@@ -27,7 +27,7 @@ const HomeworkSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-TimetableSchema.index({ class: 1, dueDate: 1 });
+HomeworkSchema.index({ class: 1, dueDate: 1 });
 HomeworkSchema.index({ teacher: 1, postedDate: 1 });
 HomeworkSchema.index({ status: 1, dueDate: 1 });
 

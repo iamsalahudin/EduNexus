@@ -1,6 +1,7 @@
 require('../src/config');
 
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -11,6 +12,8 @@ const { connectDB } = require('./config/db');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
 const logger = require('./utils/logger');
+const { setupSocket } = require('./utils/socket');
+const { initializeFirebase } = require('./utils/fcm');
 
 const app = express();
 
@@ -47,8 +50,17 @@ const PORT = process.env.PORT || 4000;
 
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    
+    // Setup Socket.io for real-time messaging
+    const io = setupSocket(server);
+    
+    // Initialize Firebase for push notifications
+    initializeFirebase();
+    
+    server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
+      logger.info('Socket.io ready for real-time messaging');
     });
   })
   .catch((err) => {

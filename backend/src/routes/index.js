@@ -26,4 +26,16 @@ router.use('/timetables', require('./timetables'));
 // Homework management
 router.use('/homeworks', require('./homeworks'));
 
+// Fee management
+router.use('/fees', require('./fees'));
+
+// Complaints & feedback
+router.use('/complaints', require('./complaints'));
+
+// Real-time messaging
+router.use('/messages', require('./messaging'));
+
+// FCM push notifications
+router.use('/notifications', require('./fcm'));
+
 module.exports = router;

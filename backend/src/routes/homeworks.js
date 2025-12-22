@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const homeworkController = require('../controllers/homeworkController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { createHomeworkSchema, submitHomeworkSchema, gradeSubmissionSchema, updateHomeworkSchema, getHomeworksQuerySchema } = require('../validators/homeworks');
 
 // All routes require auth

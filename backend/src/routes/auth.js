@@ -3,7 +3,7 @@ const router = express.Router();
 
 const authController = require('../controllers/authController');
 const { requireAuth } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { registerSchema, loginSchema, refreshSchema, logoutSchema } = require('../validators/auth');
 
 // Register: restricted to authenticated admin by default. Bootstrapping handled via seed script.
