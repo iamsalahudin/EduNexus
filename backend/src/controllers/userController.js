@@ -40,4 +40,22 @@ async function deleteUser(req, res, next) {
   }
 }
 
-module.exports = { listUsers, getUser, updateUser, deleteUser };
+async function changeRole(req, res, next) {
+  try {
+    const { role } = req.body;
+    if (!role) return res.status(400).json({ error: 'Role is required' });
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { listUsers, getUser, updateUser, deleteUser, changeRole };

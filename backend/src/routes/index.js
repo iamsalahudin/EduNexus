@@ -11,6 +11,19 @@ router.use('/auth', require('./auth'));
 // User management (admin)
 router.use('/users', require('./users'));
 
-// Mount other routers here (users, students, attendance, reports...)
+// Attendance management
+router.use('/attendance', require('./attendance'));
+
+// Student management (parent linking, bulk import)
+router.use('/students', require('./students'));
+
+// Report cards
+router.use('/reports', require('./reportCards'));
+
+// Timetable management
+router.use('/timetables', require('./timetables'));
+
+// Homework management
+router.use('/homeworks', require('./homeworks'));
 
 module.exports = router;

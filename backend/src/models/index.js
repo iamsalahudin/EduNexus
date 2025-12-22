@@ -8,6 +8,8 @@ const Fee = require('./fee');
 const Complaint = require('./complaint');
 const Message = require('./message');
 const RefreshToken = require('./refreshToken');
+const Timetable = require('./timetable');
+const Homework = require('./homework');
 
 module.exports = {
 	Role,
@@ -18,7 +20,8 @@ module.exports = {
 	ReportCard,
 	Fee,
 	Complaint,
-	Message
-,
-	RefreshToken
+	Message,
+	RefreshToken,
+	Timetable,
+	Homework
 };

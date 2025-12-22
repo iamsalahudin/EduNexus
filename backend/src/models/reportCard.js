@@ -23,4 +23,7 @@ const ReportCardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+ReportCardSchema.index({ student: 1, term: 1, year: 1 }, { unique: true });
+ReportCardSchema.index({ status: 1, year: 1 });
+
 module.exports = mongoose.model('ReportCard', ReportCardSchema);

@@ -8,11 +8,17 @@ async function register(req, res, next) {
     if (!name || !email || !password) return res.status(400).json({ error: 'Missing fields' });
 
     // Allow self-register only for Student and Parent roles.
-    const highRoles = ['Admin', 'Principal', 'Finance', 'HR', 'Reception', 'Teacher'];
+    const highRoles = ['Admin', 'Principal', 'Finance', 'HR', 'Teacher'];
     if (role && highRoles.includes(role)) {
-      // require admin privileges to create high privilege accounts
+      // require admin privileges to create high-privilege accounts
       if (!req.user || req.user.role !== 'Admin') {
         return res.status(403).json({ error: 'Only admin can create this role' });
+      }
+    }
+    // Reception can create Student and Parent
+    if (role && ['Student', 'Parent'].includes(role)) {
+      if (req.user && !['Admin', 'Reception'].includes(req.user.role)) {
+        return res.status(403).json({ error: 'Only admin or reception can create this role' });
       }
     }
 
