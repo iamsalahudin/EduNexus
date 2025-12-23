@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/National%20Textile%20University%20Faisalabad/FYP/EduNexus/frontend/src/app/error.js"],"sourcesContent":["// src/app/error.js\r\n'use client';\r\n\r\nexport default function Error({ error, reset }) {\r\n  return (\r\n    <div className=\"h-screen flex flex-col items-center justify-center\">\r\n      <h2>Something went wrong</h2>\r\n      <button onClick={reset}>Retry</button>\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAAA,mBAAmB;AACnB;;AAEe,SAAS,MAAM,EAAE,KAAK,EAAE,KAAK,EAAE;IAC5C,qBACE,6LAAC;QAAI,WAAU;;0BACb,6LAAC;0BAAG;;;;;;0BACJ,6LAAC;gBAAO,SAAS;0BAAO;;;;;;;;;;;;AAG9B;KAPwB"}}]
+}
