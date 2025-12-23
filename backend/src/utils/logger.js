@@ -8,4 +8,8 @@ function error(...args) {
   console.error('[ERROR]', util.format(...args));
 }
 
-module.exports = { info, error };
+function warn(...args) {
+  console.warn('[WARN]', util.format(...args));
+}
+
+module.exports = { info, error, warn };

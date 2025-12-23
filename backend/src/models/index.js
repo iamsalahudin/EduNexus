@@ -26,7 +26,7 @@ module.exports = {
 	Message,
 	RefreshToken,
 	Timetable,
-	Homework
+	Homework,
 	MessageDelivery,
 	FCMToken,
 	HomeworkNotification
