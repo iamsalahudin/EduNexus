@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///D:/National%20Textile%20University%20Faisalabad/FYP/EduNexus/frontend/src/app/page.js"],"sourcesContent":["export default function FullScreenThemeShowcase() {\n\n  return (\n    <main className=\"relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg text-fg transition-colors duration-500\">\n      <div className=\"z-10 p-5 text-center\">\n        <h1 className=\"mb-4 text-4xl font-bold\">Welcome to EduNexus</h1>\n        <p className=\"mb-8 text-lg\">Your gateway to knowledge and learning.</p>\n        <a\n          href=\"/login\"\n          className=\"rounded bg-cta px-6 py-3 font-semibold text-white hover:bg-cta/90 transition\"\n        >\n          lOGIN NOW\n        </a>\n      </div>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IAEtB,qBACE,8OAAC;QAAK,WAAU;kBACd,cAAA,8OAAC;YAAI,WAAU;;8BACb,8OAAC;oBAAG,WAAU;8BAA0B;;;;;;8BACxC,8OAAC;oBAAE,WAAU;8BAAe;;;;;;8BAC5B,8OAAC;oBACC,MAAK;oBACL,WAAU;8BACX;;;;;;;;;;;;;;;;;AAMT"}}]
-}
