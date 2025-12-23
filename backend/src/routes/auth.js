@@ -12,4 +12,9 @@ router.post('/login', validate(loginSchema), authController.login);
 router.post('/refresh', validate(refreshSchema), authController.refresh);
 router.post('/logout', validate(logoutSchema), authController.logout);
 
+// Return current user from access token
+router.get('/me', requireAuth, (req, res) => {
+	res.json({ user: req.user });
+});
+
 module.exports = router;

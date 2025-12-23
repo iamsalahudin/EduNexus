@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/services/api';
+import { authService } from '@/services/auth.service';
 
 const AuthContext = createContext(null);
 
@@ -14,16 +14,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const login = async (payload) => {
-    const { data } = await api.post('/auth/login', payload);
-
+    const data = await authService.login(payload);
     setUser(data.user);
     setRole(data.user.role);
-
     router.push(`/${data.user.role}`);
   };
 
   const logout = async () => {
-    await api.post('/auth/logout');
+    await authService.logout();
     setUser(null);
     setRole(null);
     router.push('/login');
@@ -31,7 +29,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchMe = async () => {
     try {
-      const { data } = await api.get('/auth/me');
+      const data = await authService.me();
       setUser(data.user);
       setRole(data.user.role);
     } catch {

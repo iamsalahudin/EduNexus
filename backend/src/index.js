@@ -18,7 +18,14 @@ const { initializeFirebase } = require('./utils/fcm');
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+// Configure CORS to allow credentials from the frontend origin
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 
