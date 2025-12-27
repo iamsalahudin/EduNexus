@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">Sign in to EduNexus</h2>
+      <h2 className="text-xl font-bold mb-4">Sign in to EduNexus</h2>
       <div className="mb-3 flex flex-wrap gap-2">
         <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='admin@edunexus.test'; if(passRef.current) passRef.current.value='password' }} className="px-3 py-1 border rounded text-sm">Admin</button>
         <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='principal@edunexus.test'; if(passRef.current) passRef.current.value='password' }} className="px-3 py-1 border rounded text-sm">Principal</button>
