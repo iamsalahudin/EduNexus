@@ -1,7 +1,13 @@
-// src/services/api.ts
-import axios from 'axios';
+import axios from 'axios'
 
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true,
-});
+const instance = axios.create({
+  baseURL: '/api',
+  headers: { 'Content-Type': 'application/json' }
+})
+
+export async function fetcher(url){
+  const res = await instance.get(url)
+  return res.data
+}
+
+export default instance
