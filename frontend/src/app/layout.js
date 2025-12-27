@@ -1,15 +1,22 @@
-import { AuthProvider } from '@/context/auth.context';
-import { ThemeProvider } from '@/context/theme.context';
-import './globals.css';
+import '../app/globals.css'
+import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
+
+export const metadata = {
+  title: 'EduNexus',
+  description: 'Smart Institute Management System - Frontend',
+}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
-  );
+  )
 }
