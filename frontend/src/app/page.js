@@ -1,17 +1,13 @@
-export default function FullScreenThemeShowcase() {
+import Link from 'next/link'
 
+export default function Home() {
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg text-fg transition-colors duration-500">
-      <div className="z-10 p-5 text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to EduNexus</h1>
-        <p className="mb-8 text-lg">Your gateway to knowledge and learning.</p>
-        <a
-          href="/login"
-          className="rounded bg-cta px-6 py-3 font-semibold text-white hover:bg-cta/90 transition"
-        >
-          lOGIN NOW
-        </a>
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="card w-full max-w-3xl">
+        <h1 className="text-2xl font-semibold">Welcome to EduNexus</h1>
+        <p className="mt-2 text-sm text-gray-600">Open the app routes to view role dashboards and auth screens.</p>
+        <Link href="/login" className="mt-4 inline-block px-4 py-2 btn-primary rounded">Get Started</Link>
       </div>
     </main>
-  );
+  )
 }
