@@ -2,6 +2,7 @@
 import { useRef } from 'react'
 import { fetchFeesSummary } from '@/services/feesService'
 import useSWR from 'swr'
+import SubHeader from '@/components/layout/SubHeader'
 
 function toCSV(rows){
   if(!rows || rows.length===0) return ''
@@ -14,6 +15,7 @@ export default function FeeReport(){
   const { data } = useSWR('feesSummary', fetchFeesSummary)
   const sampleRows = [{month:'Jan', collected:12000},{month:'Feb', collected:15000}]
   const csvRef = useRef(null)
+  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Report', link: '/admin/fees/report'}]
 
   function download(){
     const csv = toCSV(sampleRows)
@@ -28,6 +30,7 @@ export default function FeeReport(){
 
   return (
     <div>
+      <SubHeader breadcrumb={breadcrumb} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Fee Report</h1>

@@ -6,16 +6,16 @@
   --color-primary: #0ea5a4;
   --color-secondary: #7c3aed;
   --color-text-light: #ffffff;
-  --color-text-dark: #111827;
+  --color-text-dark: #0a0c11;
   --color-bg-light: #f9fafb;
-  --color-bg-dark: #1f2937; /* dark grayish (tailwind gray-800) */
+  --color-bg-dark: #16191e; /* dark grayish (tailwind gray-800) */
   --color-cta: #ef4444;
   /* unified variables used at runtime */
   --color-bg: var(--color-bg-light);
   --color-text: var(--color-text-dark);
   /* card and shadow variables */
   --card-bg-light: #ffffff;
-  --card-bg-dark: #0b1220; /* slightly darker than page bg */
+  --card-bg-dark: #101215; /* slightly darker than page bg */
   --card-bg: var(--card-bg-light);
   --card-shadow-light: 0 1px 3px rgba(2,6,23,0.06);
   --card-shadow-dark: 0 8px 24px rgba(2,6,23,0.6);
