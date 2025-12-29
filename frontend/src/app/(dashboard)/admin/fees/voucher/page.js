@@ -15,6 +15,7 @@ export default function FeeVoucher(){
     resolver: zodResolver(VoucherSchema),
     defaultValues: { schoolName:'My School', schoolAddress:'Address', banks: [{ bankName:'Bank A', account:'XXXX' }] }
   })
+  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Voucher', link: '/admin/fees/voucher'}]
 
   const { fields, append, remove } = useFieldArray({ name: 'banks', control })
 

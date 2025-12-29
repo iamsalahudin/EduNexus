@@ -4,6 +4,7 @@ import FilterForm from '@/components/fees/FilterForm'
 import FeesTable from '@/components/fees/FeesTable'
 import { fetchFeeRecords } from '@/services/feesService'
 import EmptyState from '@/components/ui/EmptyState'
+import SubHeader from '@/components/layout/SubHeader'
 
 function toCSV(rows){
   if(!rows || rows.length===0) return ''
@@ -17,6 +18,7 @@ export default function FeeRecord(){
   const [masterRows, setMasterRows] = useState([])
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
+  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Record', link: '/admin/fees/record'}]
 
   async function loadAll(){
     setLoading(true)
@@ -61,6 +63,7 @@ export default function FeeRecord(){
 
   return (
     <div>
+      <SubHeader breadcrumb={breadcrumb} />
       <h1 className="text-2xl font-semibold">Fee Record</h1>
       <FilterForm initial={{}} monthAsNumber={true} yearMax={new Date().getFullYear()} onApply={(f)=>{ setFilters(f) }} />
       {loading ? <div className="mt-4">Loading...</div> : (

@@ -4,6 +4,7 @@ import { fetchFeeStructure } from '@/services/feesService'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import SubHeader from '@/components/layout/SubHeader'
 
 const StructureSchema = z.object({
   regularFees: z.array(z.object({ label: z.string(), amount: z.number().min(0) })),
@@ -12,6 +13,7 @@ const StructureSchema = z.object({
 
 export default function FeeStructure(){
   const { register, control, handleSubmit, reset } = useForm({ resolver: zodResolver(StructureSchema), defaultValues: { regularFees: [], tuition: { type:'Monthly', levels: {} } } })
+  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Structure', link: '/admin/fees/structure'}]
 
   useEffect(()=>{ fetchFeeStructure().then(d=>{ reset(d) }) },[reset])
 
@@ -22,6 +24,7 @@ export default function FeeStructure(){
 
   return (
     <div>
+      <SubHeader breadcrumb={breadcrumb} />
       <form onSubmit={handleSubmit(onSubmit)}>
         <h1 className="text-2xl font-semibold">Fee Structure</h1>
         <div className="mt-4 card">

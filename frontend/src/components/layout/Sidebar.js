@@ -19,6 +19,8 @@ export default function Sidebar(){
           <Link className={`px-3 py-2 rounded nav-item ${isActive('/admin') ? 'font-semibold' : ''}`} href="/admin" style={isActive('/admin') ? {backgroundColor:'var(--color-primary)', color:'var(--color-text-light)'} : undefined}>Overview</Link>
           <Link className={`px-3 py-2 rounded nav-item ${isActive('/admin/settings/theme') ? 'font-semibold' : ''}`} href="/admin/settings/theme" style={isActive('/admin/settings/theme') ? {backgroundColor:'var(--color-primary)', color:'var(--color-text-light)'} : undefined}>Theme</Link>
           <Link className={`px-3 py-2 rounded nav-item ${isActive('/admin/fees') ? 'font-semibold' : ''}`} href="/admin/fees" style={isActive('/admin/fees') ? {backgroundColor:'var(--color-primary)', color:'var(--color-text-light)'} : undefined}>Fees</Link>
+          <Link className={`px-3 py-2 rounded nav-item ${isActive('/admin/attendance') ? 'font-semibold' : ''}`} href="/admin/attendance" style={isActive('/admin/attendance') ? {backgroundColor:'var(--color-primary)', color:'var(--color-text-light)'} : undefined}>Attendance</Link>
+          <Link className={`px-3 py-2 rounded nav-item ${isActive('/admin/timetable') ? 'font-semibold' : ''}`} href="/admin/timetable" style={isActive('/admin/timetable') ? {backgroundColor:'var(--color-primary)', color:'var(--color-text-light)'} : undefined}>Timetable</Link>
         </nav>
       </div>
     </aside>
