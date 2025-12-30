@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const attendanceController = require('../controllers/attendanceController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema } = require('../validators/attendance');
 
 // All routes require auth

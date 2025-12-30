@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const studentController = require('../controllers/studentController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { addParentSchema, bulkImportSchema } = require('../validators/students');
 
 // All routes require auth

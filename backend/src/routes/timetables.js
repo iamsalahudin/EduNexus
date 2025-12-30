@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const timetableController = require('../controllers/timetableController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { createTimetableSchema, updateTimetableSchema, getTimetablesSchema } = require('../validators/timetables');
 
 // All routes require auth
