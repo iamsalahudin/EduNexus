@@ -38,4 +38,7 @@ router.use('/messages', require('./messaging'));
 // FCM push notifications
 router.use('/notifications', require('./fcm'));
 
+// AI Chat agent
+router.use('/chat', require('./chat'));
+
 module.exports = router;
