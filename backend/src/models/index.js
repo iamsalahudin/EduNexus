@@ -10,6 +10,9 @@ const Message = require('./message');
 const RefreshToken = require('./refreshToken');
 const Timetable = require('./timetable');
 const Homework = require('./homework');
+const MessageDelivery = require('./messageDelivery');
+const FCMToken = require('./fcmToken');
+const HomeworkNotification = require('./homeworkNotification');
 
 module.exports = {
 	Role,
@@ -23,5 +26,8 @@ module.exports = {
 	Message,
 	RefreshToken,
 	Timetable,
-	Homework
+	Homework,
+	MessageDelivery,
+	FCMToken,
+	HomeworkNotification
 };

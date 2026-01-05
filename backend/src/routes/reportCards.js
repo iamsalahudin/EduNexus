@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const reportCardController = require('../controllers/reportCardController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
+const validate = require('../middlewares/validate');
 const { createReportCardSchema, getReportCardsSchema, rejectReportCardSchema } = require('../validators/reportCards');
 
 // All routes require auth
