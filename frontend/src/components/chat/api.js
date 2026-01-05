@@ -1,35 +1,34 @@
+import axios from '@/services/api';
+
+/**
+ * Send message to backend chat API (which forwards to n8n agent)
+ * Backend route: POST /api/chat (protected with auth middleware)
+ */
 export async function sendToApi({ conversationId, message }) {
-  // Replace later with real NLP backend
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        reply: "Attendance report for Class A (March)",
-        data: {
-          type: "table",
-          columns: ["Student", "Present", "Absent"],
-          rows: [
-            ["Ali", 22, 3],
-            ["Sara", 24, 1]
-          ]
-        },
-        chart: {
-          type: "bar",
-          labels: ["Ali", "Sara"],
-          values: [22, 24]
-        },
-        actions: [
-          {
-            type: "download",
-            label: "Download CSV",
-            url: "/sample-attendance.csv"
-          },
-          {
-            type: "navigate",
-            label: "Go to Attendance Page",
-            path: "/attendance"
-          }
-        ]
-      });
-    }, 900);
-  });
+  try {
+    const response = await axios.post('/chat', {
+      message,
+      sessionId: conversationId
+    });
+
+    return {
+      reply: response.data.reply,
+      data: response.data.data || null,
+      chart: response.data.data?.type === 'chart' ? response.data.data : null,
+      actions: response.data.actions || [],
+      sources: response.data.sources || []
+    };
+  } catch (error) {
+    const errorMessage = 
+      error.response?.data?.error || 
+      error.message ||
+      'Unable to connect to agent. Please try again.';
+    
+    return {
+      reply: errorMessage,
+      error: true,
+      retry: true
+    };
+  }
 }
+
