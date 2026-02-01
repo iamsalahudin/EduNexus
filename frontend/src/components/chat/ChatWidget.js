@@ -39,7 +39,7 @@ export default function ChatWidget() {
               <div className="text-xs text-gray-500">Ask attendance, timetables...</div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="text-xs px-2 py-1 rounded-md border" onClick={() => { /* new conv logic could be added */ }}>
+              <button className="text-xs px-2 py-1 rounded-md border" onClick={() => window.dispatchEvent(new Event('chat-new'))}>
                 New
               </button>
               <button onClick={() => setOpen(false)} className="text-gray-500 text-sm">Close</button>

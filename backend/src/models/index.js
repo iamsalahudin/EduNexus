@@ -13,6 +13,8 @@ const Homework = require('./homework');
 const MessageDelivery = require('./messageDelivery');
 const FCMToken = require('./fcmToken');
 const HomeworkNotification = require('./homeworkNotification');
+const ChatSession = require('./chatSession');
+const ChatMessage = require('./chatMessage');
 
 module.exports = {
 	Role,
@@ -29,5 +31,7 @@ module.exports = {
 	Homework,
 	MessageDelivery,
 	FCMToken,
-	HomeworkNotification
+	HomeworkNotification,
+	ChatSession,
+	ChatMessage
 };

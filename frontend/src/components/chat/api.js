@@ -12,7 +12,7 @@ export async function sendToApi({ conversationId, message }) {
     try {
       const response = await axios.post('/chat', {
         message,
-        sessionId: conversationId
+        sessionId: conversationId,
       });
 
       return {
@@ -20,7 +20,7 @@ export async function sendToApi({ conversationId, message }) {
         data: response.data.data || null,
         chart: response.data.data?.type === 'chart' ? response.data.data : null,
         actions: response.data.actions || [],
-        sources: response.data.sources || []
+        sources: response.data.sources || [],
       };
     } catch (error) {
       const status = error.response?.status;
@@ -38,9 +38,21 @@ export async function sendToApi({ conversationId, message }) {
       return {
         reply: errorMessage,
         error: true,
-        retry: isRetryable && attempt < maxAttempts
+        retry: isRetryable && attempt < maxAttempts,
       };
     }
   }
+}
+
+// GET /api/chat/sessions
+export async function fetchSessions() {
+  const res = await axios.get('/chat/sessions');
+  return res.data || [];
+}
+
+// GET /api/chat/sessions/:sessionKey/messages
+export async function fetchMessages(sessionKey) {
+  const res = await axios.get(`/chat/sessions/${sessionKey}/messages`);
+  return res.data || { session: null, messages: [] };
 }
 

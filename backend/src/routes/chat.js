@@ -16,4 +16,10 @@ const chatLimiter = rateLimit({
 // POST /api/chat - send message to n8n agent
 router.post('/', requireAuth, chatLimiter, chatController.sendMessage);
 
+// GET /api/chat/sessions - list chat sessions for the current user
+router.get('/sessions', requireAuth, chatController.listSessions);
+
+// GET /api/chat/sessions/:sessionKey/messages - fetch messages for a session
+router.get('/sessions/:sessionKey/messages', requireAuth, chatController.getSessionMessages);
+
 module.exports = router;

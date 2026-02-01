@@ -3,6 +3,27 @@ const { addChatJob, isQueueReady, waitForQueueReady } = require('../queues/chatQ
 const { processChat } = require('../services/chatJob');
 const cache = require('../utils/cache');
 const redisCache = require('../utils/redisCache');
+const { ChatSession, ChatMessage } = require('../models');
+
+async function ensureSession({ userId, sessionId, role }) {
+  const sessionKey = sessionId || userId.toString();
+  const now = new Date();
+
+  const session = await ChatSession.findOneAndUpdate(
+    { user: userId, sessionKey },
+    {
+      $setOnInsert: {
+        sessionKey,
+        roleAtCreation: role,
+        status: 'open',
+      },
+      $set: { lastMessageAt: now },
+    },
+    { new: true, upsert: true }
+  );
+
+  return session;
+}
 
 /**
  * Send user message to n8n agent
@@ -27,15 +48,25 @@ exports.sendMessage = async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
+    const session = await ensureSession({ userId: user.id, sessionId, role: user.role });
+
     // Build payload for n8n with user credentials & context
     const n8nPayload = {
-      sessionId: sessionId || user.id,
+      sessionId: session.sessionKey,
       userId: user.id.toString(),
       email: user.email,
       role: user.role,
       message: message.trim(),
       timestamp: new Date().toISOString()
     };
+
+    // Persist user message
+    await ChatMessage.create({
+      session: session._id,
+      senderType: 'user',
+      senderUser: user.id,
+      text: message.trim(),
+    });
 
     // Response cache (per user + normalized message)
     const cacheTtl = parseInt(process.env.CHAT_CACHE_TTL_MS || '120000', 10);
@@ -92,6 +123,24 @@ exports.sendMessage = async (req, res) => {
       await redisCache.set(cacheKey, result, cacheTtl);
       cache.set(cacheKey, result, cacheTtl);
     }
+    // Persist agent response
+    await ChatMessage.create({
+      session: session._id,
+      senderType: 'agent',
+      text: result.reply,
+      data: result.data || null,
+      actions: result.actions || [],
+      sources: result.sources || [],
+    });
+
+    await ChatSession.updateOne(
+      { _id: session._id },
+      {
+        lastMessageAt: new Date(),
+        lastMessagePreview: result.reply ? result.reply.substring(0, 240) : undefined,
+      }
+    );
+
     res.json(result);
 
   } catch (error) {
@@ -123,5 +172,41 @@ exports.sendMessage = async (req, res) => {
     }
 
     res.status(500).json({ error: 'Failed to process your query' });
+  }
+};
+
+// List chat sessions for the authenticated user
+exports.listSessions = async (req, res) => {
+  try {
+    const sessions = await ChatSession.find({ user: req.user.id })
+      .sort({ updatedAt: -1 })
+      .select('sessionKey title status lastMessageAt lastMessagePreview createdAt');
+
+    res.json(sessions);
+  } catch (err) {
+    logger.error('[CHAT][LIST] failed', err.message);
+    res.status(500).json({ error: 'Failed to load sessions' });
+  }
+};
+
+// Fetch messages for a specific session owned by the authenticated user
+exports.getSessionMessages = async (req, res) => {
+  try {
+    const { sessionKey } = req.params;
+    const session = await ChatSession.findOne({ sessionKey, user: req.user.id });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    const messages = await ChatMessage.find({ session: session._id })
+      .sort({ createdAt: 1 })
+      .select('-__v');
+
+    res.json({ session: {
+      sessionKey: session.sessionKey,
+      status: session.status,
+      lastMessageAt: session.lastMessageAt,
+    }, messages });
+  } catch (err) {
+    logger.error('[CHAT][MESSAGES] failed', err.message);
+    res.status(500).json({ error: 'Failed to load messages' });
   }
 };
