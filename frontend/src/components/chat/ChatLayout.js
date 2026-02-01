@@ -65,10 +65,8 @@ export default function ChatLayout({ mode = "full" }) {
       )
     );
 
-    // call API
-    const res = await sendToApi({ conversationId: id, message: text });
-
-    // append assistant response
+    // optimistic assistant placeholder
+    const placeholderId = uid("m_");
     setConversations((cs) =>
       cs.map((c) =>
         c.id === id
@@ -76,15 +74,34 @@ export default function ChatLayout({ mode = "full" }) {
               ...c,
               messages: [
                 ...c.messages,
-                {
-                  id: uid("m_"),
-                  role: "assistant",
-                  text: res.reply,
-                  data: res.data,
-                  chart: res.chart,
-                  actions: res.actions,
-                },
+                { id: placeholderId, role: "assistant", text: "Thinking..." },
               ],
+              updatedAt: new Date().toISOString(),
+            }
+          : c
+      )
+    );
+
+    // call API with retries handled inside
+    const res = await sendToApi({ conversationId: id, message: text });
+
+    // update placeholder with real response
+    setConversations((cs) =>
+      cs.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === placeholderId
+                  ? {
+                      ...m,
+                      text: res.reply,
+                      data: res.data,
+                      chart: res.chart,
+                      actions: res.actions,
+                    }
+                  : m
+              ),
               updatedAt: new Date().toISOString(),
             }
           : c
