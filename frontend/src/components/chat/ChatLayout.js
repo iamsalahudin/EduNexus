@@ -5,8 +5,8 @@ import Link from "next/link";
 import ConversationList from "./ConversationList";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import { uid, loadConversations, saveConversations } from "./chatStore";
-import { sendToApi } from "./api";
+import { uid } from "./chatStore";
+import { sendToApi, fetchSessions, fetchMessages } from "./api";
 import { useRouter, usePathname } from "next/navigation";
 
 // default input height in px — used to pad messages so they don't get hidden
@@ -19,77 +19,158 @@ export default function ChatLayout({ mode = "full" }) {
   const bottomRef = useRef(null);
   const thispath = usePathname();
 
-  const [conversations, setConversations] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [currentId, setCurrentId] = useState(null);
+  const [messagesBySession, setMessagesBySession] = useState({});
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   useEffect(() => {
-    const data = loadConversations();
-    setConversations(data);
-    if (data.length) setCurrentId(data[0].id);
+    let mounted = true;
+    async function loadSessions() {
+      try {
+        setLoadingSessions(true);
+        const list = await fetchSessions();
+        if (!mounted) return;
+        setSessions(list);
+        if (list.length) {
+          setCurrentId(list[0].sessionKey);
+          await ensureMessages(list[0].sessionKey);
+        }
+      } finally {
+        setLoadingSessions(false);
+      }
+    }
+    loadSessions();
+    function handleNewChat() {
+      startConversation();
+    }
+    window.addEventListener('chat-new', handleNewChat);
+    return () => {
+      mounted = false;
+      window.removeEventListener('chat-new', handleNewChat);
+    };
   }, []);
-
-  useEffect(() => {
-    saveConversations(conversations);
-  }, [conversations]);
 
   // auto-scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversations, currentId]);
+  }, [messagesBySession, currentId]);
+
+  function mapServerMessages(msgs = []) {
+    return msgs.map((m) => ({
+      id: m._id || uid("m_"),
+      role: m.senderType === "user" ? "user" : "assistant",
+      text: m.text || "",
+      data: m.data,
+      actions: m.actions,
+      chart: m.data?.type === "chart" ? m.data : null,
+      createdAt: m.createdAt,
+    }));
+  }
+
+  async function ensureMessages(sessionKey) {
+    if (!sessionKey) return;
+    if (Object.prototype.hasOwnProperty.call(messagesBySession, sessionKey)) return;
+    try {
+      setLoadingMessages(true);
+      const { messages } = await fetchMessages(sessionKey);
+      const mapped = mapServerMessages(messages || []);
+      setMessagesBySession((prev) => ({ ...prev, [sessionKey]: mapped }));
+    } finally {
+      setLoadingMessages(false);
+    }
+  }
 
   function startConversation() {
-    const c = {
-      id: uid("c_"),
+    const sessionKey = uid("s_");
+    const now = new Date().toISOString();
+    const s = {
+      sessionKey,
       title: "New Chat",
-      messages: [],
-      updatedAt: new Date().toISOString(),
+      status: "open",
+      lastMessageAt: now,
+      lastMessagePreview: "",
+      createdAt: now,
+      updatedAt: now,
     };
-    setConversations((s) => [c, ...s]);
-    setCurrentId(c.id);
-    return c.id;
+    setSessions((prev) => [s, ...prev]);
+    setMessagesBySession((prev) => ({ ...prev, [sessionKey]: [] }));
+    setCurrentId(sessionKey);
+    return sessionKey;
   }
 
   async function sendMessage(text) {
     const id = currentId || startConversation();
 
     // append user message
-    setConversations((cs) =>
-      cs.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              messages: [...c.messages, { id: uid("m_"), role: "user", text }],
-              updatedAt: new Date().toISOString(),
-            }
-          : c
-      )
-    );
+    setMessagesBySession((prev) => {
+      const list = prev[id] || [];
+      return {
+        ...prev,
+        [id]: [...list, { id: uid("m_"), role: "user", text }],
+      };
+    });
 
-    // call API
+    // optimistic assistant placeholder
+    const placeholderId = uid("m_");
+    setMessagesBySession((prev) => {
+      const list = prev[id] || [];
+      return {
+        ...prev,
+        [id]: [...list, { id: placeholderId, role: "assistant", text: "Thinking..." }],
+      };
+    });
+
+    // call API with retries handled inside
     const res = await sendToApi({ conversationId: id, message: text });
 
-    // append assistant response
-    setConversations((cs) =>
-      cs.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              messages: [
-                ...c.messages,
-                {
-                  id: uid("m_"),
-                  role: "assistant",
-                  text: res.reply,
-                  data: res.data,
-                  chart: res.chart,
-                  actions: res.actions,
-                },
-              ],
-              updatedAt: new Date().toISOString(),
-            }
-          : c
-      )
-    );
+    // update placeholder with real response
+    setMessagesBySession((prev) => {
+      const list = prev[id] || [];
+      return {
+        ...prev,
+        [id]: list.map((m) =>
+          m.id === placeholderId
+            ? {
+                ...m,
+                text: res.reply,
+                data: res.data,
+                chart: res.chart,
+                actions: res.actions,
+              }
+            : m
+        ),
+      };
+    });
+
+    // update session metadata (preview + timestamp)
+    const now = new Date().toISOString();
+    setSessions((prev) => {
+      const exists = prev.find((s) => s.sessionKey === id);
+      const updated = exists
+        ? prev.map((s) =>
+            s.sessionKey === id
+              ? {
+                  ...s,
+                  lastMessageAt: now,
+                  lastMessagePreview: res.reply,
+                  status: 'open',
+                }
+              : s
+          )
+        : [
+            {
+              sessionKey: id,
+              title: 'Chat',
+              status: 'open',
+              lastMessageAt: now,
+              lastMessagePreview: res.reply,
+            },
+            ...prev,
+          ];
+      return updated;
+    });
   }
 
   function handleNavigate(path) {
@@ -99,7 +180,7 @@ export default function ChatLayout({ mode = "full" }) {
     router.push(path);
   }
 
-  const current = conversations.find((c) => c.id === currentId);
+  const currentMessages = messagesBySession[currentId] || [];
 
   // PANEL mode: the input will be absolutely positioned inside the panel container (not fixed)
   // FULL mode: the input will be fixed to viewport bottom
@@ -114,9 +195,12 @@ export default function ChatLayout({ mode = "full" }) {
       {/* Sidebar only in full mode */}
       {isFull && (
         <ConversationList
-          conversations={conversations}
+          conversations={sessions}
           currentId={currentId}
-          onSelect={setCurrentId}
+          onSelect={(id) => {
+            setCurrentId(id);
+            ensureMessages(id);
+          }}
         />
       )}
 
@@ -133,10 +217,14 @@ export default function ChatLayout({ mode = "full" }) {
             paddingBottom: isFull ? INPUT_HEIGHT + 24 : INPUT_HEIGHT + 16,
           }}
         >
-          <MessageList
-            messages={current?.messages || []}
-            onNavigate={handleNavigate}
-          />
+          {loadingSessions || (loadingMessages && !currentMessages.length) ? (
+            <div className="text-sm text-gray-500">Loading chat...</div>
+          ) : (
+            <MessageList
+              messages={currentMessages}
+              onNavigate={handleNavigate}
+            />
+          )}
           <div ref={bottomRef} />
         </div>
 

@@ -1,5 +1,29 @@
-const axios = require('axios');
 const logger = require('../utils/logger');
+const { addChatJob, isQueueReady, waitForQueueReady } = require('../queues/chatQueue');
+const { processChat } = require('../services/chatJob');
+const cache = require('../utils/cache');
+const redisCache = require('../utils/redisCache');
+const { ChatSession, ChatMessage } = require('../models');
+
+async function ensureSession({ userId, sessionId, role }) {
+  const sessionKey = sessionId || userId.toString();
+  const now = new Date();
+
+  const session = await ChatSession.findOneAndUpdate(
+    { user: userId, sessionKey },
+    {
+      $setOnInsert: {
+        sessionKey,
+        roleAtCreation: role,
+        status: 'open',
+      },
+      $set: { lastMessageAt: now },
+    },
+    { new: true, upsert: true }
+  );
+
+  return session;
+}
 
 /**
  * Send user message to n8n agent
@@ -24,9 +48,11 @@ exports.sendMessage = async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
+    const session = await ensureSession({ userId: user.id, sessionId, role: user.role });
+
     // Build payload for n8n with user credentials & context
     const n8nPayload = {
-      sessionId: sessionId || user.id,
+      sessionId: session.sessionKey,
       userId: user.id.toString(),
       email: user.email,
       role: user.role,
@@ -34,40 +60,88 @@ exports.sendMessage = async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    // Call n8n webhook
-    // IMPORTANT: Store your n8n webhook URL in environment variables
-    const N8N_WEBHOOK_URL = process.env.N8N_CHAT_WEBHOOK_URL;
-    if (!N8N_WEBHOOK_URL) {
-      logger.error('N8N_CHAT_WEBHOOK_URL not configured');
-      return res.status(500).json({ error: 'Chat service not available' });
-    }
+    // Persist user message
+    await ChatMessage.create({
+      session: session._id,
+      senderType: 'user',
+      senderUser: user.id,
+      text: message.trim(),
+    });
 
-    logger.info(`[CHAT] User ${user.id} (${user.role}): ${message.substring(0, 100)}`);
-
-    // Call n8n with 30 second timeout
-    const n8nResponse = await axios.post(N8N_WEBHOOK_URL, n8nPayload, {
-      timeout: 30000,
-      headers: {
-        'Content-Type': 'application/json'
+    // Response cache (per user + normalized message)
+    const cacheTtl = parseInt(process.env.CHAT_CACHE_TTL_MS || '120000', 10);
+    const cacheKey = `${user.id}:${message.trim().toLowerCase()}`;
+    if (cacheTtl > 0) {
+      // Try Redis first, then memory fallback
+      const cachedRedis = await redisCache.get(cacheKey);
+      if (cachedRedis) {
+        logger.info('[CHAT] cache hit (redis)');
+        return res.json(cachedRedis);
       }
-    });
-
-    // Log what n8n actually returned for debugging
-    logger.info('[CHAT] n8n raw response:', JSON.stringify(n8nResponse.data, null, 2));
-
-    // Validate n8n response shape
-    if (!n8nResponse.data || !n8nResponse.data.reply) {
-      logger.error('Invalid n8n response format. Expected { reply: "..." }. Got:', n8nResponse.data);
-      return res.status(500).json({ error: 'Invalid response from agent' });
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        logger.info('[CHAT] cache hit (memory)');
+        return res.json(cached);
+      }
     }
 
-    // Return response to frontend
-    res.json({
-      reply: n8nResponse.data.reply,
-      data: n8nResponse.data.data || null,
-      actions: n8nResponse.data.actions || [],
-      sources: n8nResponse.data.sources || []
+    // Ensure queue is ready; if not, fallback to direct processing
+    const ready = await waitForQueueReady();
+    if (!ready || !isQueueReady()) {
+      logger.warn('[CHAT] Queue not ready, falling back to direct processing');
+      const directResult = await processChat(n8nPayload);
+      if (cacheTtl > 0) {
+        await redisCache.set(cacheKey, directResult, cacheTtl);
+        cache.set(cacheKey, directResult, cacheTtl);
+      }
+      return res.json(directResult);
+    }
+
+    // Enqueue chat job (Bull) and wait for completion
+    logger.info(`[CHAT] Enqueue job for User ${user.id} (${user.role})`);
+    let job;
+    try {
+      job = await addChatJob(n8nPayload);
+    } catch (queueErr) {
+      logger.error('[CHAT] Queue enqueue failed, falling back to direct processing:', queueErr.message);
+      const directResult = await processChat(n8nPayload);
+      if (cacheTtl > 0) {
+        await redisCache.set(cacheKey, directResult, cacheTtl);
+        cache.set(cacheKey, directResult, cacheTtl);
+      }
+      return res.json(directResult);
+    }
+
+    // Wait for job result with timeout guard
+    const jobTimeout = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '35000', 10) + 5000;
+    const result = await Promise.race([
+      job.finished(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Chat job timed out')), jobTimeout)),
+    ]);
+
+    if (cacheTtl > 0) {
+      await redisCache.set(cacheKey, result, cacheTtl);
+      cache.set(cacheKey, result, cacheTtl);
+    }
+    // Persist agent response
+    await ChatMessage.create({
+      session: session._id,
+      senderType: 'agent',
+      text: result.reply,
+      data: result.data || null,
+      actions: result.actions || [],
+      sources: result.sources || [],
     });
+
+    await ChatSession.updateOne(
+      { _id: session._id },
+      {
+        lastMessageAt: new Date(),
+        lastMessagePreview: result.reply ? result.reply.substring(0, 240) : undefined,
+      }
+    );
+
+    res.json(result);
 
   } catch (error) {
     logger.error('[CHAT ERROR]', error.message);
@@ -81,18 +155,58 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    if (error.code === 'ECONNREFUSED') {
-      return res.status(503).json({ error: 'Agent service unavailable. Try again later.' });
-    }
-
-    if (error.response?.status === 400) {
-      return res.status(400).json({ error: error.response.data?.message || 'Invalid query' });
-    }
-
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      return res.status(504).json({ error: 'Agent took too long to respond. Try a simpler question.' });
+    // If agent/queue failed but we have a cached answer, serve it as a stale response
+    const cacheTtl = parseInt(process.env.CHAT_CACHE_TTL_MS || '120000', 10);
+    if (cacheTtl > 0) {
+      const cacheKey = `${req.user?.id || 'anon'}:${(req.body?.message || '').trim().toLowerCase()}`;
+      const cachedRedis = await redisCache.get(cacheKey);
+      if (cachedRedis) {
+        logger.warn('[CHAT] Serving stale cached response after failure (redis)');
+        return res.json(cachedRedis);
+      }
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        logger.warn('[CHAT] Serving stale cached response after failure (memory)');
+        return res.json(cached);
+      }
     }
 
     res.status(500).json({ error: 'Failed to process your query' });
+  }
+};
+
+// List chat sessions for the authenticated user
+exports.listSessions = async (req, res) => {
+  try {
+    const sessions = await ChatSession.find({ user: req.user.id })
+      .sort({ updatedAt: -1 })
+      .select('sessionKey title status lastMessageAt lastMessagePreview createdAt');
+
+    res.json(sessions);
+  } catch (err) {
+    logger.error('[CHAT][LIST] failed', err.message);
+    res.status(500).json({ error: 'Failed to load sessions' });
+  }
+};
+
+// Fetch messages for a specific session owned by the authenticated user
+exports.getSessionMessages = async (req, res) => {
+  try {
+    const { sessionKey } = req.params;
+    const session = await ChatSession.findOne({ sessionKey, user: req.user.id });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    const messages = await ChatMessage.find({ session: session._id })
+      .sort({ createdAt: 1 })
+      .select('-__v');
+
+    res.json({ session: {
+      sessionKey: session.sessionKey,
+      status: session.status,
+      lastMessageAt: session.lastMessageAt,
+    }, messages });
+  } catch (err) {
+    logger.error('[CHAT][MESSAGES] failed', err.message);
+    res.status(500).json({ error: 'Failed to load messages' });
   }
 };

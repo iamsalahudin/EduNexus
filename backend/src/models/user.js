@@ -13,6 +13,11 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for faster lookups
+UserSchema.index({ email: 1 });
+UserSchema.index({ role: 1 });
+UserSchema.index({ createdAt: -1 });
+
   // fields for lockout
   UserSchema.add({
     failedLoginAttempts: { type: Number, default: 0 },

@@ -6,16 +6,19 @@ export default function ConversationList({ conversations = [], currentId, onSele
         {conversations.length === 0 && (
           <div className="text-xs text-gray-500">No conversations yet</div>
         )}
-        {conversations.map(c => (
+        {conversations.map((c) => (
           <button
-            key={c.id}
-            onClick={() => onSelect(c.id)}
+            key={c.sessionKey}
+            onClick={() => onSelect(c.sessionKey)}
             className={`w-full text-left p-2 rounded-md ${
-              c.id === currentId ? 'bg-white shadow' : 'hover:bg-gray-100'
+              c.sessionKey === currentId ? 'bg-white shadow' : 'hover:bg-gray-100'
             }`}
           >
             <div className="text-sm font-medium truncate">{c.title || 'Chat'}</div>
-            <div className="text-xs text-gray-400">{new Date(c.updatedAt).toLocaleString()}</div>
+            <div className="text-xs text-gray-400">{new Date(c.lastMessageAt || c.createdAt || c.updatedAt).toLocaleString()}</div>
+            {c.lastMessagePreview && (
+              <div className="text-xs text-gray-500 truncate">{c.lastMessagePreview}</div>
+            )}
           </button>
         ))}
       </div>

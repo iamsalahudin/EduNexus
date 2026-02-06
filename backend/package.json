@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.13.2",
+    "bull": "^4.12.4",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -27,7 +28,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.0",
     "morgan": "^1.10.0",
-    "socket.io": "^4.6.1"
+    "socket.io": "^4.6.1",
+    "redis": "^4.6.12"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
