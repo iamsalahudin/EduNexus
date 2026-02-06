@@ -1,23 +1,107 @@
 // Minimal message list with simple bubble layout.
 // It also supports structured 'data', 'chart', and 'actions' fields if present.
-import React from 'react';
+import React from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+const markdownComponents = {
+  p: ({ children, ...props }) => (
+    <p {...props} className="whitespace-pre-wrap">
+      {children}
+    </p>
+  ),
+  li: ({ children, ...props }) => (
+    <li {...props} className="whitespace-pre-wrap">
+      {children}
+    </li>
+  ),
+  a: ({ children, ...props }) => (
+    <a
+      {...props}
+      className="underline underline-offset-2"
+      target="_blank"
+      rel="noreferrer"
+    >
+      {children}
+    </a>
+  ),
+  pre: ({ children, ...props }) => (
+    <pre
+      {...props}
+      className="mt-2 overflow-auto rounded-md bg-neutral-200 p-3 text-xs"
+    >
+      {children}
+    </pre>
+  ),
+  code: ({ inline, children, ...props }) => {
+    if (inline) {
+      return (
+        <code {...props} className="rounded bg-neutral-200 px-1 py-0.5 text-xs">
+          {children}
+        </code>
+      );
+    }
+    return <code {...props}>{children}</code>;
+  },
+  table: ({ children, ...props }) => (
+    <div className="my-3 overflow-auto rounded-lg border border-neutral-500">
+      <table
+        {...props}
+        className="min-w-full text-sm border-separate border-spacing-0"
+      >
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children, ...props }) => (
+    <thead {...props} className="bg-gray-100">
+      {children}
+    </thead>
+  ),
+  th: ({ children, ...props }) => (
+    <th
+      {...props}
+      className="px-3 py-2 text-left font-medium border-b border-r border-neutral-500 last:border-r-0"
+    >
+      {children}
+    </th>
+  ),
+  td: ({ children, ...props }) => (
+    <td
+      {...props}
+      className="px-3 py-2 border-b border-r border-neutral-500 last:border-r-0"
+    >
+      {children}
+    </td>
+  ),
+};
 
 function TableRenderer({ columns = [], rows = [] }) {
   return (
-    <div className="mt-3 overflow-auto border rounded-lg">
-      <table className="min-w-full text-sm">
+    <div className="mt-3 overflow-auto rounded-lg border border-neutral-500">
+      <table className="min-w-full text-sm border-separate border-spacing-0">
         <thead className="bg-gray-100">
           <tr>
             {columns.map((c) => (
-              <th key={c} className="px-3 py-2 text-left font-medium">{c}</th>
+              <th
+                key={c}
+                className="px-3 py-2 text-left font-medium border-b border-r border-neutral-500 last:border-r-0"
+              >
+                {c}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-t">
+            <tr key={i}>
               {r.map((cell, j) => (
-                <td key={j} className="px-3 py-2">{cell}</td>
+                <td
+                  key={j}
+                  className="px-3 py-2 border-b border-r border-neutral-500 last:border-r-0"
+                >
+                  {cell}
+                </td>
               ))}
             </tr>
           ))}
@@ -52,22 +136,38 @@ function BarChart({ labels = [], values = [] }) {
 export default function MessageList({ messages = [], onNavigate = () => {} }) {
   return (
     <div className="space-y-4">
-      {messages.map(m => (
-        <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-          <div className={`max-w-[85%] text-sm rounded-xl p-5 ${m.role === 'user' ? 'bg-[--color-primary] text-white' : 'bg-[--card-bg] text-[--color-text]'}`}>
-            <div className="whitespace-pre-wrap">{m.text}</div>
+      {messages.map((m, idx) => (
+        <div
+          key={m.id ?? `${m.role || "msg"}-${idx}`}
+          className={`flex ${
+            m.role === "user" ? "justify-end" : "justify-start"
+          }`}
+        >
+          <div
+            className={`max-w-[85%] text-sm rounded-xl p-5 ${
+              m.role === "user"
+                ? "bg-[--color-primary] text-white"
+                : "bg-neutral-100 text-[--color-text]"
+            }`}
+          >
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents}
+            >
+              {typeof m.text === "string" ? m.text : ""}
+            </ReactMarkdown>
 
             {/* structured table */}
-            {m.data?.type === 'table' && <TableRenderer {...m.data} />}
+            {m.data?.type === "table" && <TableRenderer {...m.data} />}
 
             {/* chart */}
-            {m.chart?.type === 'bar' && <BarChart {...m.chart} />}
+            {m.chart?.type === "bar" && <BarChart {...m.chart} />}
 
             {/* actions */}
             {Array.isArray(m.actions) && m.actions.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {m.actions.map((a, i) => {
-                  if (a.type === 'download') {
+                  if (a.type === "download") {
                     return (
                       <a
                         key={i}
@@ -79,7 +179,7 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
                       </a>
                     );
                   }
-                  if (a.type === 'navigate') {
+                  if (a.type === "navigate") {
                     return (
                       <button
                         key={i}
