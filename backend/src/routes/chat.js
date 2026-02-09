@@ -22,4 +22,7 @@ router.get('/sessions', requireAuth, chatController.listSessions);
 // GET /api/chat/sessions/:sessionKey/messages - fetch messages for a session
 router.get('/sessions/:sessionKey/messages', requireAuth, chatController.getSessionMessages);
 
+// GET /api/chat/files/:fileId - download attachment
+router.get('/files/:fileId', requireAuth, chatController.downloadAttachment);
+
 module.exports = router;

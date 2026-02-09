@@ -21,6 +21,7 @@ export async function sendToApi({ conversationId, message }) {
         chart: response.data.data?.type === 'chart' ? response.data.data : null,
         actions: response.data.actions || [],
         sources: response.data.sources || [],
+        attachments: response.data.attachments || [],
       };
     } catch (error) {
       const status = error.response?.status;
@@ -39,6 +40,7 @@ export async function sendToApi({ conversationId, message }) {
         reply: errorMessage,
         error: true,
         retry: isRetryable && attempt < maxAttempts,
+        attachments: [],
       };
     }
   }
