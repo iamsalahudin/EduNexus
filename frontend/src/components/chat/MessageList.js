@@ -147,14 +147,23 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
             className={`max-w-[85%] text-sm rounded-xl p-5 ${
               m.role === "user"
                 ? "bg-[--color-primary] text-white"
-                : "bg-neutral-100 text-[--color-text]"
+                : "bg-[--color-bg] text-[--card-text]"
             }`}
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
             >
-              {typeof m.text === "string" ? m.text : ""}
+              {typeof m.text === "string" 
+                ? (() => {
+                    try {
+                      const parsed = JSON.parse(m.text);
+                      return parsed.reply || m.text;
+                    } catch {
+                      return m.text;
+                    }
+                  })()
+                : ""}
             </ReactMarkdown>
 
             {/* structured table */}
