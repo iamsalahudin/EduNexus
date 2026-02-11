@@ -3,7 +3,52 @@ const { addChatJob, isQueueReady, waitForQueueReady } = require('../queues/chatQ
 const { processChat } = require('../services/chatJob');
 const cache = require('../utils/cache');
 const redisCache = require('../utils/redisCache');
-const { ChatSession, ChatMessage } = require('../models');
+const { ChatSession, ChatMessage, ChatFile } = require('../models');
+
+const MAX_ATTACHMENT_BYTES = parseInt(process.env.CHAT_ATTACHMENT_MAX_BYTES || '5242880', 10);
+
+async function persistAttachments(rawAttachments, session, userId) {
+  if (!Array.isArray(rawAttachments) || rawAttachments.length === 0) return [];
+
+  const normalized = [];
+
+  for (const att of rawAttachments) {
+    // If attachment already has a URL and no embedded content, keep as-is
+    if (att?.url && !att?.content && !att?.data && !att?.base64) {
+      normalized.push(att);
+      continue;
+    }
+
+    const base64 = att?.content || att?.data || att?.base64;
+    if (!base64) continue;
+
+    const buffer = Buffer.from(base64, 'base64');
+    if (buffer.length > MAX_ATTACHMENT_BYTES) {
+      throw new Error('Attachment exceeds maximum allowed size');
+    }
+
+    const fileDoc = await ChatFile.create({
+      session: session._id,
+      owner: userId,
+      filename: att.name || 'file',
+      mimeType: att.mimeType || 'application/octet-stream',
+      size: buffer.length,
+      data: buffer,
+      meta: att.meta,
+    });
+
+    normalized.push({
+      name: fileDoc.filename,
+      url: `/api/chat/files/${fileDoc._id}`,
+      mimeType: fileDoc.mimeType,
+      size: fileDoc.size,
+      kind: att.kind,
+      meta: att.meta,
+    });
+  }
+
+  return normalized;
+}
 
 async function ensureSession({ userId, sessionId, role }) {
   const sessionKey = sessionId || userId.toString();
@@ -76,12 +121,48 @@ exports.sendMessage = async (req, res) => {
       const cachedRedis = await redisCache.get(cacheKey);
       if (cachedRedis) {
         logger.info('[CHAT] cache hit (redis)');
-        return res.json(cachedRedis);
+        const attachments = await persistAttachments(cachedRedis.attachments || [], session, user.id);
+        const cachedResponse = { ...cachedRedis, attachments };
+        await ChatMessage.create({
+          session: session._id,
+          senderType: 'agent',
+          text: cachedResponse.reply,
+          data: cachedResponse.data || null,
+          actions: cachedResponse.actions || [],
+          sources: cachedResponse.sources || [],
+          attachments: cachedResponse.attachments || [],
+        });
+        await ChatSession.updateOne(
+          { _id: session._id },
+          {
+            lastMessageAt: new Date(),
+            lastMessagePreview: cachedResponse.reply ? cachedResponse.reply.substring(0, 240) : undefined,
+          }
+        );
+        return res.json(cachedResponse);
       }
       const cached = cache.get(cacheKey);
       if (cached) {
         logger.info('[CHAT] cache hit (memory)');
-        return res.json(cached);
+        const attachments = await persistAttachments(cached.attachments || [], session, user.id);
+        const cachedResponse = { ...cached, attachments };
+        await ChatMessage.create({
+          session: session._id,
+          senderType: 'agent',
+          text: cachedResponse.reply,
+          data: cachedResponse.data || null,
+          actions: cachedResponse.actions || [],
+          sources: cachedResponse.sources || [],
+          attachments: cachedResponse.attachments || [],
+        });
+        await ChatSession.updateOne(
+          { _id: session._id },
+          {
+            lastMessageAt: new Date(),
+            lastMessagePreview: cachedResponse.reply ? cachedResponse.reply.substring(0, 240) : undefined,
+          }
+        );
+        return res.json(cachedResponse);
       }
     }
 
@@ -90,11 +171,29 @@ exports.sendMessage = async (req, res) => {
     if (!ready || !isQueueReady()) {
       logger.warn('[CHAT] Queue not ready, falling back to direct processing');
       const directResult = await processChat(n8nPayload);
+      const attachments = await persistAttachments(directResult.attachments || [], session, user.id);
+      const responsePayload = { ...directResult, attachments };
+      await ChatMessage.create({
+        session: session._id,
+        senderType: 'agent',
+        text: responsePayload.reply,
+        data: responsePayload.data || null,
+        actions: responsePayload.actions || [],
+        sources: responsePayload.sources || [],
+        attachments: responsePayload.attachments || [],
+      });
+      await ChatSession.updateOne(
+        { _id: session._id },
+        {
+          lastMessageAt: new Date(),
+          lastMessagePreview: responsePayload.reply ? responsePayload.reply.substring(0, 240) : undefined,
+        }
+      );
       if (cacheTtl > 0) {
-        await redisCache.set(cacheKey, directResult, cacheTtl);
-        cache.set(cacheKey, directResult, cacheTtl);
+        await redisCache.set(cacheKey, responsePayload, cacheTtl);
+        cache.set(cacheKey, responsePayload, cacheTtl);
       }
-      return res.json(directResult);
+      return res.json(responsePayload);
     }
 
     // Enqueue chat job (Bull) and wait for completion
@@ -105,11 +204,29 @@ exports.sendMessage = async (req, res) => {
     } catch (queueErr) {
       logger.error('[CHAT] Queue enqueue failed, falling back to direct processing:', queueErr.message);
       const directResult = await processChat(n8nPayload);
+      const attachments = await persistAttachments(directResult.attachments || [], session, user.id);
+      const responsePayload = { ...directResult, attachments };
+      await ChatMessage.create({
+        session: session._id,
+        senderType: 'agent',
+        text: responsePayload.reply,
+        data: responsePayload.data || null,
+        actions: responsePayload.actions || [],
+        sources: responsePayload.sources || [],
+        attachments: responsePayload.attachments || [],
+      });
+      await ChatSession.updateOne(
+        { _id: session._id },
+        {
+          lastMessageAt: new Date(),
+          lastMessagePreview: responsePayload.reply ? responsePayload.reply.substring(0, 240) : undefined,
+        }
+      );
       if (cacheTtl > 0) {
-        await redisCache.set(cacheKey, directResult, cacheTtl);
-        cache.set(cacheKey, directResult, cacheTtl);
+        await redisCache.set(cacheKey, responsePayload, cacheTtl);
+        cache.set(cacheKey, responsePayload, cacheTtl);
       }
-      return res.json(directResult);
+      return res.json(responsePayload);
     }
 
     // Wait for job result with timeout guard
@@ -119,29 +236,33 @@ exports.sendMessage = async (req, res) => {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Chat job timed out')), jobTimeout)),
     ]);
 
+    const attachments = await persistAttachments(result.attachments || [], session, user.id);
+    const responsePayload = { ...result, attachments };
+
     if (cacheTtl > 0) {
-      await redisCache.set(cacheKey, result, cacheTtl);
-      cache.set(cacheKey, result, cacheTtl);
+      await redisCache.set(cacheKey, responsePayload, cacheTtl);
+      cache.set(cacheKey, responsePayload, cacheTtl);
     }
     // Persist agent response
     await ChatMessage.create({
       session: session._id,
       senderType: 'agent',
-      text: result.reply,
-      data: result.data || null,
-      actions: result.actions || [],
-      sources: result.sources || [],
+      text: responsePayload.reply,
+      data: responsePayload.data || null,
+      actions: responsePayload.actions || [],
+      sources: responsePayload.sources || [],
+      attachments: responsePayload.attachments || [],
     });
 
     await ChatSession.updateOne(
       { _id: session._id },
       {
         lastMessageAt: new Date(),
-        lastMessagePreview: result.reply ? result.reply.substring(0, 240) : undefined,
+        lastMessagePreview: responsePayload.reply ? responsePayload.reply.substring(0, 240) : undefined,
       }
     );
 
-    res.json(result);
+    res.json(responsePayload);
 
   } catch (error) {
     logger.error('[CHAT ERROR]', error.message);
@@ -208,5 +329,27 @@ exports.getSessionMessages = async (req, res) => {
   } catch (err) {
     logger.error('[CHAT][MESSAGES] failed', err.message);
     res.status(500).json({ error: 'Failed to load messages' });
+  }
+};
+
+// Download a chat attachment (stored in DB) ensuring ownership
+exports.downloadAttachment = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const file = await ChatFile.findById(fileId);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+    const session = await ChatSession.findById(file.session);
+    if (!session || session.user.toString() !== req.user.id) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.setHeader('Content-Length', file.size);
+    return res.send(file.data);
+  } catch (err) {
+    logger.error('[CHAT][FILE][DOWNLOAD] failed', err.message);
+    return res.status(500).json({ error: 'Unable to download file' });
   }
 };

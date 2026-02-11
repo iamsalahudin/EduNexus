@@ -30,12 +30,12 @@ async function seed() {
       }
     }
 
-    const adminEmail = 'hussain@gmail.com';
-    const adminPassword = '123456';
+    const adminEmail = 'admin@edu.com';
+    const adminPassword = 'admin@123';
 
     let admin = await User.findOne({ email: adminEmail });
     if (!admin) {
-      admin = await User.create({ name: 'Admin User', email: adminEmail, password: adminPassword, role: 'Admin' });
+      admin = await User.create({ name: 'Admin', email: adminEmail, password: adminPassword, role: 'Admin' });
       console.log('Created admin user:', adminEmail);
     } else {
       console.log('Admin user already exists:', adminEmail);
