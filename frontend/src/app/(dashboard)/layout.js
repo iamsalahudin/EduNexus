@@ -16,7 +16,7 @@ export default function DashboardRoot({ children }){
   }, [thispath]);
 
   return (
-    <div className="w-full min-h-screen flex bg-gray-50 dark:bg-gray-900  scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="w-full min-h-screen flex bg-[--color-bg]   scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <Sidebar isHidden={isHidden}/>
       <div className={`w-full flex-1 flex flex-col transition-all duration-300 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${isHidden ? 'ml-0' : 'ml-64'}`}>
         <Navbar isHidden={isHidden} setIsHidden={setIsHidden} />

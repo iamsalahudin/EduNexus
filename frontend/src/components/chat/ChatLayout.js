@@ -65,6 +65,7 @@ export default function ChatLayout({ mode = "full" }) {
       data: m.data,
       actions: m.actions,
       chart: m.data?.type === "chart" ? m.data : null,
+      attachments: m.attachments || [],
       createdAt: m.createdAt,
     }));
   }
@@ -138,6 +139,7 @@ export default function ChatLayout({ mode = "full" }) {
                 data: res.data,
                 chart: res.chart,
                 actions: res.actions,
+                attachments: res.attachments || [],
               }
             : m
         ),

@@ -15,6 +15,7 @@ const FCMToken = require('./fcmToken');
 const HomeworkNotification = require('./homeworkNotification');
 const ChatSession = require('./chatSession');
 const ChatMessage = require('./chatMessage');
+const ChatFile = require('./chatFile');
 
 module.exports = {
 	Role,
@@ -33,5 +34,6 @@ module.exports = {
 	FCMToken,
 	HomeworkNotification,
 	ChatSession,
-	ChatMessage
+	ChatMessage,
+	ChatFile
 };

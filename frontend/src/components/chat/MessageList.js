@@ -154,7 +154,16 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
             >
-              {typeof m.text === "string" ? m.text : ""}
+              {typeof m.text === "string" 
+                ? (() => {
+                    try {
+                      const parsed = JSON.parse(m.text);
+                      return parsed.reply || m.text;
+                    } catch {
+                      return m.text;
+                    }
+                  })()
+                : ""}
             </ReactMarkdown>
 
             {/* structured table */}
@@ -162,6 +171,26 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
 
             {/* chart */}
             {m.chart?.type === "bar" && <BarChart {...m.chart} />}
+
+            {/* attachments */}
+            {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {m.attachments.map((att, i) => (
+                  <a
+                    key={i}
+                    href={att.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={att.name}
+                    className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <span aria-hidden>📎</span>
+                    <span className="truncate max-w-[180px]">{att.name || 'Download file'}</span>
+                    {att.size ? <span className="text-xs text-gray-500">{Math.ceil(att.size / 1024)} KB</span> : null}
+                  </a>
+                ))}
+              </div>
+            )}
 
             {/* actions */}
             {Array.isArray(m.actions) && m.actions.length > 0 && (
