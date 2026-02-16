@@ -1,95 +1,42 @@
 "use client"
-import { useEffect, useState } from 'react'
-import { useTheme } from '@/context/ThemeContext'
-import { useAuth } from '@/context/AuthContext'
 
-const presets = {
-  Default: {
-    primary:'#066FD1', secondary:'#2FB344', textLight:'#E5E7EB', textDark:'#0a0c11', cta:'#D63939'
-  },
-  Ocean: {
-    primary:'#0ea5a4', secondary:'#7c3aed', textLight:'#ffffff', textDark:'#0f172a', cta:'#06b6d4'
-  },
-  Sunset: {
-    primary:'#ef4444', secondary:'#f97316', textLight:'#ffffff', textDark:'#111827', cta:'#f43f5e'
-  },
-  Classic: {
-    primary:'#2563eb', secondary:'#64748b', textLight:'#ffffff', textDark:'#0b1220', cta:'#10b981'
-  }
-}
+import Link from 'next/link'
+import { useMemo } from 'react'
+import SubHeader from '@/components/layout/SubHeader'
 
-export default function ThemeSettings(){
-  const user = 'admin' // TODO: get from auth context
-  const { palette, setPalette } = useTheme()
-  const [mode, setMode] = useState('preset')
-  const [presetName, setPresetName] = useState('Ocean')
-  const [custom, setCustom] = useState({ primary:'', secondary:'', textLight:'', textDark:'', cta:'' })
-
-  useEffect(()=>{
-    if(palette) {
-      setCustom(palette)
-    }
-  },[palette])
-
-  if(!user || user !== 'admin'){
-    return <div className="card">Only admin can change theme.</div>
-  }
-
-  function applyPreset(name){
-    setPresetName(name)
-    const p = presets[name]
-    setPalette(p)
-  }
-
-  function saveCustom(){
-    setPalette(custom)
-  }
+export default function AdminSettingsHome() {
+  const breadcrumb = useMemo(
+    () => [{ id: 1, name: 'Settings', link: '/admin/settings' }],
+    []
+  )
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold">Admin Theme Settings</h2>
-      <p className="text-sm text-gray-600 mt-1">Choose a palette or set a custom color scheme (5 colors).</p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="text-sm text-gray-600 mt-1">Manage your account preferences.</p>
+      </div>
 
-      <div className="mt-4 space-y-4">
-        <div className="flex gap-3">
-          {Object.keys(presets).map(name=> (
-            <button key={name} onClick={()=>applyPreset(name)} className={`px-3 py-2 rounded border ${presetName===name? 'border-indigo-600':'border-gray-200'}`}>
-              {name}
-            </button>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href="/admin/settings/profile" className="card nav-item">
+          <div className="font-medium">Profile</div>
+          <div className="text-sm text-gray-600 mt-1">Update name and email.</div>
+        </Link>
 
-        <div className="card">
-          <h3 className="font-medium">Custom Palette</h3>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="flex items-center gap-2">Primary
-              <input type="color" value={custom.primary||palette.primary} onChange={e=>setCustom({...custom, primary:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Secondary
-              <input type="color" value={custom.secondary||palette.secondary} onChange={e=>setCustom({...custom, secondary:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Light Text / Dark Background
-              <input type="color" value={custom.textLight||palette.textLight} onChange={e=>setCustom({...custom, textLight:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Dark Text / Light Background
-              <input type="color" value={custom.textDark||palette.textDark} onChange={e=>setCustom({...custom, textDark:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">CTA
-              <input type="color" value={custom.cta||palette.cta} onChange={e=>setCustom({...custom, cta:e.target.value})} />
-            </label>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button onClick={saveCustom} className="px-4 py-2 btn-primary rounded">Save Custom</button>
-            <button onClick={()=>applyPreset(presetName)} className="px-4 py-2 border rounded">Apply Preset</button>
-          </div>
-        </div>
+        <Link href="/admin/settings/security" className="card nav-item">
+          <div className="font-medium">Security</div>
+          <div className="text-sm text-gray-600 mt-1">Change your password.</div>
+        </Link>
 
-        <div className="card">
-          <h3 className="font-medium">Preview</h3>
-          <div className="mt-3 p-4 rounded" style={{background: 'linear-gradient(90deg,' + (palette.primary||'#0ea5a4') + ', ' + (palette.secondary||'#7c3aed') + ')'}}>
-            <div className="text-white p-4 rounded">Primary / Secondary Preview</div>
-          </div>
-        </div>
+        <Link href="/admin/settings/notifications" className="card nav-item">
+          <div className="font-medium">Notifications</div>
+          <div className="text-sm text-gray-600 mt-1">Basic notification preferences.</div>
+        </Link>
+
+        <Link href="/admin/settings/theme" className="card nav-item">
+          <div className="font-medium">Theme</div>
+          <div className="text-sm text-gray-600 mt-1">Customize colors and dark mode.</div>
+        </Link>
       </div>
     </div>
   )

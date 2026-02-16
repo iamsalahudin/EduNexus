@@ -1,10 +1,34 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo } from 'react'
 
 export default function SubHeader({ breadcrumb = [], className = "" }) {
   const router = useRouter();
+  const pathname = usePathname()
+
+  const autoBreadcrumb = useMemo(() => {
+    if (!pathname) return []
+    const parts = pathname.split('/').filter(Boolean)
+    if (parts.length === 0) return []
+
+    const role = parts[0]
+    const crumbs = [{ id: 1, name: 'Overview', link: `/${role}/` }]
+
+    function titleize(seg) {
+      const clean = String(seg).replace(/-/g, ' ')
+      return clean.replace(/\b\w/g, (c) => c.toUpperCase())
+    }
+
+    for (let i = 1; i < parts.length; i++) {
+      const link = `/${parts.slice(0, i + 1).join('/')}`
+      crumbs.push({ id: i + 1, name: titleize(parts[i]), link })
+    }
+    return crumbs
+  }, [pathname])
+
+  const finalBreadcrumb = breadcrumb && breadcrumb.length ? breadcrumb : autoBreadcrumb
 
   return (
     <div className={`flex items-center justify-between mb-4 ${className}`}>
@@ -22,10 +46,10 @@ export default function SubHeader({ breadcrumb = [], className = "" }) {
           className="text-sm flex items-center justify-center text-center text-gray-500"
           style={{ color: "var(--color-text)" }}
         >
-          {breadcrumb.map((bc, id) => (
+          {finalBreadcrumb.map((bc, id) => (
             <span key={bc.id || id} className="inline-flex items-center">
               <Link href={bc.link}>{bc.name}</Link>
-              {id < breadcrumb.length - 1 && (
+              {id < finalBreadcrumb.length - 1 && (
                 <ChevronRight className="mx-1 w-4 h-4" />
               )}
             </span>

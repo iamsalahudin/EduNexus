@@ -1,5 +1,6 @@
 const routes = {
   "admin": {
+    "overview": "/admin/",
     "attendance": "/admin/attendance",
     "chat": "/admin/chat",
     "exams": "/admin/exams",
@@ -8,12 +9,12 @@ const routes = {
     "notifications": "/admin/notifications",
     "report cards": "/admin/report-cards",
     "settings": "/admin/settings",
-    "students": "/admin/students",
     "subjects": "/admin/subjects",
+    "students": "/admin/students",
+    "users": "/admin/users",
     "teachers": "/admin/teachers",
     "timetable": "/admin/timetable",
-    "transport": "/admin/transport",
-    "overview": "/admin/"
+    "transport": "/admin/transport"
   },
   "principal": {
     "overview": "/principal/",

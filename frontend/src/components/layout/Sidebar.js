@@ -18,9 +18,17 @@ export default function Sidebar({ isHidden }) {
     return Object.entries(roleRoutes);
   }, [role]);
 
+  function normalizePath(path) {
+    if (!path) return '';
+    if (path === '/') return '/';
+    return String(path).replace(/\/+$/, '');
+  }
+
   function isActive(href) {
     if (!pathname) return false;
-    return pathname === href;
+    const current = normalizePath(pathname);
+    const target = normalizePath(href);
+    return current === target;
   }
 
   return (

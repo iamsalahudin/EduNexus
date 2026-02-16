@@ -43,6 +43,11 @@ export const authService = {
   me: async () => {
     const { data } = await api.get('/auth/me')
     return data
+  },
+
+  changePassword: async (payload) => {
+    const { data } = await api.post('/auth/change-password', payload)
+    return data
   }
 }
 

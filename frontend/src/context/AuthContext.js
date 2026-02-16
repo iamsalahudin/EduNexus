@@ -51,7 +51,7 @@ export function AuthProvider({ children }){
       
       return { success: true, user: meData.user }
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Login failed'
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed'
       setError(message)
       setUser(null)
       throw new Error(message)
