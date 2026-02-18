@@ -43,35 +43,40 @@ export default function OTPVerificationPage() {
   };
 
   return (
-      <div className="card flex flex-col space-y-2">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">OTP Verification</h2>
-          <p className="mt-1 text-sm text-muted">OTP sent to {email || 'your email'}</p>
+    <div className="space-y-4">
+      <div className="text-center">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">OTP verification</h2>
+        <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+          OTP sent to {email || 'your email'}
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-sm text-red-700 bg-red-50 dark:bg-transparent dark:text-red-400 p-2 rounded">{err}</div>}
+
+        <div className="flex justify-center">
+          <OTPInput length={4} value={otp} onChange={setOtp} />
         </div>
 
-        <form onSubmit={submit} className="space-y-4">
-          {err && <div className="text-sm text-red-700 bg-red-50 p-2 rounded">{err}</div>}
-
-          <div className="flex justify-center">
-            <OTPInput length={4} value={otp} onChange={setOtp} />
+        <div className="flex justify-between items-center text-sm">
+          <div className="text-gray-600 dark:text-gray-300">
+            {seconds > 0 ? `Resend in ${seconds}s` : 'You can resend now'}
           </div>
-
-          <div className="flex justify-between items-center text-sm mt-2">
-            <div className="text-muted">{seconds > 0 ? `Resend in ${seconds}s` : 'You can resend now'}</div>
-            <button
-              type="button"
-              disabled={seconds > 0}
-              onClick={resend}
-              className="text-primary disabled:opacity-40"
-            >
-              Resend
-            </button>
-          </div>
-
-          <button className="w-full p-2 rounded bg-primary text-white" disabled={loading}>
-            {loading ? 'Verifying...' : 'Verify OTP'}
+          <button
+            type="button"
+            disabled={seconds > 0}
+            onClick={resend}
+            className="underline underline-offset-4 disabled:opacity-40"
+            style={{ color: 'var(--color-primary)' }}
+          >
+            Resend
           </button>
-        </form>
-      </div>
+        </div>
+
+        <button className="w-full py-2 btn-primary rounded" disabled={loading}>
+          {loading ? 'Verifying...' : 'Verify OTP'}
+        </button>
+      </form>
+    </div>
   );
 }

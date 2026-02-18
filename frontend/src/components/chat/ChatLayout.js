@@ -24,6 +24,7 @@ export default function ChatLayout({ mode = "full" }) {
   const [messagesBySession, setMessagesBySession] = useState({});
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +52,25 @@ export default function ChatLayout({ mode = "full" }) {
       window.removeEventListener('chat-new', handleNewChat);
     };
   }, []);
+
+  // mobile drawer toggle for conversations list
+  useEffect(() => {
+    if (mode !== 'full') return
+
+    function onToggle() {
+      setMobileDrawerOpen((v) => !v)
+    }
+    function onClose() {
+      setMobileDrawerOpen(false)
+    }
+
+    window.addEventListener('chat-toggle-conversations', onToggle)
+    window.addEventListener('chat-close-conversations', onClose)
+    return () => {
+      window.removeEventListener('chat-toggle-conversations', onToggle)
+      window.removeEventListener('chat-close-conversations', onClose)
+    }
+  }, [mode])
 
   // auto-scroll to bottom when messages change
   useEffect(() => {
@@ -191,9 +211,40 @@ export default function ChatLayout({ mode = "full" }) {
   return (
     <div
       className={`w-full relative flex ${
-        isFull ? "h-[calc(100vh-72px)] flex-row" : "h-full flex-col"
+        isFull ? "h-[calc(100dvh-104px)] flex-row" : "h-full flex-col"
       } bg-white`}
     >
+      {/* Mobile conversations drawer (slides in) */}
+      {isFull ? (
+        <>
+          <div
+            className={`fixed left-0 right-0 bottom-0 top-[104px] z-30 bg-black/40 transition-opacity duration-300 md:hidden ${
+              mobileDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            onClick={() => setMobileDrawerOpen(false)}
+            aria-hidden
+          />
+          <div
+            className={`fixed left-0 top-[104px] bottom-0 z-40 md:hidden transform transition-transform duration-300 ${
+              mobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <ConversationList
+              variant="drawer"
+              widthClass="w-72"
+              className="h-full"
+              conversations={sessions}
+              currentId={currentId}
+              onSelect={(id) => {
+                setCurrentId(id)
+                ensureMessages(id)
+                setMobileDrawerOpen(false)
+              }}
+            />
+          </div>
+        </>
+      ) : null}
+
       {/* Sidebar only in full mode */}
       {isFull && (
         <ConversationList

@@ -38,7 +38,8 @@ async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     // check account lock
@@ -129,4 +130,30 @@ async function logout(req, res, next) {
   }
 }
 
-module.exports = { register, login, refresh, logout };
+async function changePassword(req, res, next) {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Need password hash for compare, so fetch with password
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const match = await user.comparePassword(oldPassword);
+    if (!match) return res.status(401).json({ error: 'Old password is incorrect' });
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, refresh, logout, changePassword };

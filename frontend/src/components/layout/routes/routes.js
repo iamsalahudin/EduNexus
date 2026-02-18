@@ -1,19 +1,21 @@
 const routes = {
   "admin": {
+    "overview": "/admin/",
     "attendance": "/admin/attendance",
     "chat": "/admin/chat",
+    "classes/sections": "/admin/classes",
     "exams": "/admin/exams",
     "fees": "/admin/fees",
     "homework": "/admin/homework",
     "notifications": "/admin/notifications",
     "report cards": "/admin/report-cards",
     "settings": "/admin/settings",
-    "students": "/admin/students",
     "subjects": "/admin/subjects",
+    "students": "/admin/students",
+    "users": "/admin/users",
     "teachers": "/admin/teachers",
     "timetable": "/admin/timetable",
-    "transport": "/admin/transport",
-    "overview": "/admin/"
+    "transport": "/admin/transport"
   },
   "principal": {
     "overview": "/principal/",
@@ -34,6 +36,7 @@ const routes = {
   "teacher": {
     "salary": "/teacher/salary",
     "attendance": "/teacher/attendance",
+    "student attendance": "/teacher/student-attendance",
     "homework": "/teacher/homework",
     "report-cards": "/teacher/report-cards",
     "timetable": "/teacher/timetable",

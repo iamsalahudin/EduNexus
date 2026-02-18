@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -32,11 +33,19 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear and redirect to login
-      try {
-        localStorage.removeItem('accessToken')
-      } catch (e) {}
-      window.location.href = '/login'
+      const url = String(error.config?.url || '')
+      const isLoginAttempt = url.includes('/auth/login')
+      const isOnLoginPage = typeof window !== 'undefined' && window.location?.pathname === '/login'
+
+      // During an explicit login attempt, let the caller handle 401
+      if (!isLoginAttempt) {
+        try {
+          localStorage.removeItem('accessToken')
+        } catch (e) {}
+        if (!isOnLoginPage) {
+          window.location.href = '/login'
+        }
+      }
     }
     return Promise.reject(error)
   }

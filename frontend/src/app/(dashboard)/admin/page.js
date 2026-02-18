@@ -29,14 +29,10 @@ export default function AdminDashboard(){
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-start">
         <div>
           <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
           <p className="mt-1 text-sm text-gray-600">Overview of institute operations and quick actions.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/admin/fees" className="px-3 py-2 btn-primary rounded">Fees</Link>
-          <Link href="/admin/attendance" className="px-3 py-2 border rounded">Attendance</Link>
         </div>
       </div>
 

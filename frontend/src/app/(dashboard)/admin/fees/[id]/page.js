@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import SubHeader from '@/components/layout/SubHeader'
 import { fetchFeeDetails } from '@/services/feesService'
 
 export default function FeeDetails(){
@@ -9,7 +8,6 @@ export default function FeeDetails(){
   const id = params.id
   const router = useRouter()
   const [data, setData] = useState(null)
-  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Defaulters', link: '/admin/fees/defaulters'}, {id: 3, name: `Fee Details (${id})`, link: `/admin/fees/${id}`}]
 
   useEffect(()=>{
     let mounted = true
@@ -33,8 +31,6 @@ export default function FeeDetails(){
 
   return (
     <div>
-      <SubHeader breadcrumb={breadcrumb} />
-
       <h1 className="text-2xl font-semibold">Fee Details — {data.student.name}</h1>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card">

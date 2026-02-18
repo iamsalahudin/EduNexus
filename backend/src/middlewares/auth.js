@@ -15,7 +15,17 @@ async function requireAuth(req, res, next) {
     const user = await User.findById(payload.sub).select('-password');
     if (!user) return unauthorized(res, 'User not found');
     // attach full user object for downstream checks
-    req.user = { id: user._id, role: user.role, email: user.email };
+    req.user = {
+      id: user._id,
+      _id: user._id,
+      name: user.name,
+      role: user.role,
+      email: user.email,
+      active: user.active,
+      profile: user.profile,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
     next();
   } catch (err) {
     return unauthorized(res, err.message || 'Invalid token');

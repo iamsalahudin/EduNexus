@@ -3,6 +3,8 @@ const User = require('./user');
 const Student = require('./student');
 const Subject = require('./subject');
 const Attendance = require('./attendance');
+const StaffAttendance = require('./staffAttendance');
+const SchoolClass = require('./schoolClass');
 const ReportCard = require('./reportCard');
 const Fee = require('./fee');
 const Complaint = require('./complaint');
@@ -23,6 +25,8 @@ module.exports = {
 	Student,
 	Subject,
 	Attendance,
+	StaffAttendance,
+	SchoolClass,
 	ReportCard,
 	Fee,
 	Complaint,
