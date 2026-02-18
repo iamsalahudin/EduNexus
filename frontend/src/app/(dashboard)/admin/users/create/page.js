@@ -1,22 +1,13 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import SubHeader from '@/components/layout/SubHeader'
 import { userService } from '@/services/user.service'
 
 const ROLE_OPTIONS = ['Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception']
 
 export default function NewUser() {
   const router = useRouter()
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Users', link: '/admin/users' },
-      { id: 2, name: 'Create', link: '/admin/users/create' }
-    ],
-    []
-  )
-
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -47,8 +38,6 @@ export default function NewUser() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Create New User</h1>
         <p className="text-sm text-gray-600 mt-1">Creates a new account via backend registration.</p>

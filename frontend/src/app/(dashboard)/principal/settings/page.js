@@ -1,19 +1,10 @@
 "use client"
 
 import Link from 'next/link'
-import { useMemo } from 'react'
-import SubHeader from '@/components/layout/SubHeader'
 
 export default function PrincipalSettingsHome() {
-  const breadcrumb = useMemo(
-    () => [{ id: 1, name: 'Settings', link: '/principal/settings' }],
-    []
-  )
-
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-gray-600 mt-1">Manage your account preferences.</p>

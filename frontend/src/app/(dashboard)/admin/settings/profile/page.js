@@ -1,20 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
-import SubHeader from '@/components/layout/SubHeader'
+import { useEffect, useState } from 'react'
 import Skeleton from '@/components/ui/Skeleton'
 import { useAuth } from '@/context/AuthContext'
 import { userService } from '@/services/user.service'
 
 export default function ProfileSettings() {
-	const breadcrumb = useMemo(
-		() => [
-			{ id: 1, name: 'Settings', link: '/admin/settings' },
-			{ id: 2, name: 'Profile', link: '/admin/settings/profile' }
-		],
-		[]
-	)
-
 	const { user } = useAuth()
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
@@ -52,8 +43,6 @@ export default function ProfileSettings() {
 
 	return (
 		<div className="space-y-4">
-			<SubHeader breadcrumb={breadcrumb} />
-
 			<div>
 				<h1 className="text-2xl font-semibold">Profile</h1>
 				<p className="text-sm text-gray-600 mt-1">Update your account profile.</p>

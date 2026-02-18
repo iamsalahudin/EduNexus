@@ -4,11 +4,11 @@ import { useTheme } from "@/context/ThemeContext";
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { UserCircle, ChevronDown } from 'lucide-react'
+import { UserCircle, ChevronDown, Moon, Sun } from 'lucide-react'
 
 export default function Navbar({ isHidden, setIsHidden }) {
   const { user, logout } = useAuth();
-  const { toggleDark } = useTheme();
+  const { toggleDark, dark } = useTheme();
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -45,13 +45,13 @@ export default function Navbar({ isHidden, setIsHidden }) {
     <header
       className={`fixed top-0 right-0 h-14 flex items-center justify-between px-6 border-b z-20
         transition-all duration-300
-        ${isHidden ? 'left-0' : 'left-64'}
+        left-0 ${isHidden ? 'lg:left-0' : 'lg:left-64'}
       `}
       style={{ backgroundColor: "var(--card-bg)" }}
     >
       <div className="flex items-center gap-4">
         <button
-          className="px-2 py-1 border rounded nav-item"
+          className={`px-2 py-1 border rounded nav-item transition-transform duration-300 ${isHidden ? '' : 'rotate-90'}`}
           onClick={() => setIsHidden(prev => !prev)}
         >
           ☰
@@ -68,9 +68,10 @@ export default function Navbar({ isHidden, setIsHidden }) {
       <div className="flex items-center gap-4">
         <button
           onClick={toggleDark}
-          className="px-3 py-1 border rounded nav-item"
+          className="px-1 py-1 rounded nav-item inline-flex items-center justify-center"
+          aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
         >
-          Toggle theme
+          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
 
         <div className="relative" ref={menuRef}>

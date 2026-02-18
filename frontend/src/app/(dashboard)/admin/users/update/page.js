@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import SubHeader from '@/components/layout/SubHeader'
 import Skeleton from '@/components/ui/Skeleton'
 import { userService } from '@/services/user.service'
 
@@ -12,14 +11,6 @@ export default function UpdateUser() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const id = searchParams?.get('id') || ''
-
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Users', link: '/admin/users' },
-      { id: 2, name: 'Update', link: '/admin/users/update' }
-    ],
-    []
-  )
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -83,8 +74,6 @@ export default function UpdateUser() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Update User</h1>
         <p className="text-sm text-gray-600 mt-1">Edit user profile fields (Admin-only).</p>

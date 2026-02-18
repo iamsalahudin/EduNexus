@@ -36,7 +36,7 @@ export default function OTPInput({ length = 4, value = '', onChange }) {
           value={value[i] || ''}
           onChange={(e) => handleChange(e, i)}
           onKeyDown={(e) => handleKeyDown(e, i)}
-          className="w-12 h-12 text-center rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent text-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-12 h-12 text-center rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)]"
           aria-label={`Digit ${i + 1}`}
         />
       ))}

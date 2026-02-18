@@ -1,18 +1,9 @@
 "use client"
 
-import { useMemo, useState } from 'react'
-import SubHeader from '@/components/layout/SubHeader'
+import { useState } from 'react'
 import { authService } from '@/services/auth.service'
 
 export default function PrincipalSecuritySettings() {
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Settings', link: '/principal/settings' },
-      { id: 2, name: 'Security', link: '/principal/settings/security' }
-    ],
-    []
-  )
-
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -38,8 +29,6 @@ export default function PrincipalSecuritySettings() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Security</h1>
         <p className="text-sm text-gray-600 mt-1">Change your account password.</p>

@@ -1,18 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import SubHeader from '@/components/layout/SubHeader'
 import EmptyState from '@/components/ui/EmptyState'
 import Skeleton from '@/components/ui/Skeleton'
 import { userService } from '@/services/user.service'
 
 export default function UsersHome() {
-  const breadcrumb = useMemo(
-    () => [{ id: 1, name: 'Users', link: '/admin/users' }],
-    []
-  )
-
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [users, setUsers] = useState([])
@@ -36,8 +30,6 @@ export default function UsersHome() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Users</h1>

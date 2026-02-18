@@ -1,8 +1,8 @@
 import { api } from './api'
 
 export const userService = {
-	listUsers: async () => {
-		const { data } = await api.get('/users')
+	listUsers: async (params = undefined) => {
+		const { data } = await api.get('/users', params ? { params } : undefined)
 		return data
 	},
 
@@ -12,8 +12,8 @@ export const userService = {
 	},
 
 	createUser: async (payload) => {
-		// Admin-only (or other role-specific restrictions) enforced by backend
-		const { data } = await api.post('/auth/register', payload)
+		// Admin-only enforced by backend
+		const { data } = await api.post('/users', payload)
 		return data
 	},
 

@@ -18,8 +18,8 @@ export default function PasswordStrength({ password }) {
     'bg-red-500',
     'bg-orange-500',
     'bg-yellow-500',
-    'bg-primary',
-    'bg-cta',
+    'bg-[color:var(--color-primary)]',
+    'bg-[color:var(--color-cta)]',
   ];
   return (
     <div className="mt-2">
@@ -30,7 +30,7 @@ export default function PasswordStrength({ password }) {
           aria-hidden
         />
       </div>
-      <div className="mt-1 text-xs text-muted">{labels[score]}</div>
+      <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">{labels[score]}</div>
     </div>
   );
 }

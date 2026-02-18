@@ -37,17 +37,18 @@ export default function ConfirmPasswordPage() {
   };
 
   return (
-    
-      <div className="card space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">Set new password</h2>
-          <p className="mt-1 text-sm text-muted">Choose a strong password to secure your account</p>
-        </div>
+    <div className="space-y-5">
+      <div className="text-center">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Set new password</h2>
+        <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+          Choose a strong password to secure your account
+        </p>
+      </div>
 
-        {err && <div className="text-sm text-red-700 bg-red-50 p-2 rounded">{err}</div>}
-        {success && <div className="text-sm text-green-700 bg-green-50 p-2 rounded">{success}</div>}
+      {err && <div className="text-sm text-red-700 bg-red-50 dark:bg-transparent dark:text-red-400 p-2 rounded">{err}</div>}
+      {success && <div className="text-sm text-green-700 bg-green-50 dark:bg-transparent dark:text-green-400 p-2 rounded">{success}</div>}
 
-        <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4">
           <Input
             name="password"
             type="password"
@@ -68,10 +69,10 @@ export default function ConfirmPasswordPage() {
             placeholder="Repeat your password"
           />
 
-          <Button type="submit" className="bg-primary text-white" disabled={loading}>
+          <Button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Updating...' : 'Update Password'}
           </Button>
         </form>
-      </div>
+    </div>
   );
 }

@@ -1,11 +1,26 @@
 const Joi = require('joi');
 
+const attendanceStatus = Joi.string().valid('present', 'absent', 'late', 'excused');
+
 const markAttendanceSchema = Joi.object({
   body: Joi.object({
-    studentIds: Joi.array().items(Joi.string().required()).min(1).required(),
     date: Joi.date().required(),
-    status: Joi.string().valid('present', 'absent', 'late', 'excused').required()
+    // Preferred: entries allows per-student status
+    entries: Joi.array()
+      .items(
+        Joi.object({
+          studentId: Joi.string().required(),
+          status: attendanceStatus.required(),
+          remarks: Joi.string().max(500).allow('')
+        })
+      )
+      .min(1),
+    // Backward compatible: one status for multiple students
+    studentIds: Joi.array().items(Joi.string().required()).min(1),
+    status: attendanceStatus
   })
+    .xor('entries', 'studentIds')
+    .with('studentIds', 'status')
 });
 
 const getAttendanceSchema = Joi.object({
@@ -20,7 +35,7 @@ const getAttendanceSchema = Joi.object({
 
 const updateAttendanceSchema = Joi.object({
   body: Joi.object({
-    status: Joi.string().valid('present', 'absent', 'late', 'excused'),
+    status: attendanceStatus,
     remarks: Joi.string().max(500)
   })
 });

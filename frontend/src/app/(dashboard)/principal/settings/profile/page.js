@@ -1,23 +1,12 @@
 "use client"
 
-import { useMemo } from 'react'
-import SubHeader from '@/components/layout/SubHeader'
 import { useAuth } from '@/context/AuthContext'
 
 export default function PrincipalProfileSettings() {
   const { user } = useAuth()
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Settings', link: '/principal/settings' },
-      { id: 2, name: 'Profile', link: '/principal/settings/profile' }
-    ],
-    []
-  )
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Profile</h1>
         <p className="text-sm text-gray-600 mt-1">Your account information.</p>

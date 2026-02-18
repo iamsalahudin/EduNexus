@@ -1,17 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
-import SubHeader from '@/components/layout/SubHeader'
+import { useEffect, useState } from 'react'
 
 export default function NotificationSettings() {
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Settings', link: '/admin/settings' },
-      { id: 2, name: 'Notifications', link: '/admin/settings/notifications' }
-    ],
-    []
-  )
-
   const [prefs, setPrefs] = useState({
     push: true,
     email: true,
@@ -33,8 +24,6 @@ export default function NotificationSettings() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Notifications</h1>
         <p className="text-sm text-gray-600 mt-1">Basic preferences stored locally.</p>

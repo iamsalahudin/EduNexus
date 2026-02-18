@@ -13,8 +13,13 @@ export default function SubHeader({ breadcrumb = [], className = "" }) {
     const parts = pathname.split('/').filter(Boolean)
     if (parts.length === 0) return []
 
+    // parts: [role, ...segments]
+    // For subpages, we want breadcrumbs to start at the sidebar main section
+    // e.g. /admin/fees/defaulters => Fee > Defaulters (no "Overview" prefix)
+    if (parts.length <= 1) return []
+
     const role = parts[0]
-    const crumbs = [{ id: 1, name: 'Overview', link: `/${role}/` }]
+    const crumbs = []
 
     function titleize(seg) {
       const clean = String(seg).replace(/-/g, ' ')
@@ -23,7 +28,7 @@ export default function SubHeader({ breadcrumb = [], className = "" }) {
 
     for (let i = 1; i < parts.length; i++) {
       const link = `/${parts.slice(0, i + 1).join('/')}`
-      crumbs.push({ id: i + 1, name: titleize(parts[i]), link })
+      crumbs.push({ id: i, name: titleize(parts[i]), link })
     }
     return crumbs
   }, [pathname])

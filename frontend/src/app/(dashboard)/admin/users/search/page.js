@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import SubHeader from '@/components/layout/SubHeader'
 import Skeleton from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import { userService } from '@/services/user.service'
@@ -10,14 +9,6 @@ import { userService } from '@/services/user.service'
 const ROLE_OPTIONS = ['', 'Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception']
 
 export default function SearchUsers() {
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Users', link: '/admin/users' },
-      { id: 2, name: 'Search', link: '/admin/users/search' }
-    ],
-    []
-  )
-
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [users, setUsers] = useState([])
@@ -63,8 +54,6 @@ export default function SearchUsers() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div>
         <h1 className="text-2xl font-semibold">Search Users</h1>
         <p className="text-sm text-gray-600 mt-1">Filter users by name, email, role, and status.</p>

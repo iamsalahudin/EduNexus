@@ -1,12 +1,13 @@
-export default function Page() {
+"use client"
 
+import StudentAttendanceRecordsView from '@/components/attendance/StudentAttendanceRecordsView'
+
+export default function Page() {
   return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
+    <StudentAttendanceRecordsView
+      title="Children Attendance"
+      description="View attendance records for your linked children."
+      showClassFilter={false}
+    />
   )
 }

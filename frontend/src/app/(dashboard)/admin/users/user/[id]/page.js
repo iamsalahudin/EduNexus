@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import SubHeader from '@/components/layout/SubHeader'
 import Skeleton from '@/components/ui/Skeleton'
 import { userService } from '@/services/user.service'
 
@@ -11,14 +10,6 @@ export default function UserDetail() {
   const router = useRouter()
   const params = useParams()
   const id = params?.id
-
-  const breadcrumb = useMemo(
-    () => [
-      { id: 1, name: 'Users', link: '/admin/users' },
-      { id: 2, name: 'Detail', link: `/admin/users/user/${id || ''}` }
-    ],
-    [id]
-  )
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -66,8 +57,6 @@ export default function UserDetail() {
 
   return (
     <div className="space-y-4">
-      <SubHeader breadcrumb={breadcrumb} />
-
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">User Detail</h1>

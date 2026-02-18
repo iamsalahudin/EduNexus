@@ -3,6 +3,7 @@ const routes = {
     "overview": "/admin/",
     "attendance": "/admin/attendance",
     "chat": "/admin/chat",
+    "classes/sections": "/admin/classes",
     "exams": "/admin/exams",
     "fees": "/admin/fees",
     "homework": "/admin/homework",
@@ -35,6 +36,7 @@ const routes = {
   "teacher": {
     "salary": "/teacher/salary",
     "attendance": "/teacher/attendance",
+    "student attendance": "/teacher/student-attendance",
     "homework": "/teacher/homework",
     "report-cards": "/teacher/report-cards",
     "timetable": "/teacher/timetable",
