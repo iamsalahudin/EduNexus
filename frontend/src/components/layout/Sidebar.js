@@ -5,7 +5,23 @@ import { capitalizeFirstLetter } from "@/tools/functions/string";
 import { useMemo } from "react";
 import routes from "@/components/layout/routes/routes";
 
-export default function Sidebar({ isHidden }) {
+function formatSidebarLabel(label) {
+  const raw = String(label || '').trim();
+  if (!raw) return '';
+
+  const toTitle = (s) =>
+    String(s || '')
+      .split(/[\s_-]+/g)
+      .filter(Boolean)
+      .map((p) => (p ? p.charAt(0).toUpperCase() + p.slice(1) : ''))
+      .join(' ');
+
+  // Preserve explicit '/' as a separator between groups.
+  const groups = raw.split('/').map((g) => toTitle(g));
+  return groups.filter(Boolean).join('/');
+}
+
+export default function Sidebar({ isHidden, onNavigate }) {
   const pathname = usePathname();
 
   const role = useMemo(() => {
@@ -18,14 +34,22 @@ export default function Sidebar({ isHidden }) {
     return Object.entries(roleRoutes);
   }, [role]);
 
+  function normalizePath(path) {
+    if (!path) return '';
+    if (path === '/') return '/';
+    return String(path).replace(/\/+$/, '');
+  }
+
   function isActive(href) {
     if (!pathname) return false;
-    return pathname === href;
+    const current = normalizePath(pathname);
+    const target = normalizePath(href);
+    return current === target;
   }
 
   return (
     <aside
-      className={`w-64 border-r border-[var(--color-text)]/100 fixed left-0 top-0 h-screen z-20 overflow-auto bg-[--card-bg] transform transition-transform duration-300 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+      className={`w-64 border-r border-[var(--color-text)]/100 fixed left-0 top-0 h-screen z-50 overflow-auto bg-[--card-bg] transform transition-transform duration-300 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
         isHidden ? "-translate-x-full" : "translate-x-0"
       }`}
     >
@@ -38,6 +62,11 @@ export default function Sidebar({ isHidden }) {
             <Link
               key={href}
               href={href}
+              onClick={() => {
+                if (typeof window === 'undefined') return
+                const isDesktop = window.matchMedia('(min-width: 1024px)').matches
+                if (!isDesktop) onNavigate?.()
+              }}
               className={`px-3 py-2 rounded nav-item ${
                 isActive(href) ? "font-semibold" : ""
               }`}
@@ -51,7 +80,7 @@ export default function Sidebar({ isHidden }) {
                   : undefined
               }
             >
-              {capitalizeFirstLetter(label)}
+              {label.includes('/') || label.includes('_') || label.includes('-') ? formatSidebarLabel(label) : capitalizeFirstLetter(label)}
             </Link>
           ))}
         </nav>

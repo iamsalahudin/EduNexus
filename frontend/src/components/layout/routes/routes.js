@@ -1,19 +1,21 @@
 const routes = {
   "admin": {
+    "overview": "/admin/",
     "attendance": "/admin/attendance",
     "chat": "/admin/chat",
+    "classes/sections": "/admin/classes",
     "exams": "/admin/exams",
     "fees": "/admin/fees",
     "homework": "/admin/homework",
-    "nofications": "/admin/nofications",
+    "notifications": "/admin/notifications",
     "report cards": "/admin/report-cards",
     "settings": "/admin/settings",
-    "student": "/admin/student",
-    "subject": "/admin/subject",
-    "teacher": "/admin/teacher",
+    "subjects": "/admin/subjects",
+    "students": "/admin/students",
+    "users": "/admin/users",
+    "teachers": "/admin/teachers",
     "timetable": "/admin/timetable",
-    "transport": "/admin/transport",
-    "overview": "/admin/"
+    "transport": "/admin/transport"
   },
   "principal": {
     "overview": "/principal/",
@@ -23,17 +25,18 @@ const routes = {
     "fees": "/principal/fees",
     "homework": "/principal/homework",
     "report cards": "/principal/report-cards",
-    "student": "/principal/student",
-    "teacher": "/principal/teacher",
+    "students": "/principal/students",
+    "teachers": "/principal/teachers",
     "timetable": "/principal/timetable",
     "transport": "/principal/transport",
     "complaints": "/principal/complaints",
     "settings": "/principal/settings",
-    "nofications": "/principal/nofications"
+    "notifications": "/principal/notifications"
   },
   "teacher": {
     "salary": "/teacher/salary",
     "attendance": "/teacher/attendance",
+    "student attendance": "/teacher/student-attendance",
     "homework": "/teacher/homework",
     "report-cards": "/teacher/report-cards",
     "timetable": "/teacher/timetable",
@@ -63,7 +66,7 @@ const routes = {
     "overview": "/hr/",
     "salary": "/hr/salary",
     "employee": "/hr/employee",
-    "teacher": "/hr/teacher",
+    "teachers": "/hr/teachers",
     "attendance": "/hr/attendance"
   },
   "finance": {
@@ -82,9 +85,9 @@ const routes = {
     "fees": "/reception/fees",
     "homework": "/reception/homework",
     "report cards": "/reception/report-cards",
-    "student": "/reception/student",
-    "subject": "/reception/subject",
-    "teacher": "/reception/teacher",
+    "students": "/reception/students",
+    "subjects": "/reception/subjects",
+    "teachers": "/reception/teachers",
     "timetable": "/reception/timetable",
     "transport": "/reception/transport",
     "complaints": "/reception/complaints"

@@ -18,7 +18,6 @@ const presets = {
 export default function ThemeSettings(){
   const { user } = useAuth()
   const { palette, setPalette } = useTheme()
-  const [mode, setMode] = useState('preset')
   const [presetName, setPresetName] = useState('Ocean')
   const [custom, setCustom] = useState({ primary:'', secondary:'', textLight:'', textDark:'', cta:'' })
 
@@ -28,7 +27,7 @@ export default function ThemeSettings(){
     }
   },[palette])
 
-  if(!user || user.role !== 'admin'){
+  if(!user || user.role !== 'Admin'){
     return <div className="card">Only admin can change theme.</div>
   }
 

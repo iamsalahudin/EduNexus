@@ -3,14 +3,12 @@ import { useEffect, useState } from 'react'
 import FilterForm from '@/components/fees/FilterForm'
 import FeesTable from '@/components/fees/FeesTable'
 import { fetchFeeDefaulters } from '@/services/feesService'
-import SubHeader from '@/components/layout/SubHeader'
 
 export default function FeeDefaulters(){
   const [filters, setFilters] = useState({})
   const [masterRows, setMasterRows] = useState([])
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
-  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Defaulters', link: '/admin/fees/defaulters'}]
 
   async function loadAll(){
     setLoading(true)
@@ -56,7 +54,6 @@ export default function FeeDefaulters(){
 
   return (
     <div>
-      <SubHeader breadcrumb={breadcrumb} />
       <h1 className="text-2xl font-semibold">Fee Defaulters</h1>
       <FilterForm initial={{}} monthAsNumber={true} yearMax={new Date().getFullYear()} onApply={(f)=>{ setFilters(f) }} />
       {loading ? <div className="mt-4">Loading...</div> : <FeesTable columns={columns} data={rows} />}

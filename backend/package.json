@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seedAdmin.js",
+    "seed:demo": "node src/scripts/seedDemoData.js",
     "lint": "eslint . --ext .js",
     "test": "echo \"No tests yet\" && exit 0"
   },
@@ -14,8 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.13.2",
-    "bull": "^4.12.4",
     "bcryptjs": "^2.4.3",
+    "bull": "^4.16.5",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -28,8 +29,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.0",
     "morgan": "^1.10.0",
-    "socket.io": "^4.6.1",
-    "redis": "^4.6.12"
+    "redis": "^4.6.12",
+    "socket.io": "^4.6.1"
   },
   "devDependencies": {
     "eslint": "^8.0.0",

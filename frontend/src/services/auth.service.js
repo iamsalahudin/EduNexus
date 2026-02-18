@@ -43,7 +43,24 @@ export const authService = {
   me: async () => {
     const { data } = await api.get('/auth/me')
     return data
+  },
+
+  changePassword: async (payload) => {
+    const { data } = await api.post('/auth/change-password', payload)
+    return data
   }
+}
+
+// Named exports used by the auth reset flow pages
+// (Backend routes may be implemented separately.)
+export const verifyOtpApi = async (payload) => {
+  const { data } = await api.post('/auth/verify-otp', payload)
+  return data
+}
+
+export const resetPasswordApi = async (payload) => {
+  const { data } = await api.post('/auth/reset-password', payload)
+  return data
 }
 
 export default authService

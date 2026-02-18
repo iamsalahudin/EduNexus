@@ -1,6 +1,15 @@
-export default function ConversationList({ conversations = [], currentId, onSelect }) {
+export default function ConversationList({
+  conversations = [],
+  currentId,
+  onSelect,
+  variant = 'desktop',
+  widthClass = 'w-64',
+  className = '',
+}) {
+  const visibility = variant === 'drawer' ? 'block' : 'hidden md:block'
+
   return (
-    <aside className="hidden md:block w-64 border-r bg-gray-50 overflow-auto">
+    <aside className={`${visibility} ${widthClass} border-r bg-gray-50 overflow-auto ${className}`}>
       <div className="p-3 font-medium">Chats</div>
       <div className="p-3 space-y-2">
         {conversations.length === 0 && (
