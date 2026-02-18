@@ -1,6 +1,7 @@
 require('../src/config');
 
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -11,11 +12,20 @@ const { connectDB } = require('./config/db');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
 const logger = require('./utils/logger');
+const { setupSocket } = require('./utils/socket');
+const { initializeFirebase } = require('./utils/fcm');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+// Configure CORS to allow credentials from the frontend origin
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -39,6 +49,8 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
+
+// ROUTES
 app.use('/api', routes);
 
 app.use(errorHandler);
@@ -47,8 +59,17 @@ const PORT = process.env.PORT || 4000;
 
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    
+    // Setup Socket.io for real-time messaging
+    const io = setupSocket(server);
+    
+    // Initialize Firebase for push notifications
+    initializeFirebase();
+    
+    server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
+      logger.info('Socket.io ready for real-time messaging');
     });
   })
   .catch((err) => {

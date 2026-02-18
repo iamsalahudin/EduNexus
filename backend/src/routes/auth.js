@@ -3,13 +3,19 @@ const router = express.Router();
 
 const authController = require('../controllers/authController');
 const { requireAuth } = require('../middlewares/auth');
-const { validate } = require('../middlewares/validate');
-const { registerSchema, loginSchema, refreshSchema, logoutSchema } = require('../validators/auth');
+const validate = require('../middlewares/validate');
+const { registerSchema, loginSchema, refreshSchema, logoutSchema, changePasswordSchema } = require('../validators/auth');
 
 // Register: restricted to authenticated admin by default. Bootstrapping handled via seed script.
 router.post('/register', requireAuth, validate(registerSchema), authController.register);
 router.post('/login', validate(loginSchema), authController.login);
 router.post('/refresh', validate(refreshSchema), authController.refresh);
 router.post('/logout', validate(logoutSchema), authController.logout);
+router.post('/change-password', requireAuth, validate(changePasswordSchema), authController.changePassword);
+
+// Return current user from access token
+router.get('/me', requireAuth, (req, res) => {
+	res.json({ user: req.user });
+});
 
 module.exports = router;

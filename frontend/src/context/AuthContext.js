@@ -1,43 +1,114 @@
 "use client"
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { authService } from '@/services/auth.service'
 
 const AuthContext = createContext()
 
 export function AuthProvider({ children }){
-  const [user, setUser] = useState(() => {
-    // Mocked user for demo; in real app read from cookie or fetch
-    return { name: 'Admin User', role: 'admin' }
-  })
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  async function login({ email, password }){
-    // mock auth; replace with real API call
-    if(email && password){
-      const lower = (email||'').toLowerCase()
-      let role = 'admin'
-      if(lower.includes('principal')) role = 'principal'
-      else if(lower.includes('teacher')) role = 'teacher'
-      else if(lower.includes('student')) role = 'student'
-      else if(lower.includes('parent')) role = 'parent'
-      else if(lower.includes('hr')) role = 'hr'
-      else if(lower.includes('finance')) role = 'finance'
-      else if(lower.includes('reception')) role = 'reception'
-      setUser({ name: (role+' User'), role })
-      return { token: 'mock-jwt' }
+  /**
+   * Initialize auth on mount: check if user has valid token
+   */
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const token = localStorage.getItem('accessToken')
+        if (token) {
+          // Token exists, fetch current user
+          const userData = await authService.me()
+          setUser(userData.user)
+        }
+      } catch (err) {
+        // Token invalid or expired, clear it
+        localStorage.removeItem('accessToken')
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
-    throw new Error('Invalid')
+
+    initAuth()
+  }, [])
+
+  /**
+   * Login: Send credentials to backend, get JWT token
+   */
+  async function login({ email, password }){
+    try {
+      setError(null)
+      setLoading(true)
+      const response = await authService.login({ email, password })
+      
+      // Store token
+      localStorage.setItem('accessToken', response.accessToken)
+      
+      // Fetch and set user data
+      const meData = await authService.me()
+      setUser(meData.user)
+      
+      return { success: true, user: meData.user }
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed'
+      setError(message)
+      setUser(null)
+      throw new Error(message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  function logout(){
-    setUser(null)
+  /**
+   * Logout: Clear token and user data
+   */
+  async function logout(){
+    try {
+      setLoading(true)
+      await authService.logout()
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      localStorage.removeItem('accessToken')
+      setUser(null)
+      setLoading(false)
+    }
+  }
+
+  /**
+   * Refresh token (useful for maintaining session)
+   */
+  async function refresh(){
+    try {
+      const response = await authService.refresh()
+      localStorage.setItem('accessToken', response.accessToken)
+      return response
+    } catch (err) {
+      logout()
+      throw err
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      error,
+      login, 
+      logout,
+      refresh,
+      isAuthenticated: !!user
+    }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
 export function useAuth(){
-  return useContext(AuthContext)
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
 }
