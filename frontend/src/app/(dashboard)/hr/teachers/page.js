@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Select, Skeleton, ToggleBox } from '@/components/ui'
 import hrTeachersService from '@/services/hrTeachersService'
 import classesService from '@/services/classesService'
 
@@ -146,28 +146,34 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Teachers</h1>
-      <p className="text-sm text-gray-600 mt-1">HR teacher management (teachers only).</p>
+      <PageHeader title="Teachers" subtitle="HR teacher management (teachers only)." />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h2 className="font-medium">Create Teacher</h2>
           <form className="mt-4 space-y-3" onSubmit={createTeacher}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input className="input" placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-              <input className="input" placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-              <input className="input" placeholder="Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-              <select className="input" value={newClass} onChange={(e) => setNewClass(e.target.value)}>
+              <Input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+              <Input placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
+              <Input
+                placeholder="Password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+              <Select value={newClass} onChange={(e) => setNewClass(e.target.value)}>
                 <option value="">Class (optional)</option>
                 {classes.map((c) => (
-                  <option key={c._id} value={c.name}>{c.name}</option>
+                  <option key={c._id} value={c.name}>
+                    {c.name}
+                  </option>
                 ))}
-              </select>
-              <select
-                className="input"
+              </Select>
+              <Select
                 value={newSection}
                 onChange={(e) => setNewSection(e.target.value)}
                 disabled={!newClass || newSections.length === 0}
@@ -176,26 +182,30 @@ export default function Page() {
                   {!newClass ? 'Select class first' : newSections.length === 0 ? 'No sections' : 'Section (optional)'}
                 </option>
                 {newSections.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
-              </select>
+              </Select>
             </div>
-            <button className="btn-primary" type="submit">Create</button>
+            <Button variant="primary" type="submit">
+              Create
+            </Button>
           </form>
-        </div>
+        </Card>
 
-        <div className="card">
+        <Card>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-medium">Teacher Master</h2>
               <p className="text-sm text-gray-600 mt-1">Search and edit teachers.</p>
             </div>
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Refresh</button>
+            <Button onClick={load}>Refresh</Button>
           </div>
 
           <div className="mt-4 flex gap-2">
-            <input className="input" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Search</button>
+            <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Button onClick={load}>Search</Button>
           </div>
 
           {loading ? (
@@ -222,7 +232,9 @@ export default function Page() {
                       <td className="py-2 pr-3 whitespace-nowrap">{t.profile?.section || ''}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">{String(t.active ?? true)}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">
-                        <button className="px-3 py-1 border rounded hover-theme-primary" onClick={() => startEdit(t)}>Edit</button>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
+                          Edit
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -237,16 +249,17 @@ export default function Page() {
               <h3 className="font-medium">Edit Teacher</h3>
               <form className="mt-3 space-y-3" onSubmit={saveEdit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input className="input" placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-                  <input className="input" placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />
-                  <select className="input" value={editClass} onChange={(e) => setEditClass(e.target.value)}>
+                  <Input placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                  <Input placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />
+                  <Select value={editClass} onChange={(e) => setEditClass(e.target.value)}>
                     <option value="">Class (optional)</option>
                     {classes.map((c) => (
-                      <option key={c._id} value={c.name}>{c.name}</option>
+                      <option key={c._id} value={c.name}>
+                        {c.name}
+                      </option>
                     ))}
-                  </select>
-                  <select
-                    className="input"
+                  </Select>
+                  <Select
                     value={editSection}
                     onChange={(e) => setEditSection(e.target.value)}
                     disabled={!editClass || editSections.length === 0}
@@ -255,23 +268,29 @@ export default function Page() {
                       {!editClass ? 'Select class first' : editSections.length === 0 ? 'No sections' : 'Section (optional)'}
                     </option>
                     {editSections.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={editActive} onChange={(e) => setEditActive(e.target.checked)} />
-                  Active
-                </label>
+                <div className="flex items-center gap-2 text-sm">
+                  <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>Active</ToggleBox>
+                </div>
                 <div className="flex gap-2">
-                  <button className="btn-primary" type="submit">Save</button>
-                  <button type="button" className="px-3 py-2 border rounded hover-theme-primary" onClick={() => setSelected(null)}>Cancel</button>
+                  <Button variant="primary" type="submit">
+                    Save
+                  </Button>
+                  <Button type="button" onClick={() => setSelected(null)}>
+                    Cancel
+                  </Button>
                 </div>
               </form>
             </div>
           ) : null}
-        </div>
+        </Card>
       </div>
     </div>
   )
 }
+

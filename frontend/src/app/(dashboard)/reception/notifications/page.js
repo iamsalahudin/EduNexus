@@ -1,12 +1,6 @@
-export default function Page() {
+import NotificationsCenter from '@/components/notifications/NotificationsCenter'
 
-  return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Notifications</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
-  )
+export default function Page() {
+  return <NotificationsCenter heading="Notifications" subheading="Reception inbox and requests." />
 }
+

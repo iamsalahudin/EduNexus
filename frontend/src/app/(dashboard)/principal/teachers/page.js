@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
 import directoryService from '@/services/directoryService'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Skeleton } from '@/components/ui'
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
@@ -30,23 +30,22 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Teachers</h1>
-      <p className="text-sm text-gray-600 mt-1">View teacher accounts and assignments.</p>
+      <PageHeader title="Teachers" subtitle="View teacher accounts and assignments." />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
 
-      <div className="card mt-6">
+      <Card className="mt-6">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-medium">Teacher List</h2>
             <p className="text-sm text-gray-600 mt-1">Read-only view.</p>
           </div>
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Refresh</button>
+          <Button onClick={load}>Refresh</Button>
         </div>
 
         <div className="mt-4 flex gap-2">
-          <input className="input" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Search</button>
+          <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Button onClick={load}>Search</Button>
         </div>
 
         {loading ? (
@@ -76,8 +75,9 @@ export default function Page() {
             {teachers.length === 0 ? <div className="text-sm text-gray-600 mt-3">No teachers found.</div> : null}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
+
 

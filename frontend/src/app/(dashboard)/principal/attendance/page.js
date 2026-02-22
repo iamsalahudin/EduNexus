@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { ButtonLink, PageHeader, StatCard } from '@/components/ui'
 import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
 
 export default function Page() {
@@ -35,21 +35,21 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">View attendance summaries and details.</p>
+      <PageHeader title="Attendance" subtitle="View attendance summaries and details." />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">Student Summary (rows)<br/>{loading ? '...' : studentCount}</div>
-        <div className="card">Staff Total<br/>{loading ? '...' : (staffSummary?.total ?? 0)}</div>
-        <div className="card">Staff Present<br/>{loading ? '...' : (staffSummary?.present ?? 0)}</div>
-        <div className="card">Staff Absent<br/>{loading ? '...' : (staffSummary?.absent ?? 0)}</div>
+        <StatCard label="Student Summary (rows)" value={loading ? '...' : studentCount} />
+        <StatCard label="Staff Total" value={loading ? '...' : (staffSummary?.total ?? 0)} />
+        <StatCard label="Staff Present" value={loading ? '...' : (staffSummary?.present ?? 0)} />
+        <StatCard label="Staff Absent" value={loading ? '...' : (staffSummary?.absent ?? 0)} />
       </div>
 
       <div className="mt-6 flex gap-3">
-        <Link href="/principal/attendance/students" className="px-3 py-2 border rounded hover-theme-primary">Student Attendance</Link>
-        <Link href="/principal/attendance/staff" className="px-3 py-2 border rounded hover-theme-primary">Staff Attendance</Link>
+        <ButtonLink href="/principal/attendance/students" variant="secondary">Student Attendance</ButtonLink>
+        <ButtonLink href="/principal/attendance/staff" variant="secondary">Staff Attendance</ButtonLink>
       </div>
     </div>
   )
 }
+
 

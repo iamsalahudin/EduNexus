@@ -2,6 +2,7 @@
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Button, Card, Input, PageHeader } from '@/components/ui'
 
 const BankSchema = z.object({ bankName: z.string().min(1), account: z.string().min(1) })
 const VoucherSchema = z.object({
@@ -24,40 +25,67 @@ export default function FeeVoucher(){
     alert('Saved (mock)')
   }
 
+  const { ref: schoolNameRef, ...schoolNameReg } = register('schoolName')
+  const { ref: schoolAddressRef, ...schoolAddressReg } = register('schoolAddress')
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Fee Voucher</h1>
+      <PageHeader title="Fee Voucher" />
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">School Info</h3>
-          <input {...register('schoolName')} placeholder="School Name" className="w-full border rounded px-2 py-1 mt-2" />
+          <Input
+            {...schoolNameReg}
+            ref={schoolNameRef}
+            placeholder="School Name"
+            className="mt-2"
+          />
           {errors.schoolName && <div className="text-red-500 text-sm">{errors.schoolName.message}</div>}
-          <input {...register('schoolAddress')} placeholder="School Address" className="w-full border rounded px-2 py-1 mt-2" />
+          <Input
+            {...schoolAddressReg}
+            ref={schoolAddressRef}
+            placeholder="School Address"
+            className="mt-2"
+          />
           {errors.schoolAddress && <div className="text-red-500 text-sm">{errors.schoolAddress.message}</div>}
-        </div>
+        </Card>
 
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Bank Accounts</h3>
           <div className="mt-2 space-y-2">
             {fields.map((f,i)=> (
               <div key={f.id} className="flex gap-2">
-                <input {...register(`banks.${i}.bankName`)} placeholder="Bank Name" className="flex-1 border rounded px-2 py-1" />
-                <input {...register(`banks.${i}.account`)} placeholder="Account" className="flex-1 border rounded px-2 py-1" />
-                <button type="button" onClick={()=>remove(i)} className="px-2 py-1 border rounded">Remove</button>
+                {(() => {
+                  const { ref: bankNameRef, ...bankNameReg } = register(`banks.${i}.bankName`)
+                  const { ref: accountRef, ...accountReg } = register(`banks.${i}.account`)
+                  return (
+                    <>
+                      <Input {...bankNameReg} ref={bankNameRef} placeholder="Bank Name" className="flex-1" />
+                      <Input {...accountReg} ref={accountRef} placeholder="Account" className="flex-1" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => remove(i)}>
+                        Remove
+                      </Button>
+                    </>
+                  )
+                })()}
               </div>
             ))}
-            <button type="button" onClick={()=>append({ bankName:'', account:'' })} className="mt-2 px-3 py-1 border rounded">Add Another Bank</button>
+            <div>
+              <Button type="button" variant="secondary" onClick={() => append({ bankName:'', account:'' })}>
+                Add Another Bank
+              </Button>
+            </div>
           </div>
-        </div>
+        </Card>
 
         <div className="md:col-span-2">
-          <div className="mt-4 card">
+          <Card className="mt-4">
             <h3 className="font-medium">Voucher Preview</h3>
             <div className="mt-3 p-4 border rounded">Voucher preview area (design editor placeholder)</div>
-          </div>
+          </Card>
 
           <div className="mt-3 flex gap-2">
-            <button type="submit" className="px-4 py-2 btn-primary rounded">Save Voucher</button>
+            <Button type="submit" variant="primary">Save Voucher</Button>
           </div>
         </div>
       </form>

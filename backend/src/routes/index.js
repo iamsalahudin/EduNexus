@@ -26,6 +26,9 @@ router.use('/students', require('./students'));
 // Classes/Grades management (Admin)
 router.use('/classes', require('./classes'));
 
+// Subjects management (read for all roles, write Admin-only)
+router.use('/subjects', require('./subjects'));
+
 // HR teacher management (teacher-only)
 router.use('/hr/teachers', require('./hrTeachers'));
 
@@ -47,8 +50,11 @@ router.use('/complaints', require('./complaints'));
 // Real-time messaging
 router.use('/messages', require('./messaging'));
 
-// FCM push notifications
-router.use('/notifications', require('./fcm'));
+// FCM push token management
+router.use('/fcm', require('./fcm'));
+
+// In-app notifications + requests
+router.use('/notifications', require('./notifications'));
 
 // AI Chat agent
 router.use('/chat', require('./chat'));

@@ -25,6 +25,7 @@ const routes = {
     "fees": "/principal/fees",
     "homework": "/principal/homework",
     "report cards": "/principal/report-cards",
+    "subjects": "/principal/subjects",
     "students": "/principal/students",
     "teachers": "/principal/teachers",
     "timetable": "/principal/timetable",
@@ -38,6 +39,7 @@ const routes = {
     "attendance": "/teacher/attendance",
     "student attendance": "/teacher/student-attendance",
     "homework": "/teacher/homework",
+    "notifications": "/teacher/notifications",
     "report-cards": "/teacher/report-cards",
     "timetable": "/teacher/timetable",
     "overview": "/teacher/"
@@ -51,6 +53,7 @@ const routes = {
     "fee": "/parent/fee",
     "transport": "/parent/transport",
     "complaints": "/parent/complaints"
+    ,"notifications": "/parent/notifications"
   },
   "student": {
     "overview": "/student/",
@@ -61,13 +64,15 @@ const routes = {
     "fee": "/student/fee",
     "complaints": "/student/complaints",
     "transport": "/student/transport"
+    ,"notifications": "/student/notifications"
   },
   "hr": {
     "overview": "/hr/",
     "salary": "/hr/salary",
     "employee": "/hr/employee",
     "teachers": "/hr/teachers",
-    "attendance": "/hr/attendance"
+    "attendance": "/hr/attendance",
+    "notifications": "/hr/notifications"
   },
   "finance": {
     "overview": "/finance/",
@@ -75,7 +80,8 @@ const routes = {
     "salary": "/finance/salary",
     "expenses": "/finance/expenses",
     "reports": "/finance/reports",
-    "transport": "/finance/transport"
+    "transport": "/finance/transport",
+    "notifications": "/finance/notifications"
   },
   "reception": {
     "overview": "/reception/",
@@ -91,6 +97,7 @@ const routes = {
     "timetable": "/reception/timetable",
     "transport": "/reception/transport",
     "complaints": "/reception/complaints"
+    ,"notifications": "/reception/notifications"
   }
 }
 

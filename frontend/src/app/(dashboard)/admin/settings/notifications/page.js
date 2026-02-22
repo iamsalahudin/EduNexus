@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import ToggleBox from '@/components/ui/ToggleBox'
 
 export default function NotificationSettings() {
   const [prefs, setPrefs] = useState({
@@ -30,20 +31,11 @@ export default function NotificationSettings() {
       </div>
 
       <div className="card space-y-3 max-w-xl">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={prefs.push} onChange={(e) => setPrefs((p) => ({ ...p, push: e.target.checked }))} />
-          Push notifications
-        </label>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={prefs.email} onChange={(e) => setPrefs((p) => ({ ...p, email: e.target.checked }))} />
-          Email notifications
-        </label>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={prefs.sms} onChange={(e) => setPrefs((p) => ({ ...p, sms: e.target.checked }))} />
-          SMS notifications
-        </label>
+        <div className="flex flex-wrap gap-2">
+          <ToggleBox active={prefs.push} onToggle={(next) => setPrefs((p) => ({ ...p, push: next }))}>Push notifications</ToggleBox>
+          <ToggleBox active={prefs.email} onToggle={(next) => setPrefs((p) => ({ ...p, email: next }))}>Email notifications</ToggleBox>
+          <ToggleBox active={prefs.sms} onToggle={(next) => setPrefs((p) => ({ ...p, sms: next }))}>SMS notifications</ToggleBox>
+        </div>
       </div>
     </div>
   )

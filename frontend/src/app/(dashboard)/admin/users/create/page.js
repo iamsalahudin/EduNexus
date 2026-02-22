@@ -1,8 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { userService } from '@/services/user.service'
+import { Button, Card, Input, PageHeader, Select } from '@/components/ui'
 
 const ROLE_OPTIONS = ['Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception']
 
@@ -38,71 +39,59 @@ export default function NewUser() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Create New User</h1>
-        <p className="text-sm text-gray-600 mt-1">Creates a new account via backend registration.</p>
-      </div>
+      <PageHeader title="Create New User" subtitle="Creates a new account via backend registration." />
 
-      <form onSubmit={handleSubmit} className="card space-y-4 max-w-2xl">
-        <div>
-          <label className="block text-sm mb-1">Name</label>
-          <input
+      <Card>
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
+          <Input
+            label="Name"
             value={form.name}
             onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
             required
-            className="w-full"
           />
-        </div>
 
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input
+          <Input
+            label="Email"
             type="email"
             value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
             required
-            className="w-full"
           />
-        </div>
 
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input
+          <Input
+            label="Password"
             type="password"
             value={form.password}
             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
             required
             minLength={6}
-            className="w-full"
           />
-        </div>
 
-        <div>
-          <label className="block text-sm mb-1">Role</label>
-          <select
+          <Select
+            label="Role"
             value={form.role}
             onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-            className="w-full"
           >
             {ROLE_OPTIONS.map((r) => (
               <option key={r} value={r}>
                 {r}
               </option>
             ))}
-          </select>
-        </div>
+          </Select>
 
-        {error ? <div className="text-red-500 text-sm">{error}</div> : null}
+          {error ? <div className="text-red-500 text-sm">{error}</div> : null}
 
-        <div className="flex gap-2">
-          <button type="button" className="px-3 py-2 border rounded hover-theme-primary" onClick={() => router.push('/admin/users')} disabled={loading}>
-            Cancel
-          </button>
-          <button type="submit" className="px-3 py-2 btn-primary rounded" disabled={loading}>
-            {loading ? 'Creating...' : 'Create'}
-          </button>
-        </div>
-      </form>
+          <div className="flex gap-2">
+            <Button type="button" onClick={() => router.push('/admin/users')} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" disabled={loading}>
+              {loading ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   )
 }
+

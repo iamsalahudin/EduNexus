@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
 
 function toInputDate(d) {
@@ -91,42 +90,29 @@ export default function AdminStudentAttendancePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Student Attendance</h1>
-          <p className="text-sm text-gray-600 mt-1">Admin marking and overview by class.</p>
-        </div>
-        <Link href="/admin/attendance" className="px-3 py-2 border rounded hover-theme-primary">Back</Link>
-      </div>
+      <PageHeader
+        title="Student Attendance"
+        subtitle="Admin marking and overview by class."
+        right={<ButtonLink href="/admin/attendance" variant="secondary">Back</ButtonLink>}
+      />
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-medium">Date</label>
-            <input className="input mt-2" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Class</label>
-            <input className="input mt-2" value={classId} onChange={(e) => setClassId(e.target.value)} placeholder="e.g. 10" />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Section (optional)</label>
-            <input className="input mt-2" value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A" />
-          </div>
+          <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Input label="Class" value={classId} onChange={(e) => setClassId(e.target.value)} placeholder="e.g. 10" />
+          <Input label="Section (optional)" value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A" />
         </div>
 
         <div className="mt-4 flex gap-3">
-          <button className="btn-primary" onClick={onSave} disabled={loading || rows.length === 0}>
+          <Button variant="primary" onClick={onSave} disabled={loading || rows.length === 0}>
             {loading ? 'Saving...' : 'Save Attendance'}
-          </button>
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load} disabled={loading}>
-            Refresh
-          </button>
+          </Button>
+          <Button variant="secondary" onClick={load} disabled={loading}>Refresh</Button>
         </div>
         {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
-      </div>
+      </Card>
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <h3 className="font-medium">Roster</h3>
         <div className="mt-3 overflow-auto">
           {loading && rows.length === 0 ? (
@@ -148,11 +134,11 @@ export default function AdminStudentAttendancePage() {
                     <td className="py-2 pr-3">{r.student.firstName} {r.student.lastName}</td>
                     <td className="py-2 pr-3">{r.student.studentId}</td>
                     <td className="py-2 pr-3">
-                      <select className="input" value={r.status} onChange={(e) => setStatus(r.student._id, e.target.value)}>
+                      <Select value={r.status} onChange={(e) => setStatus(r.student._id, e.target.value)}>
                         {STATUSES.map((s) => (
                           <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
-                      </select>
+                      </Select>
                     </td>
                   </tr>
                 ))}
@@ -160,7 +146,8 @@ export default function AdminStudentAttendancePage() {
             </table>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
+
