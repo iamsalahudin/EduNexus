@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { ButtonLink, Card, PageHeader, StatCard } from '@/components/ui'
 import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
 
 export default function Page() {
@@ -35,32 +35,32 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">Student attendance + your own attendance.</p>
+      <PageHeader title="Attendance" subtitle="Student attendance + your own attendance." />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">Student Summary (rows)<br/>{loading ? '...' : studentCount}</div>
-        <div className="card">My Total<br/>{loading ? '...' : (staffSummary?.total ?? 0)}</div>
-        <div className="card">My Present<br/>{loading ? '...' : (staffSummary?.present ?? 0)}</div>
-        <div className="card">My Absent<br/>{loading ? '...' : (staffSummary?.absent ?? 0)}</div>
+        <StatCard label="Student Summary (rows)" value={loading ? '...' : studentCount} />
+        <StatCard label="My Total" value={loading ? '...' : (staffSummary?.total ?? 0)} />
+        <StatCard label="My Present" value={loading ? '...' : (staffSummary?.present ?? 0)} />
+        <StatCard label="My Absent" value={loading ? '...' : (staffSummary?.absent ?? 0)} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Student Attendance</h3>
           <p className="text-sm text-gray-600 mt-1">Mark attendance for your class.</p>
           <div className="mt-4">
-            <Link href="/teacher/student-attendance" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/teacher/student-attendance" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
-        <div className="card">
+        </Card>
+        <Card>
           <h3 className="font-medium">My Attendance</h3>
           <p className="text-sm text-gray-600 mt-1">Mark your own staff attendance.</p>
           <div className="mt-4">
-            <Link href="/teacher/attendance/my" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/teacher/attendance/my" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )
 }
+

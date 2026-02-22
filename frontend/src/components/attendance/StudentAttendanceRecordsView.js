@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
 import Skeleton from '@/components/ui/Skeleton'
@@ -61,7 +61,7 @@ export default function StudentAttendanceRecordsView({ title = 'Student Attendan
             <input className="input mt-2" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
           </div>
           <div className="flex items-end">
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load} disabled={loading}>Refresh</button>
+            <button className="px-3 py-2 rounded btn-secondary" onClick={load} disabled={loading}>Refresh</button>
           </div>
         </div>
         {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
@@ -103,3 +103,4 @@ export default function StudentAttendanceRecordsView({ title = 'Student Attendan
     </div>
   )
 }
+

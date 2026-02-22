@@ -4,6 +4,8 @@
 
 :root {
   --color-primary: #066FD1;
+  /* Use this when you want a subtle/"dim" primary tint (like Tailwind's primary/10-20) */
+  --color-primary-muted: rgba(6, 111, 209, 0.18);
   --color-secondary: #2FB344;
   --color-text-light: #E5E7EB;
   --color-text-dark: #0a0c11;
@@ -17,7 +19,7 @@
   --card-bg-light: #ffffff;
   --card-bg-dark: #1F2937; /* slightly darker than page bg */
   --card-bg: var(--card-bg-light);
-  --card-shadow-light: 0 1px 3px rgba(2,6,23,0.06);
+  --card-shadow-light: 0 1px 2px rgba(2,6,23,0.06), 0 2px 6px rgba(2,6,23,0.08);
   --card-shadow-dark: 0 8px 24px rgba(2,6,23,0.6);
   --card-shadow: var(--card-shadow-light);
   /* nav hover */
@@ -28,15 +30,119 @@
 }
 
 /* Make the old Tailwind indigo primary follow the runtime primary color */
-.bg-indigo-600 { background-color: var(--color-primary) !important; color: #fff !important; }
 
-/* Button utilities that follow theme */
-.btn-primary { background-color: var(--color-primary); color: var(--color-text-light); }
-.btn-primary:hover { opacity: 0.95; }
-.btn-outline { border: 1px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+@layer base {
+  input, select, textarea {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--color-text);
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.375rem;
+  }
 
-/* hover utility that uses runtime theme color */
-.hover-theme-primary:hover { background-color: var(--color-primary) !important; color: var(--color-text-light) !important; }
+  /* Select dropdown option theming (best-effort; browser support varies) */
+  select option,
+  select optgroup {
+    background-color: var(--card-bg);
+    color: var(--color-text);
+  }
+
+  select option:hover,
+  select option:focus {
+    background-color: var(--color-primary-muted);
+    color: var(--color-text);
+  }
+
+  select option:checked,
+  select option[selected] {
+    background-color: var(--color-primary);
+    color: var(--color-text);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(14,165,164,0.08);
+  }
+
+  html, body, #__next {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+}
+
+@layer components {
+  /* Button utilities that follow theme */
+  .btn-primary { background-color: var(--color-primary); color: var(--color-text-light); }
+  .btn-primary:hover { opacity: 0.95; }
+  .btn-outline { border: 1px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+
+  /* Secondary button used widely across dashboards */
+  .btn-secondary { border: 1px solid var(--input-border); background: transparent; color: var(--color-text); }
+  .btn-secondary:hover { background-color: var(--color-primary) !important; color: var(--color-text-light) !important; }
+
+  .card {
+    background-color: var(--card-bg);
+    color: var(--color-text);
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    padding: 1rem;
+  }
+
+  /* nav-item hover that respects theme variables */
+  .nav-item {
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  .nav-item:hover {
+    background-color: var(--nav-hover-bg);
+    color: var(--nav-hover-text);
+  }
+}
+
+@layer utilities {
+  .bg-indigo-600 { background-color: var(--color-primary) !important; color: #fff !important; }
+
+  /* direct theme helpers (use these to quickly verify variables are working) */
+  .bg-theme-primary { background-color: var(--color-primary) !important; }
+  .text-theme-primary { color: var(--color-primary) !important; }
+  .border-theme-primary { border-color: var(--color-primary) !important; }
+
+  /* hover utility that uses runtime theme color */
+  .hover-theme-primary:hover { background-color: var(--color-primary) !important; color: var(--color-text-light) !important; }
+
+  /* utilities for dim/muted primary tint */
+  .bg-theme-primary-muted { background-color: var(--color-primary-muted) !important; }
+  .hover-theme-primary-muted:hover { background-color: var(--color-primary-muted) !important; }
+
+  /* Utility class used throughout pages/components */
+  .input { width: 100%; }
+
+  /* Ensure hard-coded light backgrounds respect dark theme by default */
+  .dark .bg-white {
+    background-color: var(--color-bg-dark) !important;
+  }
+  .dark .bg-gray-50 {
+    background-color: var(--color-bg-dark) !important;
+  }
+
+  /* make utility-bg elements inherit readable text color in dark */
+  .dark .bg-white, .dark .bg-gray-50 {
+    color: var(--color-text) !important;
+  }
+
+  /* hover utility overrides for Tailwind hover: classes */
+  .dark .hover\:bg-gray-50:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
+  .dark .hover\:bg-gray-100:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
+  .dark .hover\:bg-gray-200:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
+
+  /* gray utility overrides used by components (skeletons, subtle bg) */
+  .dark .bg-gray-200 { background-color: rgba(255,255,255,0.04) !important; }
+  .dark .bg-gray-100 { background-color: rgba(255,255,255,0.03) !important; }
+  .dark .bg-gray-50 { background-color: var(--color-bg-dark) !important; }
+}
 
 /* Inputs styling - light and dark aware */
 :root {
@@ -48,49 +154,10 @@
   --input-border: var(--input-border-light);
 }
 
+
 .dark {
   --input-bg: var(--input-bg-dark);
   --input-border: var(--input-border-dark);
-}
-
-input, select, textarea {
-  background-color: var(--input-bg);
-  border: 1px solid var(--input-border);
-  color: var(--color-text);
-  padding: 0.5rem 0.5rem;
-  border-radius: 0.375rem;
-}
-
-input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(14,165,164,0.08); }
-
-html, body, #__next {
-  height: 100%;
-}
-
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-}
-
-.card {
-  background-color: var(--card-bg);
-  color: var(--color-text);
-  border-radius: 0.5rem;
-  box-shadow: var(--card-shadow);
-  padding: 1rem;
-}
-
-/* Ensure hard-coded light backgrounds respect dark theme by default */
-.dark .bg-white {
-  background-color: var(--color-bg-dark) !important;
-}
-.dark .bg-gray-50 {
-  background-color: var(--color-bg-dark) !important;
-}
-
-/* make utility-bg elements inherit readable text color in dark */
-.dark .bg-white, .dark .bg-gray-50 {
-  color: var(--color-text) !important;
 }
 
 /* dark-mode runtime overrides */
@@ -101,21 +168,4 @@ body {
   --nav-hover-text: var(--color-text-light);
 }
 
-/* nav-item hover that respects theme variables */
-.nav-item {
-  transition: background-color 150ms ease, color 150ms ease;
-}
-.nav-item:hover {
-  background-color: var(--nav-hover-bg);
-  color: var(--nav-hover-text);
-}
-
-/* hover utility overrides for Tailwind hover: classes */
-.dark .hover\:bg-gray-50:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
-.dark .hover\:bg-gray-100:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
-.dark .hover\:bg-gray-200:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
-
-/* gray utility overrides used by components (skeletons, subtle bg) */
-.dark .bg-gray-200 { background-color: rgba(255,255,255,0.04) !important; }
-.dark .bg-gray-100 { background-color: rgba(255,255,255,0.03) !important; }
-.dark .bg-gray-50 { background-color: var(--color-bg-dark) !important; }
+ 

@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import studentsService from '@/services/studentsService'
 import userService from '@/services/user.service'
 import classesService from '@/services/classesService'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Select, Skeleton, ToggleBox } from '@/components/ui'
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
@@ -201,30 +201,30 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Students</h1>
-      <p className="text-sm text-gray-600 mt-1">Admissions and student master data.</p>
+      <PageHeader title="Students" subtitle="Admissions and student master data." />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h2 className="font-medium">Admission</h2>
           <p className="text-sm text-gray-600 mt-1">Create a student record and link an existing/new parent.</p>
 
           <form className="mt-4 space-y-3" onSubmit={submitAdmission}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input className="input" placeholder="Student ID" value={studentId} onChange={(e) => setStudentId(e.target.value)} required />
-              <select className="input" value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required>
+              <Input placeholder="Student ID" value={studentId} onChange={(e) => setStudentId(e.target.value)} required />
+              <Select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required>
                 <option value="">Select class</option>
                 {classes.map((c) => (
-                  <option key={c._id} value={c.name}>{c.name}</option>
+                  <option key={c._id} value={c.name}>
+                    {c.name}
+                  </option>
                 ))}
-              </select>
-              <input className="input" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-              <input className="input" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-              <select
-                className="input"
+              </Select>
+              <Input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <Input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <Select
                 value={studentSection}
                 onChange={(e) => setStudentSection(e.target.value)}
                 disabled={!studentClass || admissionSections.length === 0}
@@ -233,22 +233,38 @@ export default function Page() {
                   {!studentClass ? 'Select class first' : admissionSections.length === 0 ? 'No sections' : 'Section (optional)'}
                 </option>
                 {admissionSections.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
-              </select>
-              <input className="input" placeholder="Contact" value={contact} onChange={(e) => setContact(e.target.value)} />
+              </Select>
+              <Input placeholder="Contact" value={contact} onChange={(e) => setContact(e.target.value)} />
             </div>
-            <input className="input" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Input placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
 
             <div className="pt-2">
               <div className="text-sm font-medium">Parent</div>
               <div className="mt-2 flex gap-3 text-sm">
                 <label className="flex items-center gap-2">
-                  <input type="radio" name="parentMode" checked={parentMode === 'existing'} onChange={() => setParentMode('existing')} />
+                  <Input
+                    id="parent-mode-existing"
+                    type="radio"
+                    name="parentMode"
+                    checked={parentMode === 'existing'}
+                    onChange={() => setParentMode('existing')}
+                    inputClassName="h-4 w-4"
+                  />
                   Existing
                 </label>
                 <label className="flex items-center gap-2">
-                  <input type="radio" name="parentMode" checked={parentMode === 'new'} onChange={() => setParentMode('new')} />
+                  <Input
+                    id="parent-mode-new"
+                    type="radio"
+                    name="parentMode"
+                    checked={parentMode === 'new'}
+                    onChange={() => setParentMode('new')}
+                    inputClassName="h-4 w-4"
+                  />
                   New
                 </label>
               </div>
@@ -256,69 +272,76 @@ export default function Page() {
               {parentMode === 'existing' ? (
                 <div className="mt-3">
                   <div className="flex gap-2">
-                    <input className="input" placeholder="Search parent by name, email, or phone" value={parentQuery} onChange={(e) => setParentQuery(e.target.value)} />
-                    <button type="button" className="px-3 py-2 border rounded hover-theme-primary" onClick={searchParents}>
+                    <Input
+                      className="flex-1"
+                      placeholder="Search parent by name, email, or phone"
+                      value={parentQuery}
+                      onChange={(e) => setParentQuery(e.target.value)}
+                    />
+                    <Button type="button" onClick={searchParents}>
                       Search
-                    </button>
+                    </Button>
                   </div>
-                  <select className="input mt-2" value={parentId} onChange={(e) => setParentId(e.target.value)} required>
+                  <Select className="mt-2" value={parentId} onChange={(e) => setParentId(e.target.value)} required>
                     <option value="">Select parent</option>
                     {parentResults.map((p) => (
                       <option key={p._id} value={p._id}>
                         {p.name} ({p.email})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               ) : (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input className="input" placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} required />
-                  <input className="input" placeholder="Parent email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} required />
-                  <input className="input" placeholder="Parent phone (optional)" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
+                  <Input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} required />
+                  <Input placeholder="Parent email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} required />
+                  <Input placeholder="Parent phone (optional)" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
                 </div>
               )}
             </div>
 
             <div className="pt-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={createLogin} onChange={(e) => setCreateLogin(e.target.checked)} />
-                Create Student Login
-              </label>
+              <div className="flex items-center gap-2 text-sm">
+                <ToggleBox active={createLogin} onToggle={(next) => setCreateLogin(next)}>Create Student Login</ToggleBox>
+              </div>
               {createLogin ? (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input className="input" placeholder="Student login email" value={studentLoginEmail} onChange={(e) => setStudentLoginEmail(e.target.value)} required />
-                  <input className="input" placeholder="Student login name (optional)" value={studentLoginName} onChange={(e) => setStudentLoginName(e.target.value)} />
+                  <Input placeholder="Student login email" value={studentLoginEmail} onChange={(e) => setStudentLoginEmail(e.target.value)} required />
+                  <Input placeholder="Student login name (optional)" value={studentLoginName} onChange={(e) => setStudentLoginName(e.target.value)} />
                 </div>
               ) : null}
             </div>
 
             <div className="pt-2">
-              <button className="btn-primary" type="submit">Submit Admission</button>
+              <Button variant="primary" type="submit">
+                Submit Admission
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
 
-        <div className="card">
+        <Card>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-medium">Student Master</h2>
               <p className="text-sm text-gray-600 mt-1">Search and view students.</p>
             </div>
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={loadStudents}>
+            <Button type="button" onClick={loadStudents}>
               Refresh
-            </button>
+            </Button>
           </div>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input className="input" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <select className="input" value={classId} onChange={(e) => setClassId(e.target.value)}>
+            <Input placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
               <option value="">All classes</option>
               {classes.map((c) => (
-                <option key={c._id} value={c.name}>{c.name}</option>
+                <option key={c._id} value={c.name}>
+                  {c.name}
+                </option>
               ))}
-            </select>
-            <select
-              className="input"
+            </Select>
+            <Select
               value={section}
               onChange={(e) => setSection(e.target.value)}
               disabled={!classId || filterSections.length === 0}
@@ -327,14 +350,16 @@ export default function Page() {
                 {!classId ? 'Select class first' : filterSections.length === 0 ? 'No sections' : 'All sections'}
               </option>
               {filterSections.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="mt-3">
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={loadStudents}>
+            <Button type="button" onClick={loadStudents}>
               Apply Filters
-            </button>
+            </Button>
           </div>
 
           {loading ? (
@@ -366,8 +391,9 @@ export default function Page() {
               {students.length === 0 ? <div className="text-sm text-gray-600 mt-3">No students found.</div> : null}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )
 }
+

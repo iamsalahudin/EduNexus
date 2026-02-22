@@ -5,6 +5,7 @@ import TimetableGrid from "@/components/timetable/TimetableGrid";
 import WeekSelector from "@/components/timetable/WeekSelector";
 import { mockTeachers, mockRooms } from "@/utils/mockData";
 import { mockTimetable } from "@/utils/mockTimetable";
+import { Button, PageHeader } from "@/components/ui";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -89,16 +90,18 @@ export default function EditTimetablePage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-semibold">Edit Timetable</h1>
+      <PageHeader title="Edit Timetable" />
 
       <WeekSelector value={weekConfig} onChange={handleWeekChange} />
 
       {weekConfig.mode === "different" && (
         <div className="flex gap-2">
           {DAYS.map((day) => (
-            <button
+            <Button
               key={day}
               onClick={() => setActiveDay(day)}
+              size="sm"
+              variant="outline"
               className={`px-3 py-1 rounded border ${
                 activeDay === day
                   ? "border-theme-primary bg-theme-primary/10"
@@ -106,7 +109,7 @@ export default function EditTimetablePage() {
               }`}
             >
               {day}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -117,12 +120,9 @@ export default function EditTimetablePage() {
           <div className="font-medium">{activeDay}</div>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={handleSave}
-            className="btn-primary px-4 py-2 rounded"
-          >
+          <Button variant="primary" onClick={handleSave}>
             Save Changes
-          </button>
+          </Button>
         </div>
       </div>
 

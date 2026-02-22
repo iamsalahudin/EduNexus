@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
+import { ButtonLink, Card, PageHeader, Skeleton, StatCard } from '@/components/ui'
 import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
 
 export default function AttendanceHome() {
@@ -36,50 +35,40 @@ export default function AttendanceHome() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">Student attendance and staff/teacher attendance.</p>
+      <PageHeader
+        title="Attendance"
+        subtitle="Student attendance and staff/teacher attendance."
+      />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">
-          <div className="text-sm text-gray-600">Student Summary (rows)</div>
-          <div className="text-2xl font-semibold mt-1">{loading ? '...' : studentCount}</div>
-        </div>
-        <div className="card">
-          <div className="text-sm text-gray-600">Staff Total</div>
-          <div className="text-2xl font-semibold mt-1">{loading ? '...' : (staffSummary?.total ?? 0)}</div>
-        </div>
-        <div className="card">
-          <div className="text-sm text-gray-600">Staff Present</div>
-          <div className="text-2xl font-semibold mt-1">{loading ? '...' : (staffSummary?.present ?? 0)}</div>
-        </div>
-        <div className="card">
-          <div className="text-sm text-gray-600">Staff Absent</div>
-          <div className="text-2xl font-semibold mt-1">{loading ? '...' : (staffSummary?.absent ?? 0)}</div>
-        </div>
+        <StatCard label="Student Summary (rows)" value={loading ? '...' : studentCount} />
+        <StatCard label="Staff Total" value={loading ? '...' : (staffSummary?.total ?? 0)} />
+        <StatCard label="Staff Present" value={loading ? '...' : (staffSummary?.present ?? 0)} />
+        <StatCard label="Staff Absent" value={loading ? '...' : (staffSummary?.absent ?? 0)} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Student Attendance</h3>
           <p className="text-sm text-gray-600 mt-1">View and mark student attendance (Admin has full access).</p>
           <div className="mt-4">
-            <Link href="/admin/attendance/students" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/admin/attendance/students" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
-        <div className="card">
+        </Card>
+        <Card>
           <h3 className="font-medium">Staff Attendance</h3>
           <p className="text-sm text-gray-600 mt-1">View staff/teacher attendance records.</p>
           <div className="mt-4">
-            <Link href="/admin/attendance/staff" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/admin/attendance/staff" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
-        <div className="card">
+        </Card>
+        <Card>
           <h3 className="font-medium">Attendance Setup</h3>
           <p className="text-sm text-gray-600 mt-1">Assign teacher class/section and link student logins to student records.</p>
           <div className="mt-4">
-            <Link href="/admin/attendance/setup" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/admin/attendance/setup" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
+        </Card>
       </div>
 
       {loading ? (
@@ -90,3 +79,4 @@ export default function AttendanceHome() {
     </div>
   )
 }
+

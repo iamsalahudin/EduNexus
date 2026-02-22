@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
 
@@ -118,45 +118,44 @@ export default function StudentAttendancePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Student Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">Mark and update attendance for your class.</p>
+      <PageHeader title="Student Attendance" subtitle="Mark and update attendance for your class." />
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium">Date</label>
-            <input className="input mt-2" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} inputClassName="mt-2" />
           </div>
           <div>
             <label className="text-sm font-medium">Class</label>
-            <input
-              className="input mt-2"
+            <Input
               value={classId}
               onChange={(e) => setClassId(e.target.value)}
               placeholder="e.g. 10"
               disabled={isClassLocked}
+              inputClassName="mt-2"
             />
             {isClassLocked ? <div className="text-xs text-gray-500 mt-1">Locked by your profile</div> : null}
           </div>
           <div>
             <label className="text-sm font-medium">Section (optional)</label>
-            <input
-              className="input mt-2"
+            <Input
               value={section}
               onChange={(e) => setSection(e.target.value)}
               placeholder="e.g. A"
               disabled={!!(user?.profile?.section || user?.profile?.assignedSection)}
+              inputClassName="mt-2"
             />
           </div>
         </div>
 
         <div className="mt-4 flex gap-3">
-          <button className="btn-primary" onClick={onSave} disabled={loading || rows.length === 0}>
+          <Button variant="primary" onClick={onSave} disabled={loading || rows.length === 0}>
             {loading ? 'Saving...' : 'Save Attendance'}
-          </button>
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load} disabled={loading}>
+          </Button>
+          <Button onClick={load} disabled={loading}>
             Refresh
-          </button>
+          </Button>
         </div>
 
         {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
@@ -165,9 +164,9 @@ export default function StudentAttendancePage() {
             Some students were skipped: {invalid.map((x) => x.studentId).join(', ')}
           </div>
         ) : null}
-      </div>
+      </Card>
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <h3 className="font-medium">Roster</h3>
         <div className="mt-3 overflow-auto">
           {loading && rows.length === 0 ? (
@@ -191,17 +190,13 @@ export default function StudentAttendancePage() {
                     </td>
                     <td className="py-2 pr-3">{r.student.studentId}</td>
                     <td className="py-2 pr-3">
-                      <select
-                        className="input"
-                        value={r.status}
-                        onChange={(e) => setStatus(r.student._id, e.target.value)}
-                      >
+                      <Select value={r.status} onChange={(e) => setStatus(r.student._id, e.target.value)}>
                         {STATUSES.map((s) => (
                           <option key={s.value} value={s.value}>
                             {s.label}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </td>
                   </tr>
                 ))}
@@ -209,7 +204,8 @@ export default function StudentAttendancePage() {
             </table>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
+

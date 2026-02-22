@@ -13,7 +13,8 @@
 const mongoose = require('mongoose');
 const config = require('../config');
 
-const { User, Student, Attendance, StaffAttendance } = require('../models');
+const { User, Student, Attendance, StaffAttendance, SchoolClass } = require('../models');
+const { ensureDefaultSubjectsForClass } = require('../controllers/subjectsController');
 
 const FALLBACK_URI = 'mongodb+srv://hussain:aws%401317@cluster0.nuopsgu.mongodb.net/edu';
 
@@ -84,6 +85,30 @@ async function upsertStaffAttendance({ user, markedBy, date, status }) {
   );
 }
 
+async function ensureSchoolClass({ name, sections }) {
+  const clsName = String(name || '').trim();
+  if (!clsName) return null;
+
+  const existing = await SchoolClass.findOne({ name: clsName });
+  if (existing) {
+    if (Array.isArray(sections)) {
+      const merged = new Map();
+      for (const s of (existing.sections || [])) merged.set(String(s || '').trim().toLowerCase(), String(s || '').trim());
+      for (const s of sections) merged.set(String(s || '').trim().toLowerCase(), String(s || '').trim());
+      existing.sections = Array.from(merged.values()).filter(Boolean);
+      await existing.save();
+    }
+    return existing;
+  }
+
+  const created = await SchoolClass.create({
+    name: clsName,
+    sections: Array.isArray(sections) ? sections.map((s) => String(s || '').trim()).filter(Boolean) : ['Boys', 'Girls'],
+    active: true
+  });
+  return created;
+}
+
 async function seedDemo() {
   const uri = config.mongoUri || FALLBACK_URI;
   if (!uri) {
@@ -105,6 +130,16 @@ async function seedDemo() {
     profile: { class: '10', section: 'A' }
   })).user;
   const studentLogin = (await ensureUser({ name: 'Student', role: 'Student', email: 'student@edu.com', password: 'student@123' })).user;
+
+  // Ensure demo class exists in master data (needed for Subjects + dropdowns)
+  await ensureSchoolClass({ name: '10', sections: ['A'] });
+
+  // Ensure default subjects exist for demo class (best-effort)
+  try {
+    await ensureDefaultSubjectsForClass('10');
+  } catch (e) {
+    // ignore
+  }
 
   // Create a small class roster
   const roster = [];

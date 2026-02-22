@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { useRef } from 'react'
+import { Button, Input } from '@/components/ui'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -57,33 +57,107 @@ export default function LoginPage() {
       </div>
 
       <div className="hidden sm:grid grid-cols-4 gap-2">
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='admin@edu.com'; if(passRef.current) passRef.current.value='admin@123' }} className="px-2 py-1.5 border rounded text-xs">Admin</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='principal@edu.com'; if(passRef.current) passRef.current.value='principal@123' }} className="px-2 py-1.5 border rounded text-xs">Principal</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='teacher@edu.com'; if(passRef.current) passRef.current.value='teacher@123' }} className="px-2 py-1.5 border rounded text-xs">Teacher</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='student@edu.com'; if(passRef.current) passRef.current.value='student@123' }} className="px-2 py-1.5 border rounded text-xs">Student</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='parent@edu.com'; if(passRef.current) passRef.current.value='parent@123' }} className="px-2 py-1.5 border rounded text-xs">Parent</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='hr@edu.com'; if(passRef.current) passRef.current.value='hr@123' }} className="px-2 py-1.5 border rounded text-xs">HR</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='finance@edu.com'; if(passRef.current) passRef.current.value='finance@123' }} className="px-2 py-1.5 border rounded text-xs">Finance</button>
-        <button type="button" onClick={()=>{ if(emailRef.current) emailRef.current.value='reception@edu.com'; if(passRef.current) passRef.current.value='reception@123' }} className="px-2 py-1.5 border rounded text-xs">Reception</button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'admin@edu.com'
+            if (passRef.current) passRef.current.value = 'admin@123'
+          }}
+        >
+          Admin
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'principal@edu.com'
+            if (passRef.current) passRef.current.value = 'principal@123'
+          }}
+        >
+          Principal
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'teacher@edu.com'
+            if (passRef.current) passRef.current.value = 'teacher@123'
+          }}
+        >
+          Teacher
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'student@edu.com'
+            if (passRef.current) passRef.current.value = 'student@123'
+          }}
+        >
+          Student
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'parent@edu.com'
+            if (passRef.current) passRef.current.value = 'parent@123'
+          }}
+        >
+          Parent
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'hr@edu.com'
+            if (passRef.current) passRef.current.value = 'hr@123'
+          }}
+        >
+          HR
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'finance@edu.com'
+            if (passRef.current) passRef.current.value = 'finance@123'
+          }}
+        >
+          Finance
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (emailRef.current) emailRef.current.value = 'reception@edu.com'
+            if (passRef.current) passRef.current.value = 'reception@123'
+          }}
+        >
+          Reception
+        </Button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input ref={emailRef} name="email" type="email" required className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input ref={passRef} name="password" type="password" required className="w-full border rounded px-3 py-2" />
-        </div>
+        <Input ref={emailRef} name="email" type="email" label="Email" required />
+        <Input ref={passRef} name="password" type="password" label="Password" required />
         {error && (
           <div className="text-sm text-red-700 bg-red-50 dark:bg-transparent dark:text-red-400 p-2 rounded">
             {error}
           </div>
         )}
-        <button className="w-full py-2 btn-primary rounded" disabled={loading}>
+        <Button className="w-full" variant="primary" disabled={loading} type="submit">
           {loading ? 'Signing in...' : 'Sign in'}
-        </button>
+        </Button>
       </form>
     </div>
   )
