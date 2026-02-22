@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
+import { Button, Card, Input, PageHeader } from '@/components/ui'
 
 const presets = {
   Ocean: {
@@ -28,7 +29,7 @@ export default function ThemeSettings(){
   },[palette])
 
   if(!user || user.role !== 'Admin'){
-    return <div className="card">Only admin can change theme.</div>
+    return <Card>Only admin can change theme.</Card>
   }
 
   function applyPreset(name){
@@ -43,49 +44,96 @@ export default function ThemeSettings(){
 
   return (
     <div>
-      <h2 className="text-xl font-semibold">Admin Theme Settings</h2>
-      <p className="text-sm text-gray-600 mt-1">Choose a palette or set a custom color scheme (5 colors).</p>
+      <PageHeader
+        title="Admin Theme Settings"
+        subtitle="Choose a palette or set a custom color scheme (5 colors)."
+      />
 
       <div className="mt-4 space-y-4">
         <div className="flex gap-3">
           {Object.keys(presets).map(name=> (
-            <button key={name} onClick={()=>applyPreset(name)} className={`px-3 py-2 rounded border ${presetName===name? 'border-indigo-600':'border-gray-200'}`}>
+            <Button
+              key={name}
+              type="button"
+              variant={presetName === name ? 'primary' : 'secondary'}
+              onClick={() => applyPreset(name)}
+            >
               {name}
-            </button>
+            </Button>
           ))}
         </div>
 
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Custom Palette</h3>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="flex items-center gap-2">Primary
-              <input type="color" value={custom.primary||palette.primary} onChange={e=>setCustom({...custom, primary:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Secondary
-              <input type="color" value={custom.secondary||palette.secondary} onChange={e=>setCustom({...custom, secondary:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Light Text / Dark Background
-              <input type="color" value={custom.textLight||palette.textLight} onChange={e=>setCustom({...custom, textLight:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">Dark Text / Light Background
-              <input type="color" value={custom.textDark||palette.textDark} onChange={e=>setCustom({...custom, textDark:e.target.value})} />
-            </label>
-            <label className="flex items-center gap-2">CTA
-              <input type="color" value={custom.cta||palette.cta} onChange={e=>setCustom({...custom, cta:e.target.value})} />
-            </label>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Primary</div>
+              <Input
+                type="color"
+                value={custom.primary || palette.primary}
+                onChange={(e) => setCustom({ ...custom, primary: e.target.value })}
+                className="shrink-0"
+                inputClassName="w-16 h-10 p-1"
+                aria-label="Primary"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Secondary</div>
+              <Input
+                type="color"
+                value={custom.secondary || palette.secondary}
+                onChange={(e) => setCustom({ ...custom, secondary: e.target.value })}
+                className="shrink-0"
+                inputClassName="w-16 h-10 p-1"
+                aria-label="Secondary"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Light Text / Dark Background</div>
+              <Input
+                type="color"
+                value={custom.textLight || palette.textLight}
+                onChange={(e) => setCustom({ ...custom, textLight: e.target.value })}
+                className="shrink-0"
+                inputClassName="w-16 h-10 p-1"
+                aria-label="Light text"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Dark Text / Light Background</div>
+              <Input
+                type="color"
+                value={custom.textDark || palette.textDark}
+                onChange={(e) => setCustom({ ...custom, textDark: e.target.value })}
+                className="shrink-0"
+                inputClassName="w-16 h-10 p-1"
+                aria-label="Dark text"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">CTA</div>
+              <Input
+                type="color"
+                value={custom.cta || palette.cta}
+                onChange={(e) => setCustom({ ...custom, cta: e.target.value })}
+                className="shrink-0"
+                inputClassName="w-16 h-10 p-1"
+                aria-label="CTA"
+              />
+            </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <button onClick={saveCustom} className="px-4 py-2 btn-primary rounded">Save Custom</button>
-            <button onClick={()=>applyPreset(presetName)} className="px-4 py-2 border rounded">Apply Preset</button>
+            <Button type="button" variant="primary" onClick={saveCustom}>Save Custom</Button>
+            <Button type="button" variant="secondary" onClick={() => applyPreset(presetName)}>Apply Preset</Button>
           </div>
-        </div>
+        </Card>
 
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Preview</h3>
           <div className="mt-3 p-4 rounded" style={{background: 'linear-gradient(90deg,' + (palette.primary||'#0ea5a4') + ', ' + (palette.secondary||'#7c3aed') + ')'}}>
             <div className="text-white p-4 rounded">Primary / Secondary Preview</div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )

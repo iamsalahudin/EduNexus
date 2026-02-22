@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
-import EmptyState from '@/components/ui/EmptyState'
 import { userService } from '@/services/user.service'
+import { ButtonLink, Card, EmptyState, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 
 const ROLE_OPTIONS = ['', 'Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception']
 
@@ -54,35 +52,30 @@ export default function SearchUsers() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Search Users</h1>
-        <p className="text-sm text-gray-600 mt-1">Filter users by name, email, role, and status.</p>
-      </div>
+      <PageHeader title="Search Users" subtitle="Filter users by name, email, role, and status." />
 
-      <div className="card">
+      <Card>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-sm mb-1">Search</label>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Name or email..." className="w-full" />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full">
-              {ROLE_OPTIONS.map((r) => (
-                <option key={r || 'all'} value={r}>
-                  {r ? r : 'All'}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Active</label>
-            <select value={active} onChange={(e) => setActive(e.target.value)} className="w-full">
-              <option value="">All</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-          </div>
+          <Input
+            label="Search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Name or email..."
+          />
+
+          <Select label="Role" value={role} onChange={(e) => setRole(e.target.value)}>
+            {ROLE_OPTIONS.map((r) => (
+              <option key={r || 'all'} value={r}>
+                {r ? r : 'All'}
+              </option>
+            ))}
+          </Select>
+
+          <Select label="Active" value={active} onChange={(e) => setActive(e.target.value)}>
+            <option value="">All</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </Select>
         </div>
 
         {error ? <div className="mt-3 text-red-500 text-sm">{error}</div> : null}
@@ -112,8 +105,12 @@ export default function SearchUsers() {
                     <td className="py-2 pr-3">{u.active === false ? 'No' : 'Yes'}</td>
                     <td className="py-2 pr-3">
                       <div className="flex gap-2">
-                        <Link href={`/admin/users/user/${u._id || u.id}`} className="px-2 py-1 border rounded hover-theme-primary">View</Link>
-                        <Link href={`/admin/users/update?id=${encodeURIComponent(u._id || u.id)}`} className="px-2 py-1 border rounded hover-theme-primary">Edit</Link>
+                        <ButtonLink href={`/admin/users/user/${u._id || u.id}`} variant="outline" size="sm">
+                          View
+                        </ButtonLink>
+                        <ButtonLink href={`/admin/users/update?id=${encodeURIComponent(u._id || u.id)}`} variant="outline" size="sm">
+                          Edit
+                        </ButtonLink>
                       </div>
                     </td>
                   </tr>
@@ -122,7 +119,7 @@ export default function SearchUsers() {
             </table>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

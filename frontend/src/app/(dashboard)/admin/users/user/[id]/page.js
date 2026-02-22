@@ -1,10 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import Skeleton from '@/components/ui/Skeleton'
 import { userService } from '@/services/user.service'
+import { Button, ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
 
 export default function UserDetail() {
   const router = useRouter()
@@ -57,24 +56,30 @@ export default function UserDetail() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">User Detail</h1>
-          <p className="text-sm text-gray-600 mt-1">View user profile and status.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href={`/admin/users/update?id=${encodeURIComponent(String(id || ''))}`} className="px-3 py-2 border rounded hover-theme-primary">
-            Edit
-          </Link>
-          <button className="px-3 py-2 border rounded" style={{ borderColor: 'var(--color-cta)', color: 'var(--color-cta)' }} onClick={handleDelete} disabled={deleting}>
-            {deleting ? 'Deleting...' : 'Delete'}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="User Detail"
+        subtitle="View user profile and status."
+        right={
+          <div className="flex gap-2">
+            <ButtonLink href={`/admin/users/update?id=${encodeURIComponent(String(id || ''))}`} variant="secondary">
+              Edit
+            </ButtonLink>
+            <Button
+              type="button"
+              variant="outline"
+              style={{ borderColor: 'var(--color-cta)', color: 'var(--color-cta)' }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        }
+      />
 
       {error ? <div className="text-red-500 text-sm">{error}</div> : null}
 
-      <div className="card">
+      <Card>
         {loading ? (
           <Skeleton className="h-40" />
         ) : !user ? (
@@ -111,7 +116,8 @@ export default function UserDetail() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
+

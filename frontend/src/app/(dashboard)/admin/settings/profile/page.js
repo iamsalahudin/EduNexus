@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Skeleton } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { userService } from '@/services/user.service'
 
@@ -43,12 +43,9 @@ export default function ProfileSettings() {
 
 	return (
 		<div className="space-y-4">
-			<div>
-				<h1 className="text-2xl font-semibold">Profile</h1>
-				<p className="text-sm text-gray-600 mt-1">Update your account profile.</p>
-			</div>
+			<PageHeader title="Profile" subtitle="Update your account profile." />
 
-			<div className="card max-w-2xl">
+			<Card className="max-w-2xl">
 				{loading ? (
 					<Skeleton className="h-40" />
 				) : (
@@ -64,25 +61,28 @@ export default function ProfileSettings() {
 							</div>
 						</div>
 
-						<div>
-							<label className="block text-sm mb-1">Name</label>
-							<input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className="w-full" />
-						</div>
+						<Input
+							label="Name"
+							value={form.name}
+							onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+						/>
 
-						<div>
-							<label className="block text-sm mb-1">Email</label>
-							<input type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} className="w-full" />
-						</div>
+						<Input
+							label="Email"
+							type="email"
+							value={form.email}
+							onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+						/>
 
 						{error ? <div className="text-red-500 text-sm">{error}</div> : null}
 						{success ? <div className="text-green-600 text-sm">{success}</div> : null}
 
-						<button type="submit" className="px-3 py-2 btn-primary rounded" disabled={saving}>
+						<Button type="submit" variant="primary" disabled={saving}>
 							{saving ? 'Saving...' : 'Save changes'}
-						</button>
+						</Button>
 					</form>
 				)}
-			</div>
+			</Card>
 		</div>
 	)
 }

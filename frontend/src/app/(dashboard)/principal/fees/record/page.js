@@ -4,6 +4,7 @@ import FilterForm from '@/components/fees/FilterForm'
 import FeesTable from '@/components/fees/FeesTable'
 import { fetchFeeRecords } from '@/services/feesService'
 import EmptyState from '@/components/ui/EmptyState'
+import { Button, PageHeader } from '@/components/ui'
 
 function toCSV(rows){
   if(!rows || rows.length===0) return ''
@@ -61,14 +62,14 @@ export default function FeeRecord(){
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Fee Record</h1>
+      <PageHeader title="Fee Record" />
       <FilterForm initial={{}} monthAsNumber={true} yearMax={new Date().getFullYear()} onApply={(f)=>{ setFilters(f) }} />
       {loading ? <div className="mt-4">Loading...</div> : (
         <div>
           {rows.length===0 ? <EmptyState title="No records" description="No fee records found for the selected filters." /> : (
             <div>
               <div className="flex items-center justify-end gap-2 mb-2">
-                <button onClick={()=>{ const csv=toCSV(rows); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='fee-records.csv'; a.click(); URL.revokeObjectURL(url); }} className="px-3 py-2 border rounded">Export CSV</button>
+                <Button variant="outline" onClick={()=>{ const csv=toCSV(rows); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='fee-records.csv'; a.click(); URL.revokeObjectURL(url); }}>Export CSV</Button>
               </div>
               <FeesTable columns={columns} data={rows} />
             </div>

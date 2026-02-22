@@ -88,7 +88,7 @@ export default function Navbar({ isHidden, setIsHidden }) {
 
           {open ? (
             <div
-              className="absolute right-0 mt-2 w-56 rounded border bg-[--card-bg] shadow"
+              className="absolute right-0 mt-2 w-56 rounded border bg-[var(--card-bg)] shadow"
               role="menu"
             >
               <div className="px-3 py-2 border-b">

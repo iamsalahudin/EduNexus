@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { Button, PageHeader } from '@/components/ui'
 import ClassTimetableView from '@/components/timetable/ClassTimetableView'
 import { mockTimetable } from '@/utils/mockTimetable'
 
@@ -28,12 +29,10 @@ export default function ByClassTimetablesPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Timetables — By Class</h1>
-          <p className="text-sm text-gray-600 mt-1">View and export class-specific timetables (mock data).</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Timetables — By Class"
+        subtitle="View and export class-specific timetables (mock data)."
+      />
 
       <div className="grid md:grid-cols-4 gap-4">
         <aside className="md:col-span-1 space-y-3">
@@ -41,13 +40,14 @@ export default function ByClassTimetablesPage() {
             <div className="text-sm font-medium mb-2">Classes</div>
             <div className="flex flex-col gap-2">
               {classes.map(c => (
-                <button
+                <Button
                   key={c.id}
                   onClick={() => setSelectedClass(c.id)}
-                  className={`text-left px-3 py-2 rounded border ${selectedClass === c.id ? 'border-theme-primary bg-theme-primary/10' : ''}`}
+                  variant="outline"
+                  className={`w-full justify-start ${selectedClass === c.id ? 'border-theme-primary bg-theme-primary/10' : ''}`}
                 >
                   {c.name}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

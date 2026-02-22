@@ -6,24 +6,30 @@ const createHomeworkSchema = Joi.object({
     description: Joi.string(),
     subject: Joi.string().required(),
     class: Joi.string().required(),
-    section: Joi.string(),
+    section: Joi.string().required(),
     dueDate: Joi.date().required(),
-    attachments: Joi.array().items(Joi.string()),
-    totalMarks: Joi.number()
+    gradingMode: Joi.string().valid('none', 'marks').default('none'),
+    maxMarks: Joi.number().min(0)
   })
 });
 
-const submitHomeworkSchema = Joi.object({
+const updateDraftSchema = Joi.object({
   body: Joi.object({
-    files: Joi.array().items(Joi.string())
+    contentText: Joi.string().allow('').max(10000)
   })
 });
 
-const gradeSubmissionSchema = Joi.object({
+const receiveSubmissionSchema = Joi.object({
+  body: Joi.object({
+    submissionStudentId: Joi.string().required()
+  })
+});
+
+const returnSubmissionSchema = Joi.object({
   body: Joi.object({
     submissionStudentId: Joi.string().required(),
     marks: Joi.number().min(0),
-    feedback: Joi.string().max(500)
+    feedback: Joi.string().allow('').max(5000)
   })
 });
 
@@ -39,9 +45,19 @@ const updateHomeworkSchema = Joi.object({
 const getHomeworksQuerySchema = Joi.object({
   query: Joi.object({
     class: Joi.string(),
+    section: Joi.string(),
     status: Joi.string().valid('draft', 'published', 'closed'),
-    subject: Joi.string()
+    subject: Joi.string(),
+    sortBy: Joi.string().valid('dueDate', 'teacher', 'subject', 'postedDate'),
+    order: Joi.string().valid('asc', 'desc')
   })
 });
 
-module.exports = { createHomeworkSchema, submitHomeworkSchema, gradeSubmissionSchema, updateHomeworkSchema, getHomeworksQuerySchema };
+module.exports = {
+  createHomeworkSchema,
+  updateHomeworkSchema,
+  getHomeworksQuerySchema,
+  updateDraftSchema,
+  receiveSubmissionSchema,
+  returnSubmissionSchema
+};

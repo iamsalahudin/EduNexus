@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { authService } from '@/services/auth.service'
+import { Button, Card, Input, PageHeader } from '@/components/ui'
 
 export default function PrincipalSecuritySettings() {
   const [oldPassword, setOldPassword] = useState('')
@@ -29,27 +30,26 @@ export default function PrincipalSecuritySettings() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Security</h1>
-        <p className="text-sm text-gray-600 mt-1">Change your account password.</p>
-      </div>
+      <PageHeader title="Security" subtitle="Change your account password." />
 
-      <form onSubmit={handleSubmit} className="card space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit} className="max-w-xl">
+        <Card className="space-y-4">
         <div>
           <label className="block text-sm mb-1">Old password</label>
-          <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required className="w-full" />
+          <Input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required />
         </div>
         <div>
           <label className="block text-sm mb-1">New password</label>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="w-full" />
+          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
         </div>
 
         {error ? <div className="text-red-500 text-sm">{error}</div> : null}
         {success ? <div className="text-green-600 text-sm">{success}</div> : null}
 
-        <button type="submit" className="px-3 py-2 btn-primary rounded" disabled={loading}>
+        <Button type="submit" variant="primary" disabled={loading}>
           {loading ? 'Saving...' : 'Update password'}
-        </button>
+        </Button>
+        </Card>
       </form>
     </div>
   )

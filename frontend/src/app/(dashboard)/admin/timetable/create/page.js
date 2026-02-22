@@ -1,15 +1,18 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import SetupForm from '@/components/timetable/TimetableSetupForm'
 import TimetableGrid from '@/components/timetable/TimetableGrid'
 import WeekSelector from '@/components/timetable/WeekSelector'
-import { mockTeachers, mockRooms, mockSubjects } from '@/utils/mockData'
+import { mockTeachers, mockRooms } from '@/utils/mockData'
+import subjectsService from '@/services/subjectsService'
+import { Button, PageHeader } from '@/components/ui'
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat']
 
 export default function CreateTimetablePage() {
   const [config, setConfig] = useState(null)
+  const [subjectsByClass, setSubjectsByClass] = useState({})
 
   // Week config
   const [weekConfig, setWeekConfig] = useState({
@@ -40,6 +43,38 @@ export default function CreateTimetablePage() {
     setGridsByDay(initialGrid)
     setActiveDay('Mon')
   }
+
+  useEffect(() => {
+    let mounted = true
+    if (!config) return
+    ;(async () => {
+      try {
+        const { subjects } = await subjectsService.listSubjects({ active: true })
+        if (!mounted) return
+        const map = {}
+        ;(Array.isArray(subjects) ? subjects : []).forEach((s) => {
+          const cls = String(s?.className || '').trim()
+          if (!cls) return
+          if (!map[cls]) map[cls] = []
+          map[cls].push(String(s?.name || '').trim())
+        })
+
+        // Filter to only selected classes in config
+        const filtered = {}
+        ;(config?.classes || []).forEach((c) => {
+          const id = String(c?.id || c?.name || '')
+          filtered[id] = Array.isArray(map[id]) ? map[id] : []
+        })
+        setSubjectsByClass(filtered)
+      } catch (e) {
+        if (!mounted) return
+        setSubjectsByClass({})
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [config])
 
   // Handle grid changes
   function handleGridChange(updatedGrid) {
@@ -91,12 +126,10 @@ export default function CreateTimetablePage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Create Timetable</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Configure metadata, build timeslots and assign teachers / rooms / subjects.
-        </p>
-      </div>
+      <PageHeader
+        title="Create Timetable"
+        subtitle="Configure metadata, build timeslots and assign teachers / rooms / subjects."
+      />
 
       {!config && (
         <SetupForm
@@ -113,18 +146,12 @@ export default function CreateTimetablePage() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setConfig(null)}
-                className="px-3 py-2 border rounded"
-              >
+              <Button type="button" variant="outline" onClick={() => setConfig(null)}>
                 ← Back
-              </button>
-              <button
-                onClick={() => console.log('Mock Save Payload', gridsByDay)}
-                className="btn-primary p-2 rounded"
-              >
+              </Button>
+              <Button type="button" variant="primary" onClick={() => console.log('Mock Save Payload', gridsByDay)}>
                 Save Timetable
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -138,13 +165,15 @@ export default function CreateTimetablePage() {
           {weekConfig.mode === 'different' && (
             <div className="flex gap-2">
               {weekConfig.days.map(d => (
-                <button
+                <Button
                   key={d}
+                  type="button"
+                  size="sm"
+                  variant={activeDay === d ? 'primary' : 'secondary'}
                   onClick={() => handleDaySelect(d)}
-                  className={`px-3 py-1 rounded border ${activeDay === d ? 'border-[--color-primary] bg-[--color-primary]/10' : ''}`}
                 >
                   {d}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -154,7 +183,7 @@ export default function CreateTimetablePage() {
             config={config}
             teachers={mockTeachers}
             rooms={mockRooms}
-            subjectsByClass={mockSubjects}
+            subjectsByClass={subjectsByClass}
             initialGrid={gridsByDay[activeDay]}
             onGridChange={handleGridChange}
           />
@@ -163,3 +192,4 @@ export default function CreateTimetablePage() {
     </div>
   )
 }
+

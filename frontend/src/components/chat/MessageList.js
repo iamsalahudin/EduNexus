@@ -146,8 +146,8 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
           <div
             className={`max-w-[85%] text-sm rounded-xl p-5 ${
               m.role === "user"
-                ? "bg-[--color-primary] text-white"
-                : "bg-[--card-bg] text-[--color-text]"
+                ? "bg-[var(--color-primary)] text-white"
+                : "bg-[var(--card-bg)] text-[var(--color-text)]"
             }`}
           >
             <ReactMarkdown

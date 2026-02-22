@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
 import studentsService from '@/services/studentsService'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, Card, Input, PageHeader, Skeleton } from '@/components/ui'
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
@@ -37,27 +37,26 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Students</h1>
-      <p className="text-sm text-gray-600 mt-1">View student master data.</p>
+      <PageHeader title="Students" subtitle="View student master data." />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
 
-      <div className="card mt-6">
+      <Card className="mt-6">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-medium">Student List</h2>
             <p className="text-sm text-gray-600 mt-1">Read-only view.</p>
           </div>
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Refresh</button>
+          <Button onClick={load}>Refresh</Button>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input className="input" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-          <input className="input" placeholder="Class" value={classId} onChange={(e) => setClassId(e.target.value)} />
-          <input className="input" placeholder="Section" value={section} onChange={(e) => setSection(e.target.value)} />
+          <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input placeholder="Class" value={classId} onChange={(e) => setClassId(e.target.value)} />
+          <Input placeholder="Section" value={section} onChange={(e) => setSection(e.target.value)} />
         </div>
         <div className="mt-3">
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load}>Apply Filters</button>
+          <Button onClick={load}>Apply Filters</Button>
         </div>
 
         {loading ? (
@@ -89,8 +88,9 @@ export default function Page() {
             {students.length === 0 ? <div className="text-sm text-gray-600 mt-3">No students found.</div> : null}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
+
 

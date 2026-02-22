@@ -2,6 +2,29 @@ const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config');
 const { User } = require('../models');
 
+function normalizeRole(role) {
+  if (role === null || role === undefined) return role;
+  const raw = String(role).trim();
+  if (!raw) return raw;
+
+  // Common alias/misspelling seen in seeded DBs
+  const lower = raw.toLowerCase();
+  if (lower === 'principle') return 'Principal';
+
+  const canonical = [
+    'Admin',
+    'Principal',
+    'Finance',
+    'HR',
+    'Reception',
+    'Teacher',
+    'Student',
+    'Parent'
+  ];
+  const byLower = new Map(canonical.map((r) => [r.toLowerCase(), r]));
+  return byLower.get(lower) || raw;
+}
+
 function unauthorized(res, message = 'Unauthorized') {
   return res.status(401).json({ error: message });
 }
@@ -19,7 +42,7 @@ async function requireAuth(req, res, next) {
       id: user._id,
       _id: user._id,
       name: user.name,
-      role: user.role,
+      role: normalizeRole(user.role),
       email: user.email,
       active: user.active,
       profile: user.profile,

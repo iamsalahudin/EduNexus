@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { Button, Card, PageHeader, Select } from '@/components/ui'
 import { mockTimetable } from '@/utils/mockTimetable'
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
@@ -109,25 +110,23 @@ export default function ByTeacherTimetablePage(){
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Timetable — By Teacher</h1>
-          <p className="text-sm text-gray-600">Choose a teacher to view their timetable across days.</p>
-        </div>
+      <PageHeader
+        title="Timetable — By Teacher"
+        subtitle="Choose a teacher to view their timetable across days."
+        right={(
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={downloadCSV}>Export CSV</Button>
+            <Button variant="outline" onClick={downloadXlsHtml}>Export XLS</Button>
+            <Button variant="outline" onClick={exportPDF}>Export PDF</Button>
+          </div>
+        )}
+      />
 
-        <div className="flex gap-2">
-          <button onClick={downloadCSV} className="px-3 py-2 border rounded">Export CSV</button>
-          <button onClick={downloadXlsHtml} className="px-3 py-2 border rounded">Export XLS</button>
-          <button onClick={exportPDF} className="px-3 py-2 border rounded">Export PDF</button>
-        </div>
-      </div>
-
-      <div className="card p-4">
-        <label className="text-sm font-medium">Teacher</label>
-        <select className="input mt-2" value={teacher} onChange={e=>setTeacher(e.target.value)}>
+      <Card className="p-4">
+        <Select label="Teacher" value={teacher} onChange={(e) => setTeacher(e.target.value)}>
           {teachersList.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
+        </Select>
+      </Card>
 
       <div className="card p-4 overflow-auto">
         <table className="min-w-full">

@@ -2,6 +2,7 @@
 import { useRef } from 'react'
 import { fetchFeesSummary } from '@/services/feesService'
 import useSWR from 'swr'
+import { Button, PageHeader } from '@/components/ui'
 
 function toCSV(rows){
   if(!rows || rows.length===0) return ''
@@ -28,15 +29,13 @@ export default function FeeReport(){
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Fee Report</h1>
-          <p className="mt-2 text-sm text-gray-600">Monthly & yearly fee submission tables and analytics.</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={download} className="px-3 py-2 btn-primary rounded">Export CSV</button>
-        </div>
-      </div>
+      <PageHeader
+        title="Fee Report"
+        subtitle="Monthly & yearly fee submission tables and analytics."
+        right={(
+          <Button variant="primary" onClick={download}>Export CSV</Button>
+        )}
+      />
 
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card">Monthly submission table (placeholder) — Total Collected: {data?.totalCollected ?? '...'}</div>

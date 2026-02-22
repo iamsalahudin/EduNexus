@@ -263,7 +263,7 @@ export default function ChatLayout({ mode = "full" }) {
         <div
           className="flex-1 px-3 overflow-y-auto pt-6
           [&::-webkit-scrollbar]:w-2
-       [&::-webkit-scrollbar-track]:bg-[--color-bg]
+       [&::-webkit-scrollbar-track]:bg-[var(--color-bg)]
       [&::-webkit-scrollbar-thumb]:bg-neutral-500
         [&::-webkit-scrollbar-thumb]:rounded-full"
           style={{
@@ -285,7 +285,7 @@ export default function ChatLayout({ mode = "full" }) {
         {isFull ? (
           /* FULL PAGE: fixed to viewport */
           <div
-            className="w-full sticky right-0 bottom-0 z-10 border-t bg-[--color-bg]"
+            className="w-full sticky right-0 bottom-0 z-10 border-t bg-[var(--color-bg)]"
             style={{ height: INPUT_HEIGHT }}
           >
             <div className="max-w-[1200px] mx-auto">
@@ -296,12 +296,12 @@ export default function ChatLayout({ mode = "full" }) {
           /* COMPACT PANEL: stays inside panel */
           <>
             <div
-              className="shrink-0 border-t bg-[--color-bg]"
+              className="shrink-0 border-t bg-[var(--color-bg)]"
               style={{ height: INPUT_HEIGHT }}
             >
               <MessageInput onSend={sendMessage} />
             </div>
-            <div className="flex justify-center items-center text-[--color-primary] text-sm py-2">
+            <div className="flex justify-center items-center text-[color:var(--color-primary)] text-sm py-2">
               <Link href={`/${thispath.split("/")[1]}/chat`}>
                 Full Page View
               </Link>
