@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import Skeleton from "@/components/ui/Skeleton"
+import { ButtonLink, Input, PageHeader, Select, Skeleton } from "@/components/ui"
 import { AlertTriangle } from "lucide-react"
 
 async function fetchTimetableSummary() {
@@ -41,11 +41,10 @@ export default function TimetableHome() {
 
   return (
     <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Timetable</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Manage class schedules, teacher allocation, and conflicts.
-      </p>
+      <PageHeader
+        title="Timetable"
+        subtitle="Manage class schedules, teacher allocation, and conflicts."
+      />
 
       {/* 1️⃣ OVERVIEW CARDS */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -77,39 +76,36 @@ export default function TimetableHome() {
 
       {/* 2️⃣ QUICK ACTIONS */}
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link href="/admin/timetable/create" className="px-4 py-2 rounded bg-[--color-primary] text-white">
+        <ButtonLink href="/principal/timetable/create" variant="primary">
           + Create Timetable
-        </Link>
-        <Link href="/admin/timetable" className="px-3 py-2 border rounded hover:text-[--color-primary] hover:border-[--color-primary]">
+        </ButtonLink>
+        <ButtonLink href="/principal/timetable" variant="outline">
           View All
-        </Link>
-        <Link href="/admin/timetable/by-class" className="px-3 py-2 border rounded hover:text-[--color-primary] hover:border-[--color-primary]">
+        </ButtonLink>
+        <ButtonLink href="/principal/timetable/by-class" variant="outline">
           By Class
-        </Link>
-        <Link href="/admin/timetable/by-teacher" className="px-3 py-2 border rounded hover:text-[--color-primary] hover:border-[--color-primary]">
+        </ButtonLink>
+        <ButtonLink href="/principal/timetable/by-teacher" variant="outline">
           By Teacher
-        </Link>
-        <Link href="/admin/timetable/conflicts" className="px-3 py-2 border rounded hover:text-[--color-primary] hover:border-[--color-primary] hidden">
+        </ButtonLink>
+        <ButtonLink href="/principal/timetable/conflicts" variant="outline" className="hidden">
           Conflicts
-        </Link>
+        </ButtonLink>
       </div>
 
       {/* 3️⃣ FILTERS */}
       <div className="mt-6 flex flex-wrap gap-3 items-center">
-        <select className="border rounded px-3 py-2 text-sm">
-          <option>Academic Year</option>
-          <option>2024-25</option>
-          <option>2023-24</option>
-        </select>
-        <select className="border rounded px-3 py-2 text-sm">
-          <option>Status</option>
-          <option>Published</option>
-          <option>Draft</option>
-        </select>
-        <input
-          placeholder="Search class..."
-          className="border rounded px-3 py-2 text-sm"
-        />
+        <Select selectClassName="text-sm" defaultValue="">
+          <option value="">Academic Year</option>
+          <option value="2024-25">2024-25</option>
+          <option value="2023-24">2023-24</option>
+        </Select>
+        <Select selectClassName="text-sm" defaultValue="">
+          <option value="">Status</option>
+          <option value="Published">Published</option>
+          <option value="Draft">Draft</option>
+        </Select>
+        <Input placeholder="Search class..." inputClassName="text-sm" />
       </div>
 
       {/* 4️⃣ TIMETABLE LIST */}
@@ -146,8 +142,8 @@ export default function TimetableHome() {
                   <td>{row.updatedAt}</td>
                   <td className="text-right">
                     <Link
-                      href={`/admin/timetable/edit/${row.id}`}
-                      className="text-[--color-primary] hover:underline"
+                      href={`/principal/timetable/edit/${row.id}`}
+                      className="text-[color:var(--color-primary)] hover:underline"
                     >
                       Edit
                     </Link>
@@ -160,9 +156,9 @@ export default function TimetableHome() {
       </div>
 
       {/* 5️⃣ CONFLICT / ALERT PANEL */}
-      <div className="mt-6 card border-l-4 border-[--color-cta] hidden">
+      <div className="mt-6 card border-l-4 border-[color:var(--color-cta)] hidden">
         <h3 className="font-medium flex items-center gap-2">
-          <AlertTriangle size={16} className="text-[--color-cta]" />
+          <AlertTriangle size={16} className="text-[color:var(--color-cta)]" />
           Timetable Alerts
         </h3>
         <ul className="mt-2 text-sm text-gray-600 list-disc pl-4">

@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { ButtonLink, Card, PageHeader, StatCard } from '@/components/ui'
 import { fetchStudentAttendanceSummary } from '@/services/attendanceService'
 
 export default function Page() {
@@ -30,20 +30,20 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="text-sm text-gray-600 mt-1">View student attendance summaries and details.</p>
+      <PageHeader title="Attendance" subtitle="View student attendance summaries and details." />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">Student Summary (rows)<br/>{loading ? '...' : studentCount}</div>
-        <div className="card">
+        <StatCard label="Student Summary (rows)" value={loading ? '...' : studentCount} />
+        <Card>
           <div className="font-medium">Student Attendance</div>
           <div className="text-sm text-gray-600 mt-1">View attendance records by class/date range.</div>
           <div className="mt-4">
-            <Link href="/reception/attendance/students" className="px-3 py-2 border rounded hover-theme-primary">Open</Link>
+            <ButtonLink href="/reception/attendance/students" variant="secondary">Open</ButtonLink>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )
 }
+
 

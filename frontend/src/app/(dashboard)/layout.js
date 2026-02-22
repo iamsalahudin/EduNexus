@@ -97,7 +97,7 @@ export default function DashboardRoot({ children }){
   }, [pathname])
 
   return (
-    <div className="w-full min-h-screen flex bg-[--color-bg]   scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="w-full min-h-screen flex bg-[var(--color-bg)] scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <Sidebar isHidden={isHidden} onNavigate={() => setMobileOpen(false)} />
 
       {/* Mobile overlay (animates in/out) */}

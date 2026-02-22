@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import TimeSlotBuilder from "./TimeSlotBuilder";
-import { MOCK_CLASSES_BY_LEVEL } from "@/utils/mockData";
+import classesService from "@/services/classesService";
 
 export default function TimetableSetupForm({ onComplete }) {
   const [name, setName] = useState("New Timetable");
@@ -13,15 +13,34 @@ export default function TimetableSetupForm({ onComplete }) {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
 
-  const allLevels = Object.keys(MOCK_CLASSES_BY_LEVEL || {});
-  const allClassesFlat = useMemo(
-    () => Object.values(MOCK_CLASSES_BY_LEVEL || {}).flat(),
-    []
-  );
+  const [classes, setClasses] = useState([]);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { classes: list } = await classesService.listClasses({ active: true })
+        if (!mounted) return
+        const normalized = (Array.isArray(list) ? list : []).map((c) => ({ id: c.name, name: c.name }))
+        setClasses(normalized)
+      } catch (e) {
+        if (!mounted) return
+        setClasses([])
+        setLoadError(e?.response?.data?.error || 'Failed to load classes')
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const allLevels = ['All'];
+  const allClassesFlat = useMemo(() => classes, [classes]);
 
   function handleTypeChange(thisType) {
     setType(thisType);
-    setSelectedLevels([]);
+    setSelectedLevels(thisType === 'level' ? ['All'] : []);
     setSelectedClasses([]);
   }
 
@@ -43,7 +62,8 @@ export default function TimetableSetupForm({ onComplete }) {
     let classes = [];
 
     if (type === "level") {
-      classes = selectedLevels.flatMap((l) => MOCK_CLASSES_BY_LEVEL[l] || []);
+      // Only a single synthetic level: All
+      classes = selectedLevels.includes('All') ? allClassesFlat : [];
     } else {
       classes = allClassesFlat.filter((c) => selectedClasses.includes(c.id));
     }
@@ -61,6 +81,9 @@ export default function TimetableSetupForm({ onComplete }) {
 
   return (
     <div className="space-y-6">
+      {loadError ? (
+        <div className="text-sm text-red-600">{loadError}</div>
+      ) : null}
       {/* BASIC INFO */}
       <div className="card">
         <div className="grid md:grid-cols-3 gap-4">
@@ -105,7 +128,7 @@ export default function TimetableSetupForm({ onComplete }) {
               className={`px-4 py-2 rounded border text-sm font-medium
                 ${
                   type === t
-                    ? "border-[--color-primary] text-theme-[--color-primary] bg-theme-[--color-primary]/10"
+                    ? "border-[color:var(--color-primary)] text-[color:var(--color-primary)] bg-[color:var(--color-primary)]/10"
                     : "hover:border-gray-400"
                 }`}
             >
@@ -129,11 +152,11 @@ export default function TimetableSetupForm({ onComplete }) {
                   className={`px-3 py-2 rounded border cursor-pointer text-sm
                     ${
                       active
-                        ? "border-[--color-primary] text-theme-[--color-primary] bg-theme-[--color-primary]/10"
+                        ? "border-[color:var(--color-primary)] text-[color:var(--color-primary)] bg-[color:var(--color-primary)]/10"
                         : "hover:border-gray-400"
                     }`}
                 >
-                  {l}
+                    {l}
                 </div>
               );
             })}
@@ -155,7 +178,7 @@ export default function TimetableSetupForm({ onComplete }) {
                   className={`px-3 py-2 rounded border cursor-pointer text-sm
                     ${
                       active
-                        ? "border-[--color-primary] text-theme-[--color-primary] bg-theme-[--color-primary]/10"
+                        ? "border-[color:var(--color-primary)] text-[color:var(--color-primary)] bg-[color:var(--color-primary)]/10"
                         : "hover:border-gray-400"
                     }`}
                 >
@@ -177,3 +200,4 @@ export default function TimetableSetupForm({ onComplete }) {
     </div>
   );
 }
+

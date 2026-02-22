@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from 'react'
 import { fetchFeesSummary } from '@/services/feesService'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -52,12 +52,13 @@ export default function FeesHome(){
       </div>
 
       <div className="mt-6 flex gap-3">
-        <Link href="/admin/fees/defaulters" className="px-3 py-2 border rounded hover-theme-primary">Fee Defaulters</Link>
-        <Link href="/admin/fees/record" className="px-3 py-2 border rounded hover-theme-primary">Fee Record</Link>
-        <Link href="/admin/fees/voucher" className="px-3 py-2 border rounded hover-theme-primary">Fee Voucher</Link>
-        <Link href="/admin/fees/structure" className="px-3 py-2 border rounded hover-theme-primary">Fee Structure</Link>
-        <Link href="/admin/fees/report" className="px-3 py-2 border rounded hover-theme-primary">Fee Report</Link>
+        <Link href="/admin/fees/defaulters" className="px-3 py-2 rounded btn-secondary">Fee Defaulters</Link>
+        <Link href="/admin/fees/record" className="px-3 py-2 rounded btn-secondary">Fee Record</Link>
+        <Link href="/admin/fees/voucher" className="px-3 py-2 rounded btn-secondary">Fee Voucher</Link>
+        <Link href="/admin/fees/structure" className="px-3 py-2 rounded btn-secondary">Fee Structure</Link>
+        <Link href="/admin/fees/report" className="px-3 py-2 rounded btn-secondary">Fee Report</Link>
       </div>
     </div>
   )
 }
+

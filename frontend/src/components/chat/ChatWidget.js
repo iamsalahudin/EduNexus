@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ChatLayout from './ChatLayout';
 import { usePathname } from 'next/navigation';
 import { Sparkle } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function ChatWidget() {
       {/* Floating button (small view) */}
       <button
         onClick={() => setOpen(!open)}
-        className={`${path.includes('/chat') ? 'hidden' : 'fixed'} bottom-6 right-6 w-14 h-14 rounded-full bg-[--color-primary] text-white shadow-lg text-center flex items-center justify-center group hover:bg-[--color-text] hover:text-[--color-bg] transition`}
+        className={`${path.includes('/chat') ? 'hidden' : 'fixed'} bottom-6 right-6 w-14 h-14 rounded-full bg-[var(--color-primary)] text-white shadow-lg text-center flex items-center justify-center group hover:bg-[var(--color-text)] hover:text-[var(--color-bg)] transition`}
       >
         <Sparkle />
         <Sparkle className="hidden absolute group-hover:bottom-1 group-hover:right-2 group-hover:block transition w-2.5"/>

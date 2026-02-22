@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, ButtonLink, Card, PageHeader, Select, Skeleton } from '@/components/ui'
 import { api } from '@/services/api'
 import { fetchStudents } from '@/services/attendanceService'
 import classesService from '@/services/classesService'
@@ -139,13 +138,11 @@ export default function AttendanceSetupPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Attendance Setup</h1>
-          <p className="text-sm text-gray-600 mt-1">Configure scoping links so attendance works correctly.</p>
-        </div>
-        <Link href="/admin/attendance" className="px-3 py-2 border rounded hover-theme-primary">Back</Link>
-      </div>
+      <PageHeader
+        title="Attendance Setup"
+        subtitle="Configure scoping links so attendance works correctly."
+        right={<ButtonLink href="/admin/attendance" variant="secondary">Back</ButtonLink>}
+      />
 
       {loading && teachers.length === 0 ? (
         <div className="mt-6"><Skeleton className="h-28" /></div>
@@ -155,90 +152,89 @@ export default function AttendanceSetupPage() {
       {success ? <div className="mt-6 text-sm text-green-700">{success}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Teacher → Class/Section</h3>
           <p className="text-sm text-gray-600 mt-1">This enforces “teacher can mark only their class”.</p>
 
-          <div className="mt-4">
-            <label className="text-sm font-medium">Teacher</label>
-            <select className="input mt-2" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
-              <option value="">Select</option>
-              {teachers.map((t) => (
-                <option key={t._id} value={t._id}>{t.name} — {t.email}</option>
-              ))}
-            </select>
-          </div>
+          <Select label="Teacher" value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="mt-4">
+            <option value="">Select</option>
+            {teachers.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name} — {t.email}
+              </option>
+            ))}
+          </Select>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Class</label>
-              <select className="input mt-2" value={teacherClass} onChange={(e) => setTeacherClass(e.target.value)}>
-                <option value="">(None)</option>
-                {/* keep current value visible even if it doesn't exist anymore */}
-                {teacherClass && !classes.some((c) => c.name === teacherClass) ? (
-                  <option value={teacherClass}>{teacherClass} (custom)</option>
-                ) : null}
-                {classes.map((c) => (
-                  <option key={c._id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Section (optional)</label>
-              <select
-                className="input mt-2"
-                value={teacherSection}
-                onChange={(e) => setTeacherSection(e.target.value)}
-                disabled={!teacherClass || teacherSections.length === 0}
-              >
-                <option value="">
-                  {!teacherClass ? 'Select class first' : teacherSections.length === 0 ? 'No sections' : '(None)'}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2">
+            <Select label="Class" value={teacherClass} onChange={(e) => setTeacherClass(e.target.value)}>
+              <option value="">(None)</option>
+              {/* keep current value visible even if it doesn't exist anymore */}
+              {teacherClass && !classes.some((c) => c.name === teacherClass) ? (
+                <option value={teacherClass}>{teacherClass} (custom)</option>
+              ) : null}
+              {classes.map((c) => (
+                <option key={c._id} value={c.name}>
+                  {c.name}
                 </option>
-                {teacherSection && teacherSections.length > 0 && !teacherSections.includes(teacherSection) ? (
-                  <option value={teacherSection}>{teacherSection} (custom)</option>
-                ) : null}
-                {teacherSections.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+              ))}
+            </Select>
+
+            <Select
+              label="Section (optional)"
+              value={teacherSection}
+              onChange={(e) => setTeacherSection(e.target.value)}
+              disabled={!teacherClass || teacherSections.length === 0}
+            >
+              <option value="">
+                {!teacherClass ? 'Select class first' : teacherSections.length === 0 ? 'No sections' : '(None)'}
+              </option>
+              {teacherSection && teacherSections.length > 0 && !teacherSections.includes(teacherSection) ? (
+                <option value={teacherSection}>{teacherSection} (custom)</option>
+              ) : null}
+              {teacherSections.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <div className="mt-4">
-            <button className="btn-primary" onClick={saveTeacher} disabled={loading || !teacherId}>Save</button>
+            <Button variant="primary" onClick={saveTeacher} disabled={loading || !teacherId}>Save</Button>
           </div>
-        </div>
+        </Card>
 
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Student User → Student Record</h3>
           <p className="text-sm text-gray-600 mt-1">This makes the Student dashboard show only their own attendance.</p>
 
-          <div className="mt-4">
-            <label className="text-sm font-medium">Student Login (User)</label>
-            <select className="input mt-2" value={studentUserId} onChange={(e) => setStudentUserId(e.target.value)}>
-              <option value="">Select</option>
-              {studentUsers.map((u) => (
-                <option key={u._id} value={u._id}>{u.name} — {u.email}</option>
-              ))}
-            </select>
+          <Select label="Student Login (User)" value={studentUserId} onChange={(e) => setStudentUserId(e.target.value)} className="mt-4">
+            <option value="">Select</option>
+            {studentUsers.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.name} — {u.email}
+              </option>
+            ))}
+          </Select>
+
+          <Select label="Student Record" value={studentRefId} onChange={(e) => setStudentRefId(e.target.value)} className="mt-4">
+            <option value="">Select</option>
+            {students.map((s) => (
+              <option key={s._id} value={s._id}>
+                {s.studentId} — {s.firstName} {s.lastName} ({s.class}{s.section ? `-${s.section}` : ''})
+              </option>
+            ))}
+          </Select>
+          <div className="text-xs text-gray-500 mt-2">
+            Saved into the user profile as: <span className="font-mono">profile.studentRef</span>
           </div>
 
           <div className="mt-4">
-            <label className="text-sm font-medium">Student Record</label>
-            <select className="input mt-2" value={studentRefId} onChange={(e) => setStudentRefId(e.target.value)}>
-              <option value="">Select</option>
-              {students.map((s) => (
-                <option key={s._id} value={s._id}>{s.studentId} — {s.firstName} {s.lastName} ({s.class}{s.section ? `-${s.section}` : ''})</option>
-              ))}
-            </select>
-            <div className="text-xs text-gray-500 mt-2">Saved into the user profile as: <span className="font-mono">profile.studentRef</span></div>
+            <Button variant="primary" onClick={saveStudentLink} disabled={loading || !studentUserId}>Save</Button>
           </div>
-
-          <div className="mt-4">
-            <button className="btn-primary" onClick={saveStudentLink} disabled={loading || !studentUserId}>Save</button>
-          </div>
-        </div>
+        </Card>
       </div>
     </div>
   )
 }
+

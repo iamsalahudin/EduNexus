@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const SchoolClassSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, unique: true, trim: true, index: true },
+    // Optional level grouping used for notifications targeting
+    level: { type: String, trim: true, enum: ['pre-primary', 'primary', 'middle'], default: undefined },
     sections: [{ type: String, trim: true }],
     active: { type: Boolean, default: true }
   },

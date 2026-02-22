@@ -1,4 +1,5 @@
 const { SchoolClass } = require('../models');
+const { ensureDefaultSubjectsForClass } = require('./subjectsController');
 
 function normalizeSections(sections) {
   if (!Array.isArray(sections)) return sections;
@@ -44,11 +45,12 @@ async function listClasses(req, res, next) {
 
 async function createClass(req, res, next) {
   try {
-    const { name, sections, active } = req.body;
+    const { name, sections, active, level } = req.body;
 
     const payload = {
       name: String(name).trim(),
-      active: typeof active === 'boolean' ? active : true
+      active: typeof active === 'boolean' ? active : true,
+      level: level ? String(level).trim() : undefined
     };
 
     // Default sections: Boys/Girls unless explicitly provided.
@@ -63,6 +65,13 @@ async function createClass(req, res, next) {
     if (exists) return res.status(409).json({ error: 'Class already exists' });
 
     const created = await SchoolClass.create(payload);
+
+    // Best-effort: create default subjects for this class
+    try {
+      await ensureDefaultSubjectsForClass(created.name);
+    } catch (e) {
+      // ignore
+    }
     res.status(201).json({ schoolClass: created });
   } catch (err) {
     next(err);
@@ -74,6 +83,7 @@ async function updateClass(req, res, next) {
     const updates = { ...(req.body || {}) };
 
     if (updates.name) updates.name = String(updates.name).trim();
+    if (typeof updates.level !== 'undefined') updates.level = updates.level ? String(updates.level).trim() : undefined;
     if (Array.isArray(updates.sections)) updates.sections = normalizeSections(updates.sections);
 
     if (updates.name) {

@@ -9,7 +9,6 @@ node_modules/
 !.yarn/versions
 
 # --- Environment & Secrets (Crucial) ---
-.env*
 *.pem
 *.crt
 
@@ -50,3 +49,16 @@ backend/venv/
 backend/env/
 backend/*.class
 backend/*.jar
+
+# --- Scripts (local/dev helpers) ---
+*.sh
+*.ps1
+*.bat
+*.cmd
+
+# --- Local Markdown files (keep READMEs & setup docs tracked) ---
+*.md
+!README.md
+!**/README.md
+!**/REALTIME_SETUP.md
+config.bat
