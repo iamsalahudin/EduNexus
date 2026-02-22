@@ -49,7 +49,7 @@ export default function Sidebar({ isHidden, onNavigate }) {
 
   return (
     <aside
-      className={`w-64 border-r border-[var(--color-text)]/100 fixed left-0 top-0 h-screen z-50 overflow-auto bg-[--card-bg] transform transition-transform duration-300 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+      className={`w-64 border-r border-[color:var(--input-border)] fixed left-0 top-0 h-screen z-50 overflow-auto bg-[var(--card-bg)] transform transition-transform duration-300 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
         isHidden ? "-translate-x-full" : "translate-x-0"
       }`}
     >

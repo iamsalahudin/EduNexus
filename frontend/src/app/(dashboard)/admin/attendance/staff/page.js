@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, ButtonLink, Card, Input, PageHeader, Skeleton, StatCard } from '@/components/ui'
 import { fetchStaffAttendance, fetchStaffAttendanceSummary } from '@/services/attendanceService'
 
 function toInputDate(d) {
@@ -47,39 +46,31 @@ export default function AdminStaffAttendancePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Staff Attendance</h1>
-          <p className="text-sm text-gray-600 mt-1">Overview of staff/teacher attendance records.</p>
-        </div>
-        <Link href="/admin/attendance" className="px-3 py-2 border rounded hover-theme-primary">Back</Link>
-      </div>
+      <PageHeader
+        title="Staff Attendance"
+        subtitle="Overview of staff/teacher attendance records."
+        right={<ButtonLink href="/admin/attendance" variant="secondary">Back</ButtonLink>}
+      />
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-medium">From</label>
-            <input className="input mt-2" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">To</label>
-            <input className="input mt-2" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-          </div>
+          <Input label="From" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          <Input label="To" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
           <div className="flex items-end">
-            <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load} disabled={loading}>Refresh</button>
+            <Button variant="secondary" onClick={load} disabled={loading}>Refresh</Button>
           </div>
         </div>
         {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
-      </div>
+      </Card>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">Total<br/>{loading ? '...' : (summary?.total ?? 0)}</div>
-        <div className="card">Present<br/>{loading ? '...' : (summary?.present ?? 0)}</div>
-        <div className="card">Absent<br/>{loading ? '...' : (summary?.absent ?? 0)}</div>
-        <div className="card">Late/Leave<br/>{loading ? '...' : ((summary?.late ?? 0) + (summary?.leave ?? 0))}</div>
+        <StatCard label="Total" value={loading ? '...' : (summary?.total ?? 0)} />
+        <StatCard label="Present" value={loading ? '...' : (summary?.present ?? 0)} />
+        <StatCard label="Absent" value={loading ? '...' : (summary?.absent ?? 0)} />
+        <StatCard label="Late/Leave" value={loading ? '...' : ((summary?.late ?? 0) + (summary?.leave ?? 0))} />
       </div>
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <h3 className="font-medium">Records</h3>
         <div className="mt-3 overflow-auto">
           {loading && records.length === 0 ? (
@@ -109,7 +100,8 @@ export default function AdminStaffAttendancePage() {
             </table>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
+

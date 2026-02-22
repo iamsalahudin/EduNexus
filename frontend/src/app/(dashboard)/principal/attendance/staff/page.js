@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from 'next/link'
 import StaffAttendanceRecordsView from '@/components/attendance/StaffAttendanceRecordsView'
@@ -8,10 +8,11 @@ export default function PrincipalStaffAttendanceView() {
     <div>
       <div className="flex items-center justify-between">
         <div />
-        <Link href="/principal/attendance" className="px-3 py-2 border rounded hover-theme-primary">Back</Link>
+        <Link href="/principal/attendance" className="px-3 py-2 rounded btn-secondary">Back</Link>
       </div>
       <StaffAttendanceRecordsView />
     </div>
   )
 }
+
 

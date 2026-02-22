@@ -12,12 +12,15 @@ const Message = require('./message');
 const RefreshToken = require('./refreshToken');
 const Timetable = require('./timetable');
 const Homework = require('./homework');
+const HomeworkFile = require('./homeworkFile');
 const MessageDelivery = require('./messageDelivery');
 const FCMToken = require('./fcmToken');
 const HomeworkNotification = require('./homeworkNotification');
 const ChatSession = require('./chatSession');
 const ChatMessage = require('./chatMessage');
 const ChatFile = require('./chatFile');
+const Notification = require('./notification');
+const NotificationRead = require('./notificationRead');
 
 module.exports = {
 	Role,
@@ -34,10 +37,13 @@ module.exports = {
 	RefreshToken,
 	Timetable,
 	Homework,
+	HomeworkFile,
 	MessageDelivery,
 	FCMToken,
 	HomeworkNotification,
 	ChatSession,
 	ChatMessage,
-	ChatFile
+	ChatFile,
+	Notification,
+	NotificationRead
 };

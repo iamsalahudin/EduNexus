@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Skeleton from '@/components/ui/Skeleton'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import { fetchStaffAttendance, markStaffAttendance } from '@/services/attendanceService'
 
 function toInputDate(d) {
@@ -70,45 +69,50 @@ export default function MyAttendancePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My Attendance</h1>
-          <p className="text-sm text-gray-600 mt-1">Mark your own attendance (staff/teacher attendance).</p>
-        </div>
-        <Link href="/teacher/attendance" className="px-3 py-2 border rounded hover-theme-primary">Back</Link>
-      </div>
+      <PageHeader
+        title="My Attendance"
+        subtitle="Mark your own attendance (staff/teacher attendance)."
+        right={<ButtonLink href="/teacher/attendance">Back</ButtonLink>}
+      />
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-medium">Date</label>
-            <input className="input mt-2" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} inputClassName="mt-2" />
           </div>
           <div>
             <label className="text-sm font-medium">Status</label>
             {!loaded && loading ? (
               <div className="mt-2"><Skeleton className="h-10" /></div>
             ) : (
-              <select className="input mt-2" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <Select className="mt-2" value={status} onChange={(e) => setStatus(e.target.value)}>
                 {STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
                 ))}
-              </select>
+              </Select>
             )}
           </div>
           <div>
             <label className="text-sm font-medium">Remarks (optional)</label>
-            <input className="input mt-2" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional" />
+            <Input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional" inputClassName="mt-2" />
           </div>
         </div>
 
         <div className="mt-4 flex gap-3">
-          <button className="btn-primary" onClick={onSave} disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
-          <button className="px-3 py-2 border rounded hover-theme-primary" onClick={load} disabled={loading}>Refresh</button>
+          <Button variant="primary" onClick={onSave} disabled={loading}>
+            {loading ? 'Saving...' : 'Save'}
+          </Button>
+          <Button onClick={load} disabled={loading}>
+            Refresh
+          </Button>
         </div>
 
         {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
-      </div>
+      </Card>
     </div>
   )
 }
+

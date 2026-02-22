@@ -1,7 +1,8 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { fetchFeeDetails } from '@/services/feesService'
+import { Button, Card, PageHeader } from '@/components/ui'
 
 export default function FeeDetails(){
   const params = useParams()
@@ -15,7 +16,7 @@ export default function FeeDetails(){
     return ()=> mounted = false
   },[id])
 
-  if(!data) return <div className="card">Loading fee details...</div>
+  if(!data) return <Card>Loading fee details...</Card>
 
   function markPaid(index){
     setData(prev=>{
@@ -31,9 +32,9 @@ export default function FeeDetails(){
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Fee Details — {data.student.name}</h1>
+      <PageHeader title={`Fee Details — ${data.student.name}`} />
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Student Info</h3>
           <ul className="mt-2 text-sm">
             <li>Roll Number: {data.student.roll}</li>
@@ -43,8 +44,8 @@ export default function FeeDetails(){
             <li>Section: {data.student.section}</li>
             <li>Gender: {data.student.gender}</li>
           </ul>
-        </div>
-        <div className="card">
+        </Card>
+        <Card>
           <h3 className="font-medium">Fee Info</h3>
           <ul className="mt-2 text-sm">
             <li>Monthly Fee: {data.feeInfo.monthlyFee}</li>
@@ -52,10 +53,10 @@ export default function FeeDetails(){
             <li>Concession: {data.feeInfo.concession}</li>
             <li>Transport: {data.feeInfo.transport}</li>
           </ul>
-        </div>
+        </Card>
       </div>
 
-      <div className="mt-6 card">
+      <Card className="mt-6">
         <h3 className="font-medium">Last Transactions</h3>
         <div className="overflow-x-auto mt-3">
           <table className="w-full text-left table-auto">
@@ -82,7 +83,15 @@ export default function FeeDetails(){
                     <td className="px-3 py-2">{t.paymentDate || '-'}</td>
                     <td className="px-3 py-2">
                       {t.status !== 'Paid' ? (
-                        <button onClick={()=>markPaid(idx)} className="px-2 py-1 rounded text-sm" style={{backgroundColor: 'var(--color-cta)', color: 'var(--color-text-light)'}}>Mark Paid</button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="primary"
+                          onClick={() => markPaid(idx)}
+                          style={{ backgroundColor: 'var(--color-cta)', color: 'var(--color-text-light)' }}
+                        >
+                          Mark Paid
+                        </Button>
                       ) : (
                         <span className="text-sm" style={{color: 'var(--color-cta)'}}>Paid</span>
                       )}
@@ -93,10 +102,13 @@ export default function FeeDetails(){
           </table>
         </div>
           <div className="mt-3 flex gap-2">
-            <button onClick={generateVoucher} className="px-3 py-2 border rounded hover-theme-primary">Generate Voucher</button>
-            <button onClick={()=>navigator.clipboard.writeText(window.location.href)} className="px-3 py-2 border rounded">Copy Link</button>
+            <Button type="button" onClick={generateVoucher}>Generate Voucher</Button>
+            <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(window.location.href)}>
+              Copy Link
+            </Button>
           </div>
-        </div>
+        </Card>
     </div>
   )
 }
+
