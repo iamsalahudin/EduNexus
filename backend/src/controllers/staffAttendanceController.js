@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const { StaffAttendance } = require('../models');
+const { StaffAttendance, User } = require('../models');
+const { arrayToCSV, setCSVHeaders } = require('../utils/csvExport');
 
 function normalizeDay(value) {
   const d = new Date(value);
@@ -8,13 +9,51 @@ function normalizeDay(value) {
   return d;
 }
 
+function applyPeriodRange(period, year, month) {
+  const now = new Date();
+  const resolvedYear = Number(year) || now.getFullYear();
+
+  if (period === 'year') {
+    return {
+      fromDate: `${resolvedYear}-01-01`,
+      toDate: `${resolvedYear}-12-31`
+    };
+  }
+
+  if (period === 'month') {
+    const resolvedMonth = String(month || now.getMonth() + 1).padStart(2, '0');
+    const lastDay = new Date(resolvedYear, Number(resolvedMonth), 0).getDate();
+    return {
+      fromDate: `${resolvedYear}-${resolvedMonth}-01`,
+      toDate: `${resolvedYear}-${resolvedMonth}-${String(lastDay).padStart(2, '0')}`
+    };
+  }
+
+  return null;
+}
+
+function escapeRegex(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function resolveRoleUserIds(role) {
+  const roleText = String(role || '').trim();
+  if (!roleText) return null;
+
+  const users = await User.find({ role: new RegExp(`^${escapeRegex(roleText)}$`, 'i') })
+    .select('_id')
+    .lean();
+
+  return users.map((user) => String(user._id));
+}
+
 async function markStaffAttendance(req, res, next) {
   try {
     const { date, status, remarks, userId } = req.body;
     const normalizedDate = normalizeDay(date);
     if (!normalizedDate) return res.status(400).json({ error: 'Invalid date' });
 
-    const canMarkOthers = ['Admin', 'HR', 'Principal'].includes(req.user.role);
+    const canMarkOthers = ['Admin', 'Principal', 'Reception'].includes(req.user.role);
     const targetUserId = canMarkOthers && userId ? userId : req.user.id;
 
     if (!canMarkOthers && userId && userId.toString() !== req.user.id.toString()) {
@@ -43,10 +82,18 @@ async function markStaffAttendance(req, res, next) {
 
 async function getStaffAttendance(req, res, next) {
   try {
-    const { userId, date, fromDate, toDate } = req.query;
+    const { userId, date, role } = req.query;
+    let { fromDate, toDate, period, year, month } = req.query;
     const userRole = req.user.role;
 
     const filter = {};
+    const roleUserIds = await resolveRoleUserIds(role);
+
+    const derived = applyPeriodRange(period, year, month);
+    if (derived) {
+      fromDate = fromDate || derived.fromDate;
+      toDate = toDate || derived.toDate;
+    }
 
     if (date) {
       const d = normalizeDay(date);
@@ -70,8 +117,15 @@ async function getStaffAttendance(req, res, next) {
       }
     }
 
-    if (['Admin', 'HR', 'Principal'].includes(userRole)) {
+    if (['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+      if (Array.isArray(roleUserIds)) {
+        filter.user = { $in: roleUserIds.map((id) => new mongoose.Types.ObjectId(id)) };
+      }
       if (userId) filter.user = new mongoose.Types.ObjectId(userId);
+
+      if (Array.isArray(roleUserIds) && userId && !roleUserIds.includes(String(userId))) {
+        return res.json({ records: [] });
+      }
     } else {
       // Teacher/staff self only
       filter.user = new mongoose.Types.ObjectId(req.user.id);
@@ -91,10 +145,17 @@ async function getStaffAttendance(req, res, next) {
 
 async function getStaffAttendanceSummary(req, res, next) {
   try {
-    const { fromDate, toDate, userId } = req.query;
+    let { fromDate, toDate, userId, role, period, year, month } = req.query;
     const userRole = req.user.role;
 
     const match = {};
+    const roleUserIds = await resolveRoleUserIds(role);
+
+    const derived = applyPeriodRange(period, year, month);
+    if (derived) {
+      fromDate = fromDate || derived.fromDate;
+      toDate = toDate || derived.toDate;
+    }
     if (fromDate || toDate) {
       match.date = {};
       if (fromDate) {
@@ -111,8 +172,15 @@ async function getStaffAttendanceSummary(req, res, next) {
       }
     }
 
-    if (['Admin', 'HR', 'Principal'].includes(userRole)) {
+    if (['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+      if (Array.isArray(roleUserIds)) {
+        match.user = { $in: roleUserIds.map((id) => new mongoose.Types.ObjectId(id)) };
+      }
       if (userId) match.user = new mongoose.Types.ObjectId(userId);
+
+      if (Array.isArray(roleUserIds) && userId && !roleUserIds.includes(String(userId))) {
+        return res.json({ summary: { present: 0, absent: 0, late: 0, leave: 0, total: 0 }, perUser: [] });
+      }
     } else {
       match.user = new mongoose.Types.ObjectId(req.user.id);
     }
@@ -133,7 +201,54 @@ async function getStaffAttendanceSummary(req, res, next) {
       summary.total += b.count;
     }
 
-    res.json({ summary });
+    let perUser = [];
+    if (['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+      perUser = await StaffAttendance.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: '$user',
+            total: { $sum: 1 },
+            present: { $sum: { $cond: [{ $eq: ['$status', 'present'] }, 1, 0] } },
+            absent: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
+            late: { $sum: { $cond: [{ $eq: ['$status', 'late'] }, 1, 0] } },
+            leave: { $sum: { $cond: [{ $eq: ['$status', 'leave'] }, 1, 0] } }
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        { $unwind: '$user' },
+        {
+          $project: {
+            _id: 0,
+            userId: '$user._id',
+            name: '$user.name',
+            role: '$user.role',
+            total: 1,
+            present: 1,
+            absent: 1,
+            late: 1,
+            leave: 1,
+            percentage: {
+              $cond: [
+                { $gt: ['$total', 0] },
+                { $round: [{ $multiply: [{ $divide: ['$present', '$total'] }, 100] }, 2] },
+                0
+              ]
+            }
+          }
+        },
+        { $sort: { name: 1 } }
+      ]);
+    }
+
+    res.json({ summary, perUser });
   } catch (err) {
     next(err);
   }
@@ -147,7 +262,7 @@ async function updateStaffAttendance(req, res, next) {
 
     const userRole = req.user.role;
     const isOwner = rec.user.toString() === req.user.id.toString();
-    const canManage = ['Admin', 'HR', 'Principal'].includes(userRole);
+    const canManage = ['Admin', 'Principal'].includes(userRole);
     if (!isOwner && !canManage) return res.status(403).json({ error: 'Forbidden' });
 
     if (status) rec.status = status;
@@ -174,10 +289,91 @@ async function deleteStaffAttendance(req, res, next) {
   }
 }
 
+// Export staff attendance records as CSV
+async function exportStaffAttendance(req, res, next) {
+  try {
+    const { userId, role, format = 'csv' } = req.query;
+    let { fromDate, toDate, period, year, month } = req.query;
+    const userRole = req.user.role;
+
+    if (!['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+      return res.status(403).json({ error: 'Insufficient permissions for export' });
+    }
+
+    const filter = {};
+    const roleUserIds = await resolveRoleUserIds(role);
+
+    const derived = applyPeriodRange(period, year, month);
+    if (derived) {
+      fromDate = fromDate || derived.fromDate;
+      toDate = toDate || derived.toDate;
+    }
+
+    if (fromDate || toDate) {
+      filter.date = {};
+      if (fromDate) {
+        const d = normalizeDay(fromDate);
+        if (!d) return res.status(400).json({ error: 'Invalid fromDate' });
+        filter.date.$gte = d;
+      }
+      if (toDate) {
+        const d = normalizeDay(toDate);
+        if (!d) return res.status(400).json({ error: 'Invalid toDate' });
+        const end = new Date(d);
+        end.setHours(23, 59, 59, 999);
+        filter.date.$lte = end;
+      }
+    }
+
+    if (Array.isArray(roleUserIds)) {
+      filter.user = { $in: roleUserIds.map((id) => new mongoose.Types.ObjectId(id)) };
+    }
+
+    if (userId) {
+      if (Array.isArray(roleUserIds) && !roleUserIds.includes(String(userId))) {
+        const filename = `staff_attendance_${fromDate || 'all'}_to_${toDate || 'all'}.csv`;
+        setCSVHeaders(res, filename);
+        return res.send('Date,Staff Name,Email,Role,Status,Marked By,Remarks\n');
+      }
+      filter.user = new mongoose.Types.ObjectId(userId);
+    }
+
+    const records = await StaffAttendance.find(filter)
+      .populate('user', 'name email role')
+      .populate('markedBy', 'name email')
+      .sort({ date: -1, user: 1 })
+      .limit(5000)
+      .lean();
+
+    if (format === 'csv') {
+      const headers = [
+        { key: 'date', label: 'Date' },
+        { key: 'user.name', label: 'Staff Name' },
+        { key: 'user.email', label: 'Email' },
+        { key: 'user.role', label: 'Role' },
+        { key: 'status', label: 'Status' },
+        { key: 'markedBy.name', label: 'Marked By' },
+        { key: 'remarks', label: 'Remarks' }
+      ];
+
+      const csv = arrayToCSV(records, headers);
+      const filename = `staff_attendance_${fromDate || 'all'}_to_${toDate || 'all'}.csv`;
+
+      setCSVHeaders(res, filename);
+      return res.send(csv);
+    }
+
+    res.json({ records });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   markStaffAttendance,
   getStaffAttendance,
   getStaffAttendanceSummary,
   updateStaffAttendance,
-  deleteStaffAttendance
+  deleteStaffAttendance,
+  exportStaffAttendance
 };

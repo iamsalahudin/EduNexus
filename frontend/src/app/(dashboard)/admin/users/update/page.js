@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { userService } from '@/services/user.service'
 import { Button, Card, Input, PageHeader, Select, Skeleton, ToggleBox } from '@/components/ui'
 
-const ROLE_OPTIONS = ['Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception']
+const ROLE_OPTIONS = ['Principal', 'HR', 'Finance', 'Reception']
 
 export default function UpdateUser() {
   const router = useRouter()
@@ -16,7 +16,7 @@ export default function UpdateUser() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [user, setUser] = useState(null)
-  const [form, setForm] = useState({ name: '', email: '', role: 'Teacher', active: true })
+  const [form, setForm] = useState({ name: '', username: '', email: '', role: 'Principal', active: true })
 
   useEffect(() => {
     let mounted = true
@@ -35,8 +35,9 @@ export default function UpdateUser() {
         setUser(u)
         setForm({
           name: u?.name || '',
+          username: u?.username || '',
           email: u?.email || '',
-          role: u?.role || 'Teacher',
+          role: u?.role || 'Principal',
           active: u?.active !== false
         })
       } catch (e) {
@@ -58,12 +59,18 @@ export default function UpdateUser() {
     setSaving(true)
     setError('')
     try {
-      await userService.updateUser(id, {
+      const payload = {
         name: form.name,
+        username: form.username,
         email: form.email,
-        role: form.role,
         active: form.active
-      })
+      }
+
+      if (ROLE_OPTIONS.includes(form.role)) {
+        payload.role = form.role
+      }
+
+      await userService.updateUser(id, payload)
       router.push(`/admin/users/user/${encodeURIComponent(id)}`)
     } catch (e) {
       setError(e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Failed to update user')
@@ -74,7 +81,10 @@ export default function UpdateUser() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Update User" subtitle="Edit user profile fields (Admin-only)." />
+      <PageHeader
+        title="Update User"
+        subtitle="Edit account fields. Admin, Teacher, Student, and Parent cannot be assigned from this form."
+      />
 
       {!id ? (
         <Card>
@@ -101,23 +111,36 @@ export default function UpdateUser() {
             />
 
             <Input
+              label="Username"
+              value={form.username}
+              onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+            />
+
+            <Input
               label="Email"
               type="email"
               value={form.email}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
             />
 
-            <Select
-              label="Role"
-              value={form.role}
-              onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-            >
-              {ROLE_OPTIONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </Select>
+            {ROLE_OPTIONS.includes(form.role) ? (
+              <Select
+                label="Role"
+                value={form.role}
+                onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+              >
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <div className="text-sm rounded border p-3 bg-gray-50">
+                Current role: <span className="font-medium">{form.role || 'Unknown'}</span>. Role updates are disabled for
+                this account from this page.
+              </div>
+            )}
 
             <div className="flex items-center gap-2 text-sm">
               <ToggleBox active={form.active} onToggle={(next) => setForm((p) => ({ ...p, active: next }))}>

@@ -55,6 +55,20 @@ const HomeworkSchema = new mongoose.Schema(
 
     attachments: { type: [FileRefSchema], default: [] },
     submissions: { type: [SubmissionSchema], default: [] },
+    lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    lastEditedAt: { type: Date },
+    editHistory: {
+      type: [
+        {
+          editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          editorRole: { type: String },
+          action: { type: String, default: 'update' },
+          note: { type: String, default: '' },
+          editedAt: { type: Date, default: Date.now }
+        }
+      ],
+      default: []
+    },
     // Backward compatibility: older UI used totalMarks
     totalMarks: { type: Number, default: 0 },
     status: { type: String, enum: ['draft', 'published', 'closed'], default: 'draft' }

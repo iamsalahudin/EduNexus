@@ -53,10 +53,22 @@ const getHomeworksQuerySchema = Joi.object({
   })
 });
 
+const homeworkAuditQuerySchema = Joi.object({
+  query: Joi.object({
+    class: Joi.string(),
+    section: Joi.string(),
+    teacherId: Joi.string(),
+    subject: Joi.string(),
+    fromDate: Joi.date(),
+    toDate: Joi.date()
+  })
+});
+
 module.exports = {
   createHomeworkSchema,
   updateHomeworkSchema,
   getHomeworksQuerySchema,
+  homeworkAuditQuerySchema,
   updateDraftSchema,
   receiveSubmissionSchema,
   returnSubmissionSchema

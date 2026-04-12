@@ -24,33 +24,45 @@ function normalizeDay(value) {
   return d;
 }
 
-async function ensureUser({ name, email, password, role, profile }) {
+async function ensureUser({ name, username, email, password, role, profile }) {
   const normalizedEmail = String(email).toLowerCase();
+  const normalizedUsername = String(username || '').toLowerCase().trim();
   let user = await User.findOne({ email: normalizedEmail });
   if (!user) {
-    user = await User.create({ name, email: normalizedEmail, password, role, profile: profile || {} });
+    user = await User.create({ name, username: normalizedUsername, email: normalizedEmail, password, role, profile: profile || {} });
     return { user, created: true };
+  }
+  if (!user.username && normalizedUsername) {
+    user.username = normalizedUsername;
   }
   if (profile && typeof profile === 'object') {
     user.profile = { ...(user.profile || {}), ...profile };
-    await user.save();
   }
+  await user.save();
   return { user, created: false };
 }
 
-async function ensureStudent({ studentId, firstName, lastName, cls, section, parentIds = [] }) {
+async function ensureStudent({ userId, studentId, registrationNumber, cls, section, contact, parentIds = [] }) {
   let student = await Student.findOne({ studentId });
   if (!student) {
     student = await Student.create({
+      user: userId,
       studentId,
-      firstName,
-      lastName: lastName || '',
+      registrationNumber,
       class: String(cls),
       section: section || '',
+      contact: String(contact || '00000000000'),
       parents: parentIds
     });
     return { student, created: true };
   }
+
+  if (userId) student.user = userId;
+  if (!student.registrationNumber) student.registrationNumber = registrationNumber;
+  if (!student.contact) student.contact = String(contact || '00000000000');
+  student.class = String(cls);
+  student.section = section || '';
+
   // merge parents
   const existing = new Set((student.parents || []).map((p) => p.toString()));
   for (const pid of parentIds) existing.add(pid.toString());
@@ -120,16 +132,17 @@ async function seedDemo() {
   console.log('Connected to DB for demo seeding');
 
   // Ensure demo users exist (same emails as login page quick-fill)
-  const admin = (await ensureUser({ name: 'Admin', role: 'Admin', email: 'admin@edu.com', password: 'admin@123' })).user;
-  const parent = (await ensureUser({ name: 'Parent', role: 'Parent', email: 'parent@edu.com', password: 'parent@123' })).user;
+  const admin = (await ensureUser({ name: 'Admin', username: 'admin', role: 'Admin', email: 'admin@edu.com', password: 'admin@123' })).user;
+  const parent = (await ensureUser({ name: 'Parent', username: 'parent', role: 'Parent', email: 'parent@edu.com', password: 'parent@123' })).user;
   const teacher = (await ensureUser({
     name: 'Teacher',
+    username: 'teacher',
     role: 'Teacher',
     email: 'teacher@edu.com',
     password: 'teacher@123',
     profile: { class: '10', section: 'A' }
   })).user;
-  const studentLogin = (await ensureUser({ name: 'Student', role: 'Student', email: 'student@edu.com', password: 'student@123' })).user;
+  const studentLogin = (await ensureUser({ name: 'Student', username: 'student', role: 'Student', email: 'student@edu.com', password: 'student@123' })).user;
 
   // Ensure demo class exists in master data (needed for Subjects + dropdowns)
   await ensureSchoolClass({ name: '10', sections: ['A'] });
@@ -145,12 +158,25 @@ async function seedDemo() {
   const roster = [];
   for (let i = 1; i <= 5; i += 1) {
     const sid = `S-10A-${String(i).padStart(3, '0')}`;
+    const registrationNumber = `REG-10A-${String(i).padStart(3, '0')}`;
+
+    const loginUser = i === 1
+      ? studentLogin
+      : (await ensureUser({
+        name: `Student${i}`,
+        username: `student${i}`,
+        role: 'Student',
+        email: `student${i}@edu.com`,
+        password: `student${i}@123`
+      })).user;
+
     const { student } = await ensureStudent({
+      userId: loginUser._id,
       studentId: sid,
-      firstName: `Student${i}`,
-      lastName: 'Demo',
+      registrationNumber,
       cls: '10',
       section: 'A',
+      contact: `03000000${String(i).padStart(3, '0')}`,
       parentIds: i === 1 ? [parent._id] : []
     });
     roster.push(student);

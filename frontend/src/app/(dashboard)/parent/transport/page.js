@@ -1,12 +1,7 @@
-export default function Page() {
+'use client'
 
-  return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Transport</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
-  )
+import TransportParentWorkspace from '@/components/transport/TransportParentWorkspace'
+
+export default function ParentTransportPage() {
+  return <TransportParentWorkspace />
 }

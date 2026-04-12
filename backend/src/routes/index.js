@@ -32,8 +32,20 @@ router.use('/subjects', require('./subjects'));
 // HR teacher management (teacher-only)
 router.use('/hr/teachers', require('./hrTeachers'));
 
+// Admin teacher management
+router.use('/teachers', require('./teachers'));
+
 // Report cards
 router.use('/reports', require('./reportCards'));
+
+// Exams + exam configuration
+router.use('/exams', require('./exams'));
+
+// Marksheets management
+router.use('/marksheets', require('./marksheets'));
+
+// Grade scales (global grading configuration)
+router.use('/grade-scales', require('./gradeScales'));
 
 // Timetable management
 router.use('/timetables', require('./timetables'));
@@ -41,8 +53,17 @@ router.use('/timetables', require('./timetables'));
 // Homework management
 router.use('/homeworks', require('./homeworks'));
 
+// Daily diary management
+router.use('/daily-diary', require('./dailyDiary'));
+
 // Fee management
 router.use('/fees', require('./fees'));
+
+// Transport management
+router.use('/transport', require('./transport'));
+
+// Salary management
+router.use('/salary', require('./salary'));
 
 // Complaints & feedback
 router.use('/complaints', require('./complaints'));
@@ -58,5 +79,8 @@ router.use('/notifications', require('./notifications'));
 
 // AI Chat agent
 router.use('/chat', require('./chat'));
+
+// Student certificates
+router.use('/certificates', require('./certificates'));
 
 module.exports = router;

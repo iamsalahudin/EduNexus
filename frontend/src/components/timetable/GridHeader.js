@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 
 export default function GridHeader({ col }) {
   const { setNodeRef, isOver } = useDroppable({
-    id: `header:${col.id}`
+    id: `header|${encodeURIComponent(col.id)}`
   })
 
   return (

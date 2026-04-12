@@ -8,6 +8,7 @@ const {
   createHomeworkSchema,
   updateHomeworkSchema,
   getHomeworksQuerySchema,
+  homeworkAuditQuerySchema,
   updateDraftSchema,
   receiveSubmissionSchema,
   returnSubmissionSchema
@@ -33,6 +34,9 @@ router.get('/', validate(getHomeworksQuerySchema), (req, res, next) => {
   if (['Admin', 'Principal'].includes(role)) return homeworkController.getHomeworksForAdminPrincipal(req, res, next);
   res.status(403).json({ error: 'Forbidden' });
 });
+
+// Admin/Principal: homework audit summary dashboard
+router.get('/audit-summary', requireRole('Admin', 'Principal'), validate(homeworkAuditQuerySchema), homeworkController.getHomeworkAuditSummary);
 
 // Get single homework
 router.get('/:id', homeworkController.getHomework);
@@ -84,6 +88,7 @@ router.post(
 );
 
 // Teacher: Update homework
-router.patch('/:id', requireRole('Teacher'), validate(updateHomeworkSchema), homeworkController.updateHomework);
+router.patch('/:id', requireRole('Teacher', 'Admin', 'Principal'), validate(updateHomeworkSchema), homeworkController.updateHomework);
+router.delete('/:id', requireRole('Teacher', 'Admin', 'Principal'), homeworkController.deleteHomework);
 
 module.exports = router;
