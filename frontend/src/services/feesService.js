@@ -1,72 +1,85 @@
-// Mock fees API service
-function wait(ms){ return new Promise(r=>setTimeout(r, ms)) }
+import { api } from './api'
 
-export async function fetchFeesSummary(){
-  await wait(300)
+function toNumber(value) {
+  const num = Number(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+export async function fetchFeesSummary(params = {}) {
+  const { data } = await api.get('/fees/summary', { params })
   return {
-    totalStudents: 1200,
-    paidThisMonth: 980,
-    pendingCount: 45,
-    totalCollected: 125000
+    totalStudents: toNumber(data?.totalStudents),
+    paidThisMonth: toNumber(data?.paidThisMonth),
+    pendingCount: toNumber(data?.pendingCount),
+    totalCollected: toNumber(data?.totalCollected),
+    incomingFeeThisMonth: toNumber(data?.incomingFeeThisMonth),
+    pendingLiabilityThisMonth: toNumber(data?.pendingLiabilityThisMonth),
+    monthlySeries: Array.isArray(data?.monthlySeries) ? data.monthlySeries : []
   }
 }
 
-export async function fetchFeeDefaulters(filters = {}){
-  await wait(350)
-  // return mock list filtered superficially
-  const rows = Array.from({length:12}).map((_,i)=>({
-    id: 1000+i,
-    roll: `R-${1000+i}`,
-    name: `Student ${i+1}`,
-    father: `Father ${i+1}`,
-    class: `Class ${((i%5)+1)}`,
-    section: ['A','B','C'][i%3],
-    gender: i%2? 'Male' : 'Female',
-    feeType: i%2? 'Tuition' : 'Transport',
-    pendingFee: (Math.floor(Math.random()*5000)+1000)
-  }))
-  return rows
-}
-
-export async function fetchFeeRecords(filters = {}){
-  await wait(300)
-  const rows = Array.from({length:15}).map((_,i)=>({
-    id: 2000+i,
-    roll: `R-${2000+i}`,
-    name: `Student ${i+1}`,
-    father: `Father ${i+1}`,
-    class: `Class ${((i%6)+1)}`,
-    section: ['A','B','C'][i%3],
-    gender: i%2? 'Male' : 'Female',
-    lastPaymentDate: `2025-0${(i%9)+1}-15`,
-    monthlyFee: 5000
-  }))
-  return rows
-}
-
-export async function fetchFeeDetails(id){
-  await wait(200)
+export async function generateMonthlyFees(payload = {}) {
+  const { data } = await api.post('/fees/generate-monthly', payload)
   return {
-    student: { roll: `R-${id}`, name: `Student ${id}`, father: 'Father X', class: 'Class 3', section: 'A', gender: 'Male'},
-    feeInfo: { monthlyFee: 5000, lastPaymentDate: '2025-11-15', concession: '0%', transport: 'Yes' },
-    transactions: Array.from({length:6}).map((_,i)=>({
-      voucherDate: `2025-0${(i%9)+1}-05`, voucherNo: `V-${id}-${i}`, dueDate: `2025-0${(i%9)+1}-20`, feeType: 'Tuition', totalFee: 5000, status: ['Paid','Pending'][i%2], paymentDate: i%2? `2025-0${(i%9)+1}-18` : null
-    }))
+    ok: Boolean(data?.ok),
+    month: String(data?.month || ''),
+    createdCount: toNumber(data?.createdCount),
+    totalCandidates: toNumber(data?.totalCandidates),
+    scope: data?.scope || { class: null, section: null }
   }
 }
 
-export async function fetchFeeStructure(){
-  await wait(200)
+export async function fetchFeeDefaulters(filters = {}) {
+  const { data } = await api.get('/fees/defaulters', { params: filters })
+  return Array.isArray(data) ? data : []
+}
+
+export async function fetchFeeRecords(filters = {}) {
+  const { data } = await api.get('/fees/records', { params: filters })
+  return Array.isArray(data) ? data : []
+}
+
+export async function fetchFeeDetails(id, params = {}) {
+  const studentId = String(id || '').trim() || 'self'
+  const query = { ...params }
+  if (studentId !== 'self') {
+    query.studentId = studentId
+  }
+
+  const path = `/fees/details/${studentId}`
+  const { data } = await api.get(path, { params: query })
+  return {
+    student: data?.student || {},
+    feeInfo: data?.feeInfo || {},
+    transactions: Array.isArray(data?.transactions) ? data.transactions : [],
+    summary: data?.summary || {
+      period: { preset: 'all', from: null, to: null },
+      totals: { paid: 0, due: 0, total: 0 },
+      monthlyRows: [],
+      yearlyRows: [],
+      transactionCount: 0,
+      allTransactionCount: 0
+    }
+  }
+}
+
+export async function updateFeeStatus(feeId, status) {
+  const { data } = await api.patch(`/fees/${feeId}/status`, { status })
+  return data?.fee
+}
+
+export async function fetchFeeStructure() {
   return {
     regularFees: [
-      {label:'Annual', amount:500},
-      {label:'Admission', amount:1000}
+      { label: 'Annual', amount: 500 },
+      { label: 'Admission', amount: 1000 }
     ],
     tuition: {
-      type:'Monthly', levels: {
-        'Pre-Primary':2000,
-        'Primary':3000,
-        'Middle':4000
+      type: 'Monthly',
+      levels: {
+        'Pre-Primary': 2000,
+        Primary: 3000,
+        Middle: 4000
       }
     }
   }

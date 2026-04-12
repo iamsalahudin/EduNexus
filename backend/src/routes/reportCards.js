@@ -23,4 +23,7 @@ router.patch('/:id/approve', requireRole('Principal', 'Admin'), reportCardContro
 // Principal: reject report card (send back to teacher)
 router.patch('/:id/reject', requireRole('Principal', 'Admin'), validate(rejectReportCardSchema), reportCardController.rejectReportCard);
 
+// Admin/Principal: archive old published report cards
+router.post('/archive/run', requireRole('Principal', 'Admin'), reportCardController.archiveOldReportCards);
+
 module.exports = router;

@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Textarea } from '@/components/ui'
 import homeworksService from '@/services/homeworksService'
 import InlineFilePreview from '@/components/homework/InlineFilePreview'
@@ -30,6 +31,7 @@ function statusBadge(status) {
 
 export default function Page({ params }) {
   const id = params?.id
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -117,6 +119,23 @@ export default function Page({ params }) {
     }
   }
 
+  async function onDeleteHomework() {
+    if (!id || saving) return
+    const ok = window.confirm('Delete this homework and all related files/submissions? This action cannot be undone.')
+    if (!ok) return
+
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      await homeworksService.remove(id)
+      router.push('/teacher/homework')
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to delete homework')
+      setSaving(false)
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -126,6 +145,9 @@ export default function Page({ params }) {
           <div className="flex gap-2">
             <Button onClick={load} disabled={loading || saving}>
               Refresh
+            </Button>
+            <Button onClick={onDeleteHomework} disabled={loading || saving}>
+              Delete
             </Button>
             <ButtonLink href="/teacher/homework">Back</ButtonLink>
           </div>

@@ -1,8 +1,10 @@
 const { User } = require('../models');
+const { createWelcomeNotificationSafe } = require('../services/notificationService');
 
 function pickTeacherUpdates(body) {
   const updates = {};
   if (typeof body.name === 'string') updates.name = body.name;
+  if (typeof body.username === 'string') updates.username = String(body.username).toLowerCase();
   if (typeof body.email === 'string') updates.email = String(body.email).toLowerCase();
   if (typeof body.active === 'boolean') updates.active = body.active;
   if (body.profile && typeof body.profile === 'object') {
@@ -23,6 +25,7 @@ async function listTeachers(req, res, next) {
     if (s) {
       filter.$or = [
         { name: { $regex: s, $options: 'i' } },
+        { username: { $regex: s, $options: 'i' } },
         { email: { $regex: s, $options: 'i' } }
       ];
     }
@@ -42,18 +45,27 @@ async function listTeachers(req, res, next) {
 
 async function createTeacher(req, res, next) {
   try {
-    const { name, email, password, active, profile } = req.body;
+    const { name, username, email, password, active, profile } = req.body;
+    const normalizedUsername = String(username).toLowerCase();
     const normalizedEmail = String(email).toLowerCase();
-    const existing = await User.findOne({ email: normalizedEmail });
-    if (existing) return res.status(409).json({ error: 'Email already exists' });
+    const existingUsername = await User.findOne({ username: normalizedUsername });
+    if (existingUsername) return res.status(409).json({ error: 'Username already exists' });
 
     const user = await User.create({
       name,
+      username: normalizedUsername,
       email: normalizedEmail,
       password,
       role: 'Teacher',
       active: typeof active === 'boolean' ? active : true,
       profile: profile && typeof profile === 'object' ? profile : {}
+    });
+
+    await createWelcomeNotificationSafe({
+      userId: user._id,
+      recipientName: user.name,
+      role: user.role,
+      createdBy: req.user?.id
     });
 
     const safe = await User.findById(user._id).select('-password');
@@ -72,10 +84,9 @@ async function updateTeacher(req, res, next) {
     if (!existing) return res.status(404).json({ error: 'Not found' });
     if (existing.role !== 'Teacher') return res.status(403).json({ error: 'Only Teacher accounts can be updated here' });
 
-    // email uniqueness check when changing
-    if (updates.email) {
-      const same = await User.findOne({ email: updates.email, _id: { $ne: existing._id } }).select('_id');
-      if (same) return res.status(409).json({ error: 'Email already exists' });
+    if (updates.username) {
+      const same = await User.findOne({ username: updates.username, _id: { $ne: existing._id } }).select('_id');
+      if (same) return res.status(409).json({ error: 'Username already exists' });
     }
 
     if (updates.profile) {

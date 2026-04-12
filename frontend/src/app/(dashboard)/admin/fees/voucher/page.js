@@ -1,4 +1,5 @@
-"use client"
+'use client'
+import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,17 +13,30 @@ const VoucherSchema = z.object({
 })
 
 export default function FeeVoucher(){
+  const [saveMessage, setSaveMessage] = useState('')
+  const [savedTemplate, setSavedTemplate] = useState(null)
   const { register, control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(VoucherSchema),
     defaultValues: { schoolName:'My School', schoolAddress:'Address', banks: [{ bankName:'Bank A', account:'XXXX' }] }
   })
-  const breadcrumb = [ {id: 1, name: 'Fee', link: '/admin/fees'}, {id: 2, name: 'Fee Voucher', link: '/admin/fees/voucher'}]
 
   const { fields, append, remove } = useFieldArray({ name: 'banks', control })
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('feeVoucherTemplate')
+      if (stored) {
+        setSavedTemplate(JSON.parse(stored))
+      }
+    } catch {
+      setSavedTemplate(null)
+    }
+  }, [])
+
   function onSubmit(values){
-    console.log('Voucher values', values)
-    alert('Saved (mock)')
+    localStorage.setItem('feeVoucherTemplate', JSON.stringify(values))
+    setSavedTemplate(values)
+    setSaveMessage('Voucher template saved.')
   }
 
   const { ref: schoolNameRef, ...schoolNameReg } = register('schoolName')
@@ -31,6 +45,7 @@ export default function FeeVoucher(){
   return (
     <div>
       <PageHeader title="Fee Voucher" />
+      {saveMessage ? <div className="mt-2 text-sm text-green-600">{saveMessage}</div> : null}
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <h3 className="font-medium">School Info</h3>
@@ -81,7 +96,22 @@ export default function FeeVoucher(){
         <div className="md:col-span-2">
           <Card className="mt-4">
             <h3 className="font-medium">Voucher Preview</h3>
-            <div className="mt-3 p-4 border rounded">Voucher preview area (design editor placeholder)</div>
+            {savedTemplate ? (
+              <div className="mt-3 p-4 border rounded space-y-2 text-sm">
+                <div><span className="font-medium">School:</span> {savedTemplate.schoolName}</div>
+                <div><span className="font-medium">Address:</span> {savedTemplate.schoolAddress}</div>
+                <div>
+                  <span className="font-medium">Banks:</span>
+                  <ul className="list-disc ml-6 mt-1">
+                    {savedTemplate.banks.map((bank, index) => (
+                      <li key={`${bank.bankName}-${index}`}>{bank.bankName} - {bank.account}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 p-4 border rounded text-sm text-gray-500">Save a template to preview the voucher content here.</div>
+            )}
           </Card>
 
           <div className="mt-3 flex gap-2">

@@ -12,10 +12,10 @@ const {
 
 router.use(requireAuth);
 
-// Mark (self) or (admin/hr/principal) can mark others via userId
+// Mark daily attendance (admin/principal/reception)
 router.post(
   '/',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal'),
+  requireRole('Admin', 'Principal', 'Reception'),
   validate(markStaffAttendanceSchema),
   staffAttendanceController.markStaffAttendance
 );
@@ -23,20 +23,27 @@ router.post(
 // View: admin/hr/principal can view all; others self-only
 router.get(
   '/',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal'),
+  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Reception'),
   validate(getStaffAttendanceSchema),
   staffAttendanceController.getStaffAttendance
 );
 
+// Export: admin/hr/principal only
+router.get(
+  '/export',
+  requireRole('Admin', 'HR', 'Principal', 'Reception'),
+  staffAttendanceController.exportStaffAttendance
+);
+
 router.get(
   '/summary',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal'),
+  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Reception'),
   staffAttendanceController.getStaffAttendanceSummary
 );
 
 router.patch(
   '/:id',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal'),
+  requireRole('Admin', 'Principal'),
   validate(updateStaffAttendanceSchema),
   staffAttendanceController.updateStaffAttendance
 );

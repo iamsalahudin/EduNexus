@@ -1,47 +1,70 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import SetupForm from '@/components/timetable/TimetableSetupForm'
 import TimetableGrid from '@/components/timetable/TimetableGrid'
-import WeekSelector from '@/components/timetable/WeekSelector'
-import { mockTeachers, mockRooms } from '@/utils/mockData'
+import classesService from '@/services/classesService'
 import subjectsService from '@/services/subjectsService'
+import teacherService from '@/services/teacher.service'
+import timetableService from '@/services/timetableService'
+import { buildApiSlotsFromWeeklyGrid, parseAcademicYearToNumber } from '@/utils/timetableTransform'
 import { Button, PageHeader } from '@/components/ui'
 
-const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat']
+const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat']
 
 export default function CreateTimetablePage() {
+  const router = useRouter()
   const [config, setConfig] = useState(null)
   const [subjectsByClass, setSubjectsByClass] = useState({})
+  const [teachers, setTeachers] = useState([])
+  const [rooms, setRooms] = useState([])
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  // Week config
-  const [weekConfig, setWeekConfig] = useState({
-    mode: 'same',
-    days: ['Mon','Tue','Wed','Thu','Fri', 'Sat'],
-  })
+  const [grid, setGrid] = useState([])
 
-  // Active day for editing (used when mode = 'different')
-  const [activeDay, setActiveDay] = useState('Mon')
-
-  // Grids per day
-  const [gridsByDay, setGridsByDay] = useState({})
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const [teacherRes, roomRes] = await Promise.all([
+          teacherService.listTeachers({ active: true, limit: 200 }),
+          classesService.listRooms()
+        ])
+        if (!mounted) return
+        const rows = Array.isArray(teacherRes?.teachers) ? teacherRes.teachers : []
+        const pool = rows
+          .map((t) => ({
+            id: String(t?.user?._id || '').trim(),
+            label: String(t?.user?.name || t?.user?.username || t?.employeeId || '').trim()
+          }))
+          .filter((t) => t.id)
+        setTeachers(pool)
+        setRooms(Array.isArray(roomRes?.rooms) ? roomRes.rooms : [])
+      } catch {
+        if (!mounted) return
+        setTeachers([])
+        setRooms([])
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   // Initialize grids once after setup form completion
   const handleSetupComplete = (cfg) => {
     setConfig(cfg)
-    const initialGrid = {} 
-    DAYS.forEach(day => {
-      initialGrid[day] = JSON.parse(JSON.stringify(cfg.classes.map(cls => ({
-        id: cls.id,
-        name: cls.name,
-        periods: Object.fromEntries(cfg.timeSlots.map(ts => [
-          ts.label,
-          { subject: null, teacher: null, room: null }
-        ]))
-      }))))
-    })
-    setGridsByDay(initialGrid)
-    setActiveDay('Mon')
+    const initialGrid = JSON.parse(JSON.stringify(cfg.classes.map((cls) => ({
+      id: cls.id,
+      name: cls.name,
+      periods: Object.fromEntries(cfg.timeSlots.map((ts) => [
+        ts.label,
+        { subject: null, teacher: null, room: null }
+      ]))
+    }))))
+    setGrid(initialGrid)
   }
 
   useEffect(() => {
@@ -56,14 +79,18 @@ export default function CreateTimetablePage() {
           const cls = String(s?.className || '').trim()
           if (!cls) return
           if (!map[cls]) map[cls] = []
-          map[cls].push(String(s?.name || '').trim())
+          map[cls].push({
+            id: String(s?._id || '').trim(),
+            label: String(s?.name || '').trim()
+          })
         })
 
         // Filter to only selected classes in config
         const filtered = {}
         ;(config?.classes || []).forEach((c) => {
-          const id = String(c?.id || c?.name || '')
-          filtered[id] = Array.isArray(map[id]) ? map[id] : []
+          const classId = String(c?.id || c?.name || '')
+          const baseClass = String(c?.className || c?.name || c?.id || '')
+          filtered[classId] = Array.isArray(map[baseClass]) ? map[baseClass] : []
         })
         setSubjectsByClass(filtered)
       } catch (e) {
@@ -76,60 +103,54 @@ export default function CreateTimetablePage() {
     }
   }, [config])
 
-  // Handle grid changes
   function handleGridChange(updatedGrid) {
-    if (weekConfig.mode === 'same') {
-      // Apply to all days
-      const newGrids = {}
-      weekConfig.days.forEach(d => newGrids[d] = JSON.parse(JSON.stringify(updatedGrid)))
-      setGridsByDay(newGrids)
-    } else {
-      // Apply only to active day
-      setGridsByDay(prev => ({ ...prev, [activeDay]: JSON.parse(JSON.stringify(updatedGrid)) }))
-    }
+    setGrid(JSON.parse(JSON.stringify(updatedGrid)))
   }
 
-  // Handle day selection (only for 'different' mode)
-  function handleDaySelect(day) {
-    setActiveDay(day)
-  }
+  async function handleSaveTimetable() {
+    if (!config) return
+    setSaveError('')
+    setSaving(true)
 
-  // When switching mode
-  function handleWeekModeChange(newConfig) {
-    if (newConfig.mode === 'same' && weekConfig.mode === 'different') {
-      if (!confirm('Switching to "same for whole week" will overwrite all individual day edits. Proceed?')) return
-      // Copy Monday grid to all days
-      const newGrids = {}
-      DAYS.forEach(d => newGrids[d] = JSON.parse(JSON.stringify(gridsByDay['Mon'])))
-      setGridsByDay(newGrids)
-      setActiveDay('Mon')
-    }
+    try {
+      const weeklyGrids = Object.fromEntries(
+        WEEK_DAYS.map((day) => [day, JSON.parse(JSON.stringify(grid))])
+      )
 
-    if (newConfig.mode === 'different' && weekConfig.mode === 'same') {
-      // When changing from same -> different
-      // Keep Monday as it is, other days empty
-      const newGrids = {}
-      DAYS.forEach((d,i) => {
-        if (i === 0) newGrids[d] = JSON.parse(JSON.stringify(gridsByDay[d])) // Monday
-        else newGrids[d] = JSON.parse(JSON.stringify(gridsByDay[d].map(c => ({
-          id: c.id,
-          name: c.name,
-          periods: Object.fromEntries(Object.entries(c.periods).map(([time]) => [time, {subject:null,teacher:null,room:null}]))
-        }))))
+      const slots = buildApiSlotsFromWeeklyGrid({
+        weeklyGrids,
+        days: WEEK_DAYS,
+        classes: config.classes,
+        timeSlots: config.timeSlots
       })
-      setGridsByDay(newGrids)
-      setActiveDay('Mon')
-    }
 
-    setWeekConfig(newConfig)
+      if (!slots.length) {
+        setSaveError('No timetable slots available to save.')
+        return
+      }
+
+      await timetableService.createTimetable({
+        level: config.level,
+        year: parseAcademicYearToNumber(config.academicYear),
+        slots
+      })
+
+      router.push('/admin/timetable')
+    } catch (e) {
+      setSaveError(e?.response?.data?.error || 'Failed to save timetable')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
       <PageHeader
         title="Create Timetable"
-        subtitle="Configure metadata, build timeslots and assign teachers / rooms / subjects."
+        subtitle="Create one timetable per level and apply it to all classes in that level."
       />
+
+      {saveError ? <div className="text-sm text-red-600">{saveError}</div> : null}
 
       {!config && (
         <SetupForm
@@ -142,49 +163,25 @@ export default function CreateTimetablePage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-muted">Timetable</div>
-              <div className="font-medium">{config.name} · {config.academicYear}</div>
+              <div className="font-medium">{config.name} · {config.academicYear} · {config.level}</div>
             </div>
 
             <div className="flex gap-3">
               <Button type="button" variant="outline" onClick={() => setConfig(null)}>
                 ← Back
               </Button>
-              <Button type="button" variant="primary" onClick={() => console.log('Mock Save Payload', gridsByDay)}>
-                Save Timetable
+              <Button type="button" variant="primary" onClick={handleSaveTimetable} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Timetable'}
               </Button>
             </div>
           </div>
 
-          {/* Week Selector */}
-          <WeekSelector 
-            value={weekConfig} 
-            onChange={handleWeekModeChange}
-          />
-
-          {/* Day toggle for 'different' mode */}
-          {weekConfig.mode === 'different' && (
-            <div className="flex gap-2">
-              {weekConfig.days.map(d => (
-                <Button
-                  key={d}
-                  type="button"
-                  size="sm"
-                  variant={activeDay === d ? 'primary' : 'secondary'}
-                  onClick={() => handleDaySelect(d)}
-                >
-                  {d}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          {/* Timetable Grid */}
           <TimetableGrid
             config={config}
-            teachers={mockTeachers}
-            rooms={mockRooms}
+            teachers={teachers}
+            rooms={rooms}
             subjectsByClass={subjectsByClass}
-            initialGrid={gridsByDay[activeDay]}
+            initialGrid={grid}
             onGridChange={handleGridChange}
           />
         </>

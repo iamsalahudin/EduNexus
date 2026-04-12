@@ -1,399 +1,364 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
+import ButtonLink from '@/components/ui/ButtonLink'
 import studentsService from '@/services/studentsService'
-import userService from '@/services/user.service'
-import classesService from '@/services/classesService'
-import { Button, Card, Input, PageHeader, Select, Skeleton, ToggleBox } from '@/components/ui'
+import {
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  PageHeader,
+  Select,
+  Skeleton,
+  StatCard,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRoot,
+  TableRow,
+} from '@/components/ui'
+
+const STATUS_OPTIONS = ['', 'incampus', 'alumni']
+const ACTIVE_OPTIONS = ['', 'true', 'false']
+const PAGE_SIZE = 12
 
 export default function Page() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [bootstrapping, setBootstrapping] = useState(true)
+  const [summary, setSummary] = useState({ total: 0, incampus: 0, active: 0, alumni: 0 })
   const [students, setStudents] = useState([])
-  const [query, setQuery] = useState('')
-  const [classId, setClassId] = useState('')
-  const [section, setSection] = useState('')
+  const [recentStudents, setRecentStudents] = useState([])
+  const [recentCertificates, setRecentCertificates] = useState([])
+  const [q, setQ] = useState('')
+  const [status, setStatus] = useState('')
+  const [active, setActive] = useState('')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+    hasPrev: false,
+    hasNext: false,
+  })
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
-  const [classes, setClasses] = useState([])
-
-  // Admission form state
-  const [studentId, setStudentId] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [studentClass, setStudentClass] = useState('')
-  const [studentSection, setStudentSection] = useState('')
-  const [contact, setContact] = useState('')
-  const [address, setAddress] = useState('')
-
-  const [parentMode, setParentMode] = useState('existing')
-  const [parentQuery, setParentQuery] = useState('')
-  const [parentResults, setParentResults] = useState([])
-  const [parentId, setParentId] = useState('')
-  const [parentName, setParentName] = useState('')
-  const [parentEmail, setParentEmail] = useState('')
-  const [parentPhone, setParentPhone] = useState('')
-
-  const [createLogin, setCreateLogin] = useState(false)
-  const [studentLoginEmail, setStudentLoginEmail] = useState('')
-  const [studentLoginName, setStudentLoginName] = useState('')
-
-  const admissionSections = (() => {
-    const c = classes.find((x) => String(x?.name) === String(studentClass))
-    return Array.isArray(c?.sections) ? c.sections : []
-  })()
-
-  const filterSections = (() => {
-    const c = classes.find((x) => String(x?.name) === String(classId))
-    return Array.isArray(c?.sections) ? c.sections : []
-  })()
-
-  async function loadClasses() {
-    try {
-      const { classes: list } = await classesService.listClasses({ active: true })
-      setClasses(Array.isArray(list) ? list : [])
-    } catch (e) {
-      setClasses([])
-    }
+  function formatDate(value) {
+    if (!value) return '-'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return '-'
+    return date.toLocaleDateString()
   }
 
-  async function loadStudents() {
-    setLoading(true)
+  async function downloadCertificateById(certificateId, certificateNumber) {
+    const blob = await studentsService.downloadCertificatePdf(certificateId)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${certificateNumber || 'certificate'}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const stats = useMemo(() => ({
+    total: summary?.total || 0,
+    incampus: summary?.incampus || 0,
+    active: summary?.active || 0,
+    alumni: summary?.alumni || 0,
+  }), [summary])
+
+  async function loadDashboard(nextPage = 1, opts = {}) {
+    const silent = Boolean(opts.silent)
+    if (silent) {
+      setLoading(true)
+    } else {
+      setBootstrapping(true)
+    }
     setError('')
     try {
-      const { students: list } = await studentsService.listStudents({
-        q: query || undefined,
-        classId: classId || undefined,
-        section: section || undefined,
-        limit: 200
+      const [summaryRes, listRes, recentRes, recentCertificatesRes] = await Promise.all([
+        studentsService.getSummary(),
+        studentsService.listStudents({
+          q: q || undefined,
+          status: status || undefined,
+          active: active || undefined,
+          sortBy: 'updatedAt',
+          sortOrder: 'desc',
+          page: nextPage,
+          limit: PAGE_SIZE,
+        }),
+        studentsService.listStudents({
+          recentHours: 24,
+          sortBy: 'updatedAt',
+          sortOrder: 'desc',
+          limit: 5,
+        }),
+        studentsService.listRecentCertificates({ limit: 5 }),
+      ])
+
+      setSummary(summaryRes?.summary || {})
+      setStudents(Array.isArray(listRes?.students) ? listRes.students : [])
+      setPagination(listRes?.pagination || {
+        page: nextPage,
+        limit: PAGE_SIZE,
+        total: 0,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
       })
-      setStudents(Array.isArray(list) ? list : [])
+      setPage(listRes?.pagination?.page || nextPage)
+      setRecentStudents(Array.isArray(recentRes?.students) ? recentRes.students : [])
+      setRecentCertificates(Array.isArray(recentCertificatesRes?.certificates) ? recentCertificatesRes.certificates : [])
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to load students')
     } finally {
-      setLoading(false)
+      if (silent) setLoading(false)
+      else setBootstrapping(false)
     }
   }
 
   useEffect(() => {
-    loadStudents()
-    loadClasses()
+    loadDashboard()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    if (!studentClass) {
-      if (studentSection) setStudentSection('')
-      return
-    }
-    if (admissionSections.length > 0 && studentSection && !admissionSections.includes(studentSection)) {
-      setStudentSection('')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentClass, classes])
-
-  useEffect(() => {
-    if (!classId) {
-      if (section) setSection('')
-      return
-    }
-    if (filterSections.length > 0 && section && !filterSections.includes(section)) {
-      setSection('')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classId, classes])
-
-  async function searchParents() {
-    setError('')
-    setSuccess('')
-    try {
-      const q = String(parentQuery || '').trim()
-      if (!q) {
-        setParentResults([])
-        return
-      }
-      const { users } = await userService.listUsers({ role: 'Parent', q, limit: 20 })
-      setParentResults(Array.isArray(users) ? users : [])
-      if (Array.isArray(users) && users.length === 1) {
-        setParentId(users[0]._id)
-      }
-    } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to search parents')
-    }
+  async function applyFilters() {
+    await loadDashboard(1, { silent: true })
   }
 
-  const admissionPayload = useMemo(() => {
-    const student = {
-      studentId: String(studentId).trim(),
-      firstName: String(firstName).trim(),
-      lastName: String(lastName).trim(),
-      class: String(studentClass).trim(),
-      section: String(studentSection).trim(),
-      contact: String(contact).trim(),
-      address: String(address).trim()
-    }
-
-    const parent =
-      parentMode === 'existing'
-        ? { mode: 'existing', parentId }
-        : {
-            mode: 'new',
-            name: String(parentName).trim(),
-            email: String(parentEmail).trim(),
-            phone: String(parentPhone).trim()
-          }
-
-    const createStudentLogin = createLogin
-      ? {
-          enabled: true,
-          email: String(studentLoginEmail).trim(),
-          name: String(studentLoginName).trim() || undefined
-        }
-      : { enabled: false }
-
-    return { student, parent, createStudentLogin }
-  }, [
-    studentId,
-    firstName,
-    lastName,
-    studentClass,
-    studentSection,
-    contact,
-    address,
-    parentMode,
-    parentId,
-    parentName,
-    parentEmail,
-    parentPhone,
-    createLogin,
-    studentLoginEmail,
-    studentLoginName
-  ])
-
-  async function submitAdmission(e) {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-    try {
-      await studentsService.admitStudent(admissionPayload)
-      setSuccess('Admission completed')
-      setStudentId('')
-      setFirstName('')
-      setLastName('')
-      setStudentClass('')
-      setStudentSection('')
-      setContact('')
-      setAddress('')
-      setParentQuery('')
-      setParentResults([])
-      setParentId('')
-      setParentName('')
-      setParentEmail('')
-      setParentPhone('')
-      setCreateLogin(false)
-      setStudentLoginEmail('')
-      setStudentLoginName('')
-      await loadStudents()
-    } catch (e2) {
-      setError(e2?.response?.data?.error || 'Admission failed')
-    }
+  async function goToPage(nextPage) {
+    if (nextPage < 1) return
+    await loadDashboard(nextPage, { silent: true })
   }
 
   return (
-    <div>
-      <PageHeader title="Students" subtitle="Admissions and student master data." />
+    <div className="space-y-6">
+      <PageHeader
+        title="Students"
+        subtitle="Manage student records, class movement, and certificate workflows."
+      />
 
-      {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
-      {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
+      {error ? <div className="text-sm text-red-600">{error}</div> : null}
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <h2 className="font-medium">Admission</h2>
-          <p className="text-sm text-gray-600 mt-1">Create a student record and link an existing/new parent.</p>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
+        <div className="xl:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StatCard label="Total" value={bootstrapping ? '...' : stats.total} />
+            <StatCard label="Incampus" value={bootstrapping ? '...' : stats.incampus} />
+            <StatCard label="Active" value={bootstrapping ? '...' : stats.active} />
+            <StatCard label="Alumni" value={bootstrapping ? '...' : stats.alumni} />
+          </div>
 
-          <form className="mt-4 space-y-3" onSubmit={submitAdmission}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Input placeholder="Student ID" value={studentId} onChange={(e) => setStudentId(e.target.value)} required />
-              <Select value={studentClass} onChange={(e) => setStudentClass(e.target.value)} required>
-                <option value="">Select class</option>
-                {classes.map((c) => (
-                  <option key={c._id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-              <Input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-              <Input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-              <Select
-                value={studentSection}
-                onChange={(e) => setStudentSection(e.target.value)}
-                disabled={!studentClass || admissionSections.length === 0}
-              >
-                <option value="">
-                  {!studentClass ? 'Select class first' : admissionSections.length === 0 ? 'No sections' : 'Section (optional)'}
-                </option>
-                {admissionSections.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Select>
-              <Input placeholder="Contact" value={contact} onChange={(e) => setContact(e.target.value)} />
-            </div>
-            <Input placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
-
-            <div className="pt-2">
-              <div className="text-sm font-medium">Parent</div>
-              <div className="mt-2 flex gap-3 text-sm">
-                <label className="flex items-center gap-2">
-                  <Input
-                    id="parent-mode-existing"
-                    type="radio"
-                    name="parentMode"
-                    checked={parentMode === 'existing'}
-                    onChange={() => setParentMode('existing')}
-                    inputClassName="h-4 w-4"
-                  />
-                  Existing
-                </label>
-                <label className="flex items-center gap-2">
-                  <Input
-                    id="parent-mode-new"
-                    type="radio"
-                    name="parentMode"
-                    checked={parentMode === 'new'}
-                    onChange={() => setParentMode('new')}
-                    inputClassName="h-4 w-4"
-                  />
-                  New
-                </label>
+          <Card>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-medium">Student Search</h2>
+                <p className="text-sm text-gray-600 mt-1">Find students by ID, registration, roll, name, contact, class, and section.</p>
               </div>
+              <Button type="button" onClick={() => loadDashboard(page, { silent: true })} disabled={bootstrapping || loading}>Refresh</Button>
+            </div>
 
-              {parentMode === 'existing' ? (
-                <div className="mt-3">
-                  <div className="flex gap-2">
-                    <Input
-                      className="flex-1"
-                      placeholder="Search parent by name, email, or phone"
-                      value={parentQuery}
-                      onChange={(e) => setParentQuery(e.target.value)}
-                    />
-                    <Button type="button" onClick={searchParents}>
-                      Search
-                    </Button>
-                  </div>
-                  <Select className="mt-2" value={parentId} onChange={(e) => setParentId(e.target.value)} required>
-                    <option value="">Select parent</option>
-                    {parentResults.map((p) => (
-                      <option key={p._id} value={p._id}>
-                        {p.name} ({p.email})
-                      </option>
-                    ))}
-                  </Select>
-                </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Input placeholder="Search students" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s || 'all'} value={s}>{s || 'Any Status'}</option>
+                ))}
+              </Select>
+              <Select value={active} onChange={(e) => setActive(e.target.value)}>
+                {ACTIVE_OPTIONS.map((a) => (
+                  <option key={a || 'all'} value={a}>
+                    {a === '' ? 'Any Active State' : a === 'true' ? 'Active' : 'Inactive'}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="mt-3">
+              <Button type="button" variant="primary" onClick={applyFilters} disabled={bootstrapping || loading}>
+                {loading ? 'Searching...' : 'Apply Filters'}
+              </Button>
+            </div>
+
+            <div className="mt-4">
+              {bootstrapping ? (
+                <Skeleton className="h-40" />
+              ) : students.length === 0 ? (
+                <EmptyState title="No students found" />
               ) : (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} required />
-                  <Input placeholder="Parent email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} required />
-                  <Input placeholder="Parent phone (optional)" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
+                <>
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableRoot>
+                        <TableHead>
+                          <TableRow>
+                            <TableHeader>Student ID</TableHeader>
+                            <TableHeader>Reg #</TableHeader>
+                            <TableHeader>Name</TableHeader>
+                            <TableHeader>Class</TableHeader>
+                            <TableHeader>Status</TableHeader>
+                            <TableHeader>Actions</TableHeader>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {students.map((row) => (
+                            <TableRow key={row._id} className="hover:bg-gray-50">
+                              <TableCell>{row.studentId || '-'}</TableCell>
+                              <TableCell>{row.registrationNumber || '-'}</TableCell>
+                              <TableCell>{row.name || '-'}</TableCell>
+                              <TableCell>{[row.class, row.section].filter(Boolean).join(' - ') || '-'}</TableCell>
+                              <TableCell className="capitalize">{row.status || '-'}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-2">
+                                  <ButtonLink href={`/admin/students/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
+                                  <ButtonLink href={`/admin/students/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
+                                  <ButtonLink href={`/admin/students/transfer-certificate?studentId=${row._id}`} variant="outline" size="sm">TC</ButtonLink>
+                                  <ButtonLink href={`/admin/students/school-leaving-certificate?studentId=${row._id}`} variant="outline" size="sm">SLC</ButtonLink>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </TableRoot>
+                    </Table>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="text-sm text-gray-600">
+                      Page {pagination.page} of {pagination.totalPages} | Total {pagination.total}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => goToPage(pagination.page - 1)}
+                        disabled={!pagination.hasPrev || loading}
+                      >
+                        Prev
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => goToPage(pagination.page + 1)}
+                        disabled={!pagination.hasNext || loading}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        <Card className="h-full flex flex-col">
+          <h2 className="font-medium">Quick Navigation</h2>
+          <p className="text-sm text-gray-600 mt-1">Jump to student workflows.</p>
+
+          <div className="mt-4 grid grid-cols-1 gap-2">
+            <ButtonLink href="/admin/students/admission" variant="secondary" className="w-full">Student Admission</ButtonLink>
+            <ButtonLink href="/admin/students/promotion" variant="secondary" className="w-full">Student Promotion</ButtonLink>
+            <ButtonLink href="/admin/students/transfer-certificate" variant="secondary" className="w-full">Transfer Certificate</ButtonLink>
+            <ButtonLink href="/admin/students/school-leaving-certificate" variant="secondary" className="w-full">School Leaving Certificate</ButtonLink>
+          </div>
+
+          <div className="mt-5">
+            <h3 className="text-sm font-medium">Recent Students (Last 24 Hours)</h3>
+            <p className="text-xs text-gray-600 mt-1">Latest 5 student records added or updated.</p>
+
+            <div className="mt-3">
+              {bootstrapping ? (
+                <Skeleton className="h-28" />
+              ) : recentStudents.length === 0 ? (
+                <EmptyState title="No recent student updates" />
+              ) : (
+                <div className="overflow-auto">
+                  <Table>
+                    <TableRoot>
+                      <TableHead>
+                        <TableRow>
+                          <TableHeader>Name</TableHeader>
+                          <TableHeader>Actions</TableHeader>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {recentStudents.map((row) => (
+                          <TableRow key={row._id}>
+                            <TableCell>{row.name || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-2">
+                                <ButtonLink href={`/admin/students/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
+                                <ButtonLink href={`/admin/students/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
+                                <ButtonLink href={`/admin/students/transfer-certificate?studentId=${row._id}`} variant="outline" size="sm">TC</ButtonLink>
+                                <ButtonLink href={`/admin/students/school-leaving-certificate?studentId=${row._id}`} variant="outline" size="sm">SLC</ButtonLink>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </TableRoot>
+                  </Table>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="pt-2">
-              <div className="flex items-center gap-2 text-sm">
-                <ToggleBox active={createLogin} onToggle={(next) => setCreateLogin(next)}>Create Student Login</ToggleBox>
-              </div>
-              {createLogin ? (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input placeholder="Student login email" value={studentLoginEmail} onChange={(e) => setStudentLoginEmail(e.target.value)} required />
-                  <Input placeholder="Student login name (optional)" value={studentLoginName} onChange={(e) => setStudentLoginName(e.target.value)} />
+          <div className="mt-5 border-t border-gray-200 pt-5">
+            <h3 className="text-sm font-medium">Recent Certificates</h3>
+            <p className="text-xs text-gray-600 mt-1">Latest issued transfer and school leaving certificates.</p>
+
+            <div className="mt-3">
+              {bootstrapping ? (
+                <Skeleton className="h-28" />
+              ) : recentCertificates.length === 0 ? (
+                <EmptyState title="No recent certificates" />
+              ) : (
+                <div className="overflow-auto">
+                  <Table>
+                    <TableRoot>
+                      <TableHead>
+                        <TableRow>
+                          <TableHeader>Certificate</TableHeader>
+                          <TableHeader>Student</TableHeader>
+                          <TableHeader>Date</TableHeader>
+                          <TableHeader>Action</TableHeader>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {recentCertificates.map((row) => (
+                          <TableRow key={row._id}>
+                            <TableCell>{row.certificateNumber || '-'}</TableCell>
+                            <TableCell>{row?.student?.user?.name || row?.studentSnapshot?.userName || '-'}</TableCell>
+                            <TableCell>{formatDate(row.issueDate)}</TableCell>
+                            <TableCell>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadCertificateById(row._id, row.certificateNumber)}
+                              >
+                                PDF
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </TableRoot>
+                  </Table>
                 </div>
-              ) : null}
+              )}
             </div>
-
-            <div className="pt-2">
-              <Button variant="primary" type="submit">
-                Submit Admission
-              </Button>
-            </div>
-          </form>
-        </Card>
-
-        <Card>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="font-medium">Student Master</h2>
-              <p className="text-sm text-gray-600 mt-1">Search and view students.</p>
-            </div>
-            <Button type="button" onClick={loadStudents}>
-              Refresh
-            </Button>
           </div>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Input placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
-              <option value="">All classes</option>
-              {classes.map((c) => (
-                <option key={c._id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-            <Select
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
-              disabled={!classId || filterSections.length === 0}
-            >
-              <option value="">
-                {!classId ? 'Select class first' : filterSections.length === 0 ? 'No sections' : 'All sections'}
-              </option>
-              {filterSections.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="mt-3">
-            <Button type="button" onClick={loadStudents}>
-              Apply Filters
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="mt-4"><Skeleton className="h-24" /></div>
-          ) : (
-            <div className="mt-4 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-600">
-                    <th className="py-2 pr-3">Student ID</th>
-                    <th className="py-2 pr-3">Name</th>
-                    <th className="py-2 pr-3">Class</th>
-                    <th className="py-2 pr-3">Section</th>
-                    <th className="py-2 pr-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((s) => (
-                    <tr key={s._id} className="border-t">
-                      <td className="py-2 pr-3 whitespace-nowrap">{s.studentId}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{s.firstName} {s.lastName}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{s.class}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{s.section}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{s.status || 'active'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {students.length === 0 ? <div className="text-sm text-gray-600 mt-3">No students found.</div> : null}
-            </div>
-          )}
         </Card>
       </div>
     </div>
   )
 }
-

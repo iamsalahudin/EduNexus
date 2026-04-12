@@ -1,12 +1,12 @@
-export default function Page() {
+'use client'
 
+import TransportSelfWorkspace from '@/components/transport/TransportSelfWorkspace'
+
+export default function StudentTransportPage() {
   return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Transport</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
+    <TransportSelfWorkspace
+      title="Transport"
+      subtitle="Check available routes, your transport details, and payment history."
+    />
   )
 }

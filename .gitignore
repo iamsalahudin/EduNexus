@@ -9,7 +9,6 @@ node_modules/
 !.yarn/versions
 
 # --- Environment & Secrets (Crucial) ---
-.env*
 *.pem
 *.crt
 
@@ -62,3 +61,4 @@ backend/*.jar
 !README.md
 !**/README.md
 !**/REALTIME_SETUP.md
+config.bat

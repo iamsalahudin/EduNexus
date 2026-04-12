@@ -1,12 +1,11 @@
-export default function Page() {
+import ComplaintsWorkspace from '@/components/complaints/ComplaintsWorkspace'
 
+export default function Page() {
   return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Complaints</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
+    <ComplaintsWorkspace
+      title="My Complaints"
+      subtitle="Submit complaints and track updates from staff."
+      allowCreate
+    />
   )
 }

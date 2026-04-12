@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const category = Joi.string().valid('critical', 'normal', 'pending', 'reminder', 'info', 'success', 'warning');
+const category = Joi.string().valid('critical', 'normal', 'pending', 'reminder', 'info', 'success', 'warning', 'system');
 
 const createBroadcastSchema = Joi.object({
   body: Joi.object({
@@ -16,7 +16,7 @@ const createBroadcastSchema = Joi.object({
 
     // scope=targeted
     targetType: Joi.string().valid('student', 'section', 'class', 'level', 'user').optional(),
-    level: Joi.string().valid('pre-primary', 'primary', 'middle').optional(),
+    level: Joi.string().trim().min(1).max(50).optional(),
     class: Joi.string().optional(),
     section: Joi.string().optional(),
     studentId: Joi.string().optional(), // Student._id
@@ -31,6 +31,15 @@ const listBroadcastSchema = Joi.object({
     category: category.optional(),
     limit: Joi.number().min(1).max(200).default(50)
   })
+});
+
+const updateBroadcastSchema = Joi.object({
+  body: Joi.object({
+    category: category.optional(),
+    title: Joi.string().min(1).max(120).optional(),
+    body: Joi.string().allow('').max(5000).optional(),
+    expiresAt: Joi.date().iso().allow(null).optional()
+  }).min(1)
 });
 
 const createRequestSchema = Joi.object({
@@ -72,6 +81,7 @@ const inboxSchema = Joi.object({
 module.exports = {
   createBroadcastSchema,
   listBroadcastSchema,
+  updateBroadcastSchema,
   createRequestSchema,
   listRequestsSchema,
   replyRequestSchema,

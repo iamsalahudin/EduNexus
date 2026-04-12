@@ -13,10 +13,14 @@ const markStaffAttendanceSchema = Joi.object({
 
 const getStaffAttendanceSchema = Joi.object({
   query: Joi.object({
+    role: Joi.string(),
     userId: Joi.string(),
     date: Joi.date(),
     fromDate: Joi.date(),
-    toDate: Joi.date()
+    toDate: Joi.date(),
+    period: Joi.string().valid('month', 'year', 'custom'),
+    month: Joi.number().integer().min(1).max(12),
+    year: Joi.number().integer().min(2000).max(2100)
   })
 });
 

@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function FeesTable({ columns = [], data = [], perPage = 10 }){
+export default function FeesTable({ columns = [], data = [], perPage = 10, detailBasePath = '/admin/fees' }){
   const router = useRouter()
   const [sortKey, setSortKey] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
@@ -50,7 +50,7 @@ export default function FeesTable({ columns = [], data = [], perPage = 10 }){
         </thead>
         <tbody>
           {paged.map(row=> (
-            <tr key={row.id} className="hover:bg-gray-50 cursor-pointer" onClick={()=>router.push(`/admin/fees/${row.id}`)}>
+            <tr key={row.id} className="hover:bg-gray-50 cursor-pointer" onClick={()=>router.push(`${detailBasePath}/${row.id}`)}>
               {columns.map(col=> <td key={col.key} className="px-3 py-2 text-sm">{row[col.key]}</td>)}
             </tr>
           ))}
