@@ -56,9 +56,14 @@ backend/*.jar
 *.bat
 *.cmd
 
-# --- Local Markdown files (keep READMEs & setup docs tracked) ---
+# --- Markdown files ---
 *.md
 !README.md
 !**/README.md
 !**/REALTIME_SETUP.md
 config.bat
+
+*.env
+.env
+.env.*
+*.env.*
