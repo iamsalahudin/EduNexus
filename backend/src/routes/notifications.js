@@ -7,6 +7,7 @@ const notificationsController = require('../controllers/notificationsController'
 const {
   createBroadcastSchema,
   listBroadcastSchema,
+  updateBroadcastSchema,
   createRequestSchema,
   listRequestsSchema,
   replyRequestSchema,
@@ -31,9 +32,10 @@ router.get('/requests/:id', notificationsController.getRequest);
 router.post('/requests/:id/reply', requireRole('Admin', 'Principal'), validate(replyRequestSchema), notificationsController.replyRequest);
 router.post('/requests/:id/close', requireRole('Admin', 'Principal'), validate(closeRequestSchema), notificationsController.closeRequest);
 
-// Broadcast management (Admin)
-router.post('/broadcast', requireRole('Admin'), validate(createBroadcastSchema), notificationsController.createBroadcast);
-router.get('/broadcast', requireRole('Admin'), validate(listBroadcastSchema), notificationsController.listBroadcast);
-router.delete('/broadcast/:id', requireRole('Admin'), notificationsController.deleteBroadcast);
+// Broadcast management (Admin + Principal, with controller-level System restrictions for Principal)
+router.post('/broadcast', requireRole('Admin', 'Principal'), validate(createBroadcastSchema), notificationsController.createBroadcast);
+router.get('/broadcast', requireRole('Admin', 'Principal'), validate(listBroadcastSchema), notificationsController.listBroadcast);
+router.patch('/broadcast/:id', requireRole('Admin', 'Principal'), validate(updateBroadcastSchema), notificationsController.updateBroadcast);
+router.delete('/broadcast/:id', requireRole('Admin', 'Principal'), notificationsController.deleteBroadcast);
 
 module.exports = router;

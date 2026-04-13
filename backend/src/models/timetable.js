@@ -13,17 +13,21 @@ const TimetableSlotSchema = new mongoose.Schema({
 
 const TimetableSchema = new mongoose.Schema(
   {
-    class: { type: String, required: true, index: true },
-    section: { type: String },
+    level: { type: String, trim: true, index: true },
+    class: { type: String, index: true }, // legacy compatibility only
+    section: { type: String }, // legacy compatibility only
     year: { type: Number, required: true },
     slots: { type: [TimetableSlotSchema], default: [] },
+    status: { type: String, enum: ['active', 'pending', 'archived'], default: 'active', index: true },
     isActive: { type: Boolean, default: true, index: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 );
 
-TimetableSchema.index({ class: 1, section: 1, year: 1 }, { unique: true });
-TimetableSchema.index({ isActive: 1, year: 1 });
+TimetableSchema.index({ level: 1, year: 1 }, { unique: true });
+TimetableSchema.index({ level: 1, isActive: 1, year: 1 });
+TimetableSchema.index({ status: 1, year: 1, level: 1 });
 
 module.exports = mongoose.model('Timetable', TimetableSchema);

@@ -8,8 +8,8 @@ const { createTimetableSchema, updateTimetableSchema, getTimetablesSchema } = re
 // All routes require auth
 router.use(requireAuth);
 
-// Admin: Create timetable
-router.post('/', requireRole('Admin'), validate(createTimetableSchema), timetableController.createTimetable);
+// Admin/Principal: Create timetable
+router.post('/', requireRole('Admin', 'Principal'), validate(createTimetableSchema), timetableController.createTimetable);
 
 // All authenticated users: Get timetables
 router.get('/', validate(getTimetablesSchema), timetableController.getTimetables);
@@ -17,10 +17,10 @@ router.get('/', validate(getTimetablesSchema), timetableController.getTimetables
 // All authenticated users: Get single timetable
 router.get('/:id', timetableController.getTimetable);
 
-// Admin: Update timetable
-router.patch('/:id', requireRole('Admin'), validate(updateTimetableSchema), timetableController.updateTimetable);
+// Admin/Principal/Reception: Update timetable
+router.patch('/:id', requireRole('Admin', 'Principal', 'Reception'), validate(updateTimetableSchema), timetableController.updateTimetable);
 
-// Admin: Delete timetable
-router.delete('/:id', requireRole('Admin'), timetableController.deleteTimetable);
+// Admin/Principal: Delete timetable
+router.delete('/:id', requireRole('Admin', 'Principal'), timetableController.deleteTimetable);
 
 module.exports = router;

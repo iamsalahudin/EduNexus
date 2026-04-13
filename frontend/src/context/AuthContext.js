@@ -36,11 +36,11 @@ export function AuthProvider({ children }){
   /**
    * Login: Send credentials to backend, get JWT token
    */
-  async function login({ email, password }){
+  async function login({ username, password }){
     try {
       setError(null)
       setLoading(true)
-      const response = await authService.login({ email, password })
+      const response = await authService.login({ username, password })
       
       // Store token
       localStorage.setItem('accessToken', response.accessToken)

@@ -1,39 +1,85 @@
 ﻿"use client"
 import { useEffect, useMemo, useState } from 'react'
-import { fetchFeesSummary } from '@/services/feesService'
+import { fetchFeesSummary, generateMonthlyFees } from '@/services/feesService'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import Skeleton from '@/components/ui/Skeleton'
-import Link from 'next/link'
+import { Button, ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
 
 export default function FeesHome(){
   const [summary, setSummary] = useState(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function loadSummary() {
+    const data = await fetchFeesSummary()
+    setSummary(data)
+  }
 
   useEffect(()=>{
     let mounted = true
-    fetchFeesSummary().then(s=>{ if(mounted) setSummary(s) })
+    loadSummary().then(()=>{ if(!mounted) return }).catch(()=>{ if(mounted) setError('Unable to load fee summary.') })
     return ()=> mounted = false
   },[])
 
+  async function handleGenerateMonthly() {
+    setBusy(true)
+    setMessage('')
+    setError('')
+    try {
+      const res = await generateMonthlyFees({})
+      await loadSummary()
+      setMessage(`Monthly fee generation completed for ${res.month}. Added ${res.createdCount} new entries.`)
+    } catch {
+      setError('Unable to generate monthly fees.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const chartData = useMemo(()=>{
     if(!summary) return []
-    // mock monthly series
-    return Array.from({length:6}).map((_,i)=>({ name: `M-${i+1}`, collected: Math.floor(summary.totalCollected/6) + (i*1000) }))
+    return Array.isArray(summary.monthlySeries)
+      ? summary.monthlySeries.map((row) => ({ name: row.name, collected: Number(row.collected || 0) }))
+      : []
   },[summary])
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Fees</h1>
-      <p className="text-sm text-gray-600 mt-1">Overview of fee collections and quick actions.</p>
+      <PageHeader
+        title="Fees"
+        subtitle="Manage fee structure, voucher, collection, records, defaulters, and reports from one place."
+        right={(
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={loadSummary} disabled={busy}>Refresh</Button>
+            <Button type="button" onClick={handleGenerateMonthly} disabled={busy}>{busy ? 'Generating...' : 'Generate Monthly Fees'}</Button>
+          </div>
+        )}
+      />
+
+      {message ? <div className="mt-3 text-sm text-green-700">{message}</div> : null}
+      {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">Total Students<br/>{summary? summary.totalStudents : '...'}</div>
-        <div className="card">Paid This Month<br/>{summary? summary.paidThisMonth : '...'}</div>
-        <div className="card">Pending Count<br/>{summary? summary.pendingCount : '...'}</div>
-        <div className="card">Total Collected<br/>{summary? `Rs ${summary.totalCollected}` : '...'}</div>
+        <Card>
+          <div className="text-sm text-gray-600">Total Students</div>
+          <div className="text-xl font-semibold mt-1">{summary? summary.totalStudents : '...'}</div>
+        </Card>
+        <Card>
+          <div className="text-sm text-gray-600">Paid This Month</div>
+          <div className="text-xl font-semibold mt-1">{summary? summary.paidThisMonth : '...'}</div>
+        </Card>
+        <Card>
+          <div className="text-sm text-gray-600">Pending Count</div>
+          <div className="text-xl font-semibold mt-1">{summary? summary.pendingCount : '...'}</div>
+        </Card>
+        <Card>
+          <div className="text-sm text-gray-600">Total Collected</div>
+          <div className="text-xl font-semibold mt-1">{summary? `Rs ${summary.totalCollected}` : '...'}</div>
+        </Card>
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
+        <Card>
           <h3 className="font-medium">Monthly Collection</h3>
           <div className="h-48 mt-3">
             {!summary ? <Skeleton className="h-48" /> : (
@@ -47,16 +93,25 @@ export default function FeesHome(){
               </ResponsiveContainer>
             )}
           </div>
-        </div>
-        <div className="card">Recent Transactions placeholder</div>
+        </Card>
+        <Card>
+          <h3 className="font-medium">Finance Reference</h3>
+          <p className="text-sm text-gray-600 mt-2">Fee collection reflects admin finance credit. Pending fee reflects admin finance liability for current month.</p>
+          <div className="mt-4 grid grid-cols-1 gap-3">
+            <ButtonLink href="/admin/finance/income" variant="outline">Open Income Reference</ButtonLink>
+            <ButtonLink href="/admin/finance/reports" variant="outline">Open Finance Reports</ButtonLink>
+            <ButtonLink href="/admin/finance/categories" variant="outline">Open Finance Categories</ButtonLink>
+          </div>
+        </Card>
       </div>
 
-      <div className="mt-6 flex gap-3">
-        <Link href="/admin/fees/defaulters" className="px-3 py-2 rounded btn-secondary">Fee Defaulters</Link>
-        <Link href="/admin/fees/record" className="px-3 py-2 rounded btn-secondary">Fee Record</Link>
-        <Link href="/admin/fees/voucher" className="px-3 py-2 rounded btn-secondary">Fee Voucher</Link>
-        <Link href="/admin/fees/structure" className="px-3 py-2 rounded btn-secondary">Fee Structure</Link>
-        <Link href="/admin/fees/report" className="px-3 py-2 rounded btn-secondary">Fee Report</Link>
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <ButtonLink href="/admin/fees/collection" variant="primary">Fee Collection</ButtonLink>
+        <ButtonLink href="/admin/fees/record" variant="outline">Past Fee Records</ButtonLink>
+        <ButtonLink href="/admin/fees/defaulters" variant="outline">Defaulters</ButtonLink>
+        <ButtonLink href="/admin/fees/structure" variant="outline">Fee Structure</ButtonLink>
+        <ButtonLink href="/admin/fees/voucher" variant="outline">Fee Voucher</ButtonLink>
+        <ButtonLink href="/admin/fees/report" variant="outline">Fee Reports</ButtonLink>
       </div>
     </div>
   )

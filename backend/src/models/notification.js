@@ -18,7 +18,7 @@ const NotificationSchema = new mongoose.Schema(
     scope: { type: String, enum: ['global', 'role', 'targeted'], index: true },
     category: {
       type: String,
-      enum: ['critical', 'normal', 'pending', 'reminder', 'info', 'success', 'warning'],
+      enum: ['critical', 'normal', 'pending', 'reminder', 'info', 'success', 'warning', 'system'],
       default: 'normal',
       index: true
     },

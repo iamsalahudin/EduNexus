@@ -1,11 +1,12 @@
 const { User, RefreshToken } = require('../models');
 const { signAccessToken, createRefreshToken } = require('../utils/jwt');
 const config = require('../config');
+const { createWelcomeNotificationSafe } = require('../services/notificationService');
 
 async function register(req, res, next) {
   try {
-    const { name, email, password, role } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ error: 'Missing fields' });
+    const { name, username, email, password, role } = req.body;
+    if (!name || !username || !email || !password) return res.status(400).json({ error: 'Missing fields' });
 
     // Allow self-register only for Student and Parent roles.
     const highRoles = ['Admin', 'Principal', 'Finance', 'HR', 'Teacher'];
@@ -22,10 +23,18 @@ async function register(req, res, next) {
       }
     }
 
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(409).json({ error: 'Email already registered' });
+    const normalizedUsername = String(username).trim().toLowerCase();
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existingUsername = await User.findOne({ username: normalizedUsername });
+    if (existingUsername) return res.status(409).json({ error: 'Username already registered' });
 
-    const user = await User.create({ name, email, password, role: role || 'Student' });
+    const user = await User.create({ name, username: normalizedUsername, email: normalizedEmail, password, role: role || 'Student' });
+    await createWelcomeNotificationSafe({
+      userId: user._id,
+      recipientName: user.name,
+      role: user.role,
+      createdBy: req.user?.id
+    });
     const out = user.toObject();
     delete out.password;
     res.status(201).json({ user: out });
@@ -36,10 +45,10 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
+    const normalizedUsername = String(username).trim().toLowerCase();
+    const user = await User.findOne({ username: normalizedUsername });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     // check account lock
@@ -72,7 +81,7 @@ async function login(req, res, next) {
     };
     res.cookie('refreshToken', refreshTokenValue, cookieOpts);
 
-    res.json({ accessToken, user: { id: user._id, role: user.role, email: user.email } });
+    res.json({ accessToken, user: { id: user._id, role: user.role, username: user.username, email: user.email } });
   } catch (err) {
     next(err);
   }
