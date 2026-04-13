@@ -1,8 +1,8 @@
 import { api } from './api'
 
 /**
- * Login with email and password
- * Returns: { accessToken, user: { id, email, name, role } }
+ * Login with username and password
+ * Returns: { accessToken, user: { id, username, email, name, role } }
  */
 export const authService = {
   login: async (payload) => {

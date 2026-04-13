@@ -1,12 +1,16 @@
-export default function Page() {
+'use client'
 
+import TransportManagementWorkspace from '@/components/transport/TransportManagementWorkspace'
+
+export default function AdminTransportPage() {
   return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Transport</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
+    <TransportManagementWorkspace
+      title="Transport"
+      subtitle="Manage routes, enrollments, payment status, and transport reports."
+      canManageRoutes
+      canManageReports
+      canDelete
+      canManagePayments
+    />
   )
 }

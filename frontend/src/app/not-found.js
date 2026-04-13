@@ -12,8 +12,8 @@ function normalizeRole(value) {
 
 function dashboardHrefForRole(role) {
   const r = normalizeRole(role)
-  const overview = routes?.[r]?.overview
-  if (typeof overview === 'string' && overview.trim()) return overview
+  const dashboard = routes?.[r]?.dashboard
+  if (typeof dashboard === 'string' && dashboard.trim()) return dashboard
   if (r) return `/${r}`
   return '/login'
 }

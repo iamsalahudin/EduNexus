@@ -12,10 +12,10 @@ router.get('/', requireAuth, complaintController.getComplaints);
 // Get single complaint
 router.get('/:id', requireAuth, complaintController.getComplaint);
 // Add comment
-router.post('/:id/comments', requireAuth, validate(addCommentSchema), complaintController.addComment);
-// Assign (Admin)
-router.patch('/:id/assign', requireAuth, requireRole('Admin'), validate(assignComplaintSchema), complaintController.assignComplaint);
+router.post('/:id/comments', requireAuth, requireRole('Admin', 'Principal', 'Teacher', 'Student', 'Parent', 'HR', 'Reception', 'Finance', 'Warden'), validate(addCommentSchema), complaintController.addComment);
+// Assign (Admin and Principal)
+router.patch('/:id/assign', requireAuth, requireRole('Admin', 'Principal'), validate(assignComplaintSchema), complaintController.assignComplaint);
 // Change status (assigned user or admin)
-router.patch('/:id/status', requireAuth, validate(changeStatusSchema), complaintController.changeStatus);
+router.patch('/:id/status', requireAuth, requireRole('Admin', 'Principal', 'Teacher', 'HR', 'Reception', 'Finance', 'Warden'), validate(changeStatusSchema), complaintController.changeStatus);
 
 module.exports = router;

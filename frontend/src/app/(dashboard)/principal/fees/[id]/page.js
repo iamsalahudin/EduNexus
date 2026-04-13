@@ -1,7 +1,7 @@
 ﻿"use client"
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { fetchFeeDetails } from '@/services/feesService'
+import { fetchFeeDetails, updateFeeStatus } from '@/services/feesService'
 import { Button, PageHeader } from '@/components/ui'
 
 export default function FeeDetails(){
@@ -9,6 +9,8 @@ export default function FeeDetails(){
   const id = params.id
   const router = useRouter()
   const [data, setData] = useState(null)
+  const [savingFeeId, setSavingFeeId] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(()=>{
     let mounted = true
@@ -18,21 +20,25 @@ export default function FeeDetails(){
 
   if(!data) return <div className="card">Loading fee details...</div>
 
-  function markPaid(index){
-    setData(prev=>{
-      const copy = { ...prev, transactions: prev.transactions.map((t,i)=> i===index ? { ...t, status:'Paid', paymentDate: new Date().toISOString().slice(0,10) } : t ) }
-      return copy
-    })
-  }
-
-  function generateVoucher(){
-    // mock voucher generation
-    alert('Voucher generated (mock)')
+  async function markPaid(transaction) {
+    if (!transaction?.feeId) return
+    setSavingFeeId(String(transaction.feeId))
+    setError('')
+    try {
+      await updateFeeStatus(transaction.feeId, 'paid')
+      const refreshed = await fetchFeeDetails(id)
+      setData(refreshed)
+    } catch {
+      setError('Unable to update fee status.')
+    } finally {
+      setSavingFeeId('')
+    }
   }
 
   return (
     <div>
       <PageHeader title={`Fee Details — ${data.student.name}`} />
+      {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card">
           <h3 className="font-medium">Student Info</h3>
@@ -72,7 +78,7 @@ export default function FeeDetails(){
               </tr>
             </thead>
             <tbody>
-              {data.transactions.map((t,idx)=> (
+                {data.transactions.map((t,idx)=> (
                   <tr key={idx} className="border-t">
                     <td className="px-3 py-2">{t.voucherDate}</td>
                     <td className="px-3 py-2">{t.voucherNo}</td>
@@ -85,7 +91,8 @@ export default function FeeDetails(){
                       {t.status !== 'Paid' ? (
                         <Button
                           size="sm"
-                          onClick={() => markPaid(idx)}
+                          onClick={() => markPaid(t)}
+                          disabled={!t?.feeId || savingFeeId === String(t.feeId)}
                           className="text-sm"
                           style={{ backgroundColor: 'var(--color-cta)', color: 'var(--color-text-light)' }}
                         >
@@ -101,7 +108,7 @@ export default function FeeDetails(){
           </table>
         </div>
           <div className="mt-3 flex gap-2">
-            <Button onClick={generateVoucher}>Generate Voucher</Button>
+            <Button variant="outline" onClick={() => router.push('/principal/fees/report')}>Back to Reports</Button>
             <Button variant="outline" onClick={() => navigator.clipboard.writeText(window.location.href)}>Copy Link</Button>
           </div>
         </div>

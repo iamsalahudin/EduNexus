@@ -19,6 +19,26 @@ export const classesService = {
   deleteClass: async (id) => {
     const { data } = await api.delete(`/classes/${id}`)
     return data
+  },
+
+  listLevels: async () => {
+    const { data } = await api.get('/classes/levels')
+    return data
+  },
+
+  updateLevels: async (payload) => {
+    const { data } = await api.put('/classes/levels', payload)
+    return data
+  },
+
+  listRooms: async () => {
+    const { data } = await api.get('/classes/rooms')
+    return data
+  },
+
+  updateRooms: async (payload) => {
+    const { data } = await api.put('/classes/rooms', payload)
+    return data
   }
 }
 

@@ -16,6 +16,9 @@ const ReportCardSchema = new mongoose.Schema(
     totalMarks: { type: Number },
     percentage: { type: Number },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
+    archived: { type: Boolean, default: false, index: true },
+    archivedAt: { type: Date },
+    archivedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     approvedAt: { type: Date }
@@ -25,5 +28,6 @@ const ReportCardSchema = new mongoose.Schema(
 
 ReportCardSchema.index({ student: 1, term: 1, year: 1 }, { unique: true });
 ReportCardSchema.index({ status: 1, year: 1 });
+ReportCardSchema.index({ archived: 1, year: 1, status: 1 });
 
 module.exports = mongoose.model('ReportCard', ReportCardSchema);
