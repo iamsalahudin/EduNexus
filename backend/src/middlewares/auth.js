@@ -10,6 +10,8 @@ function normalizeRole(role) {
   // Common alias/misspelling seen in seeded DBs
   const lower = raw.toLowerCase();
   if (lower === 'principle') return 'Principal';
+  if (lower === 'receptionist') return 'Reception';
+  if (lower === 'accountant') return 'Finance';
 
   const canonical = [
     'Admin',
@@ -43,6 +45,7 @@ async function requireAuth(req, res, next) {
       _id: user._id,
       name: user.name,
       role: normalizeRole(user.role),
+      username: user.username,
       email: user.email,
       active: user.active,
       profile: user.profile,

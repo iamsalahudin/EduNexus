@@ -31,14 +31,14 @@ async function seed() {
     }
 
     const demoUsers = [
-      { name: 'Admin', role: 'Admin', email: 'admin@edu.com', password: 'admin@123' },
-      { name: 'Principal', role: 'Principal', email: 'principal@edu.com', password: 'principal@123' },
-      { name: 'Teacher', role: 'Teacher', email: 'teacher@edu.com', password: 'teacher@123' },
-      { name: 'Student', role: 'Student', email: 'student@edu.com', password: 'student@123' },
-      { name: 'Parent', role: 'Parent', email: 'parent@edu.com', password: 'parent@123' },
-      { name: 'HR', role: 'HR', email: 'hr@edu.com', password: 'hr@123' },
-      { name: 'Finance', role: 'Finance', email: 'finance@edu.com', password: 'finance@123' },
-      { name: 'Reception', role: 'Reception', email: 'reception@edu.com', password: 'reception@123' },
+      { name: 'Admin', role: 'Admin', username: 'admin', email: 'admin@edu.com', password: 'admin@123' },
+      { name: 'Principal', role: 'Principal', username: 'principal', email: 'principal@edu.com', password: 'principal@123' },
+      { name: 'Teacher', role: 'Teacher', username: 'teacher', email: 'teacher@edu.com', password: 'teacher@123' },
+      { name: 'Student', role: 'Student', username: 'student', email: 'student@edu.com', password: 'student@123' },
+      { name: 'Parent', role: 'Parent', username: 'parent', email: 'parent@edu.com', password: 'parent@123' },
+      { name: 'HR', role: 'HR', username: 'hr', email: 'hr@edu.com', password: 'hr@123' },
+      { name: 'Finance', role: 'Finance', username: 'finance', email: 'finance@edu.com', password: 'finance@123' },
+      { name: 'Reception', role: 'Reception', username: 'reception', email: 'reception@edu.com', password: 'reception@123' },
     ];
 
     for (const u of demoUsers) {
@@ -46,9 +46,13 @@ async function seed() {
       const email = u.email.toLowerCase();
       const existing = await User.findOne({ email });
       if (!existing) {
-        await User.create({ name: u.name, email, password: u.password, role: u.role });
+        await User.create({ name: u.name, username: u.username, email, password: u.password, role: u.role });
         console.log('Created user:', email, `(${u.role})`);
       } else {
+        if (!existing.username) {
+          existing.username = u.username;
+          await existing.save();
+        }
         console.log('User already exists:', email, `(${existing.role})`);
       }
     }

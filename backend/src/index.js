@@ -2,6 +2,7 @@ require('../src/config');
 
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -14,6 +15,8 @@ const { errorHandler } = require('./middlewares/errorHandler');
 const logger = require('./utils/logger');
 const { setupSocket } = require('./utils/socket');
 const { initializeFirebase } = require('./utils/fcm');
+const { startMonthlyFeeScheduler } = require('./jobs/monthlyFeeScheduler');
+const { startReportCardArchiveScheduler } = require('./jobs/reportCardArchiveScheduler');
 
 const app = express();
 
@@ -28,6 +31,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // parse cookies
 app.use(cookieParser());
@@ -57,22 +61,39 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 
-connectDB()
-  .then(() => {
-    const server = http.createServer(app);
-    
-    // Setup Socket.io for real-time messaging
-    const io = setupSocket(server);
-    
-    // Initialize Firebase for push notifications
-    initializeFirebase();
-    
+async function startServer() {
+  await connectDB();
+  const server = http.createServer(app);
+
+  // Setup Socket.io for real-time messaging
+  setupSocket(server);
+
+  // Initialize Firebase for push notifications
+  initializeFirebase();
+
+  // Schedule monthly fee generation in production/runtime environments.
+  startMonthlyFeeScheduler();
+
+  // Schedule monthly archival for old published report cards.
+  startReportCardArchiveScheduler();
+
+  await new Promise((resolve) => {
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info('Socket.io ready for real-time messaging');
+      resolve();
     });
-  })
-  .catch((err) => {
+  });
+
+  return server;
+}
+
+if (require.main === module) {
+  startServer().catch((err) => {
     logger.error('Failed to start server', err);
     process.exit(1);
   });
+}
+
+module.exports = app;
+module.exports.startServer = startServer;

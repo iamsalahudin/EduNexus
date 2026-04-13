@@ -59,6 +59,19 @@ function canStudentModifySubmission(homeworkDoc, submission) {
   return true;
 }
 
+function appendHomeworkEdit(homework, user, action = 'update', note = '') {
+  homework.lastEditedBy = user?.id || user?._id || null;
+  homework.lastEditedAt = new Date();
+  homework.editHistory = Array.isArray(homework.editHistory) ? homework.editHistory : [];
+  homework.editHistory.push({
+    editedBy: user?.id || user?._id || null,
+    editorRole: String(user?.role || ''),
+    action,
+    note: String(note || ''),
+    editedAt: new Date()
+  });
+}
+
 // Teacher: Post homework
 async function createHomework(req, res, next) {
   try {
@@ -448,11 +461,12 @@ async function getHomework(req, res, next) {
 // Teacher: Update homework
 async function updateHomework(req, res, next) {
   try {
-    const { title, description, dueDate, status } = req.body;
+    const { title, description, dueDate, status, auditNote } = req.body;
     const homework = await Homework.findById(req.params.id);
     if (!homework) return res.status(404).json({ error: 'Not found' });
 
-    if (homework.teacher.toString() !== req.user.id.toString() && req.user.role !== 'Admin') {
+    const canEditAsAdmin = ['Admin', 'Principal'].includes(req.user.role);
+    if (homework.teacher.toString() !== req.user.id.toString() && !canEditAsAdmin) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -460,9 +474,131 @@ async function updateHomework(req, res, next) {
     if (description) homework.description = description;
     if (dueDate) homework.dueDate = new Date(dueDate);
     if (status) homework.status = status;
+    appendHomeworkEdit(homework, req.user, 'update', auditNote || 'Homework updated');
 
     await homework.save();
     res.json({ homework });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function deleteHomework(req, res, next) {
+  try {
+    const homework = await Homework.findById(req.params.id);
+    if (!homework) return res.status(404).json({ error: 'Not found' });
+
+    const canDeleteAsAdmin = ['Admin', 'Principal'].includes(req.user.role);
+    if (homework.teacher.toString() !== req.user.id.toString() && !canDeleteAsAdmin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    await HomeworkFile.deleteMany({ homework: homework._id });
+    await homework.deleteOne();
+    return res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getHomeworkAuditSummary(req, res, next) {
+  try {
+    const { class: cls, section, teacherId, subject, fromDate, toDate } = req.query;
+    const filter = {};
+    if (cls) filter.class = String(cls).trim();
+    if (section) filter.section = String(section).trim();
+    if (teacherId) filter.teacher = teacherId;
+    if (subject) filter.subject = subject;
+
+    if (fromDate || toDate) {
+      filter.postedDate = {};
+      if (fromDate) filter.postedDate.$gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        filter.postedDate.$lte = end;
+      }
+    }
+
+    const rows = await Homework.find(filter)
+      .populate('subject', 'name')
+      .populate('teacher', 'name email')
+      .select('title class section subject subjectName teacher teacherName status dueDate postedDate submissions lastEditedAt')
+      .sort({ postedDate: -1 })
+      .lean();
+
+    const summary = {
+      totalHomework: rows.length,
+      published: rows.filter((row) => row.status === 'published').length,
+      closed: rows.filter((row) => row.status === 'closed').length,
+      draft: rows.filter((row) => row.status === 'draft').length,
+      submittedCount: 0,
+      receivedCount: 0,
+      returnedCount: 0,
+      pendingReviewCount: 0
+    };
+
+    const byTeacher = new Map();
+    const bySubject = new Map();
+
+    const audits = rows.map((row) => {
+      const submissions = Array.isArray(row.submissions) ? row.submissions : [];
+      const statusCounts = submissions.reduce(
+        (acc, s) => {
+          const key = String(s?.status || 'draft');
+          if (!acc[key]) acc[key] = 0;
+          acc[key] += 1;
+          return acc;
+        },
+        { draft: 0, submitted: 0, received: 0, returned: 0 }
+      );
+
+      summary.submittedCount += statusCounts.submitted;
+      summary.receivedCount += statusCounts.received;
+      summary.returnedCount += statusCounts.returned;
+      summary.pendingReviewCount += statusCounts.submitted + statusCounts.received;
+
+      const teacherName = row.teacherName || row.teacher?.name || 'Unknown Teacher';
+      const teacherKey = String(row.teacher?._id || row.teacher || teacherName);
+      const teacherStat = byTeacher.get(teacherKey) || { id: teacherKey, name: teacherName, totalHomework: 0, pendingReview: 0 };
+      teacherStat.totalHomework += 1;
+      teacherStat.pendingReview += statusCounts.submitted + statusCounts.received;
+      byTeacher.set(teacherKey, teacherStat);
+
+      const subjectName = row.subjectName || row.subject?.name || 'Unknown Subject';
+      const subjectKey = String(row.subject?._id || row.subject || subjectName);
+      const subjectStat = bySubject.get(subjectKey) || { id: subjectKey, name: subjectName, totalHomework: 0, pendingReview: 0 };
+      subjectStat.totalHomework += 1;
+      subjectStat.pendingReview += statusCounts.submitted + statusCounts.received;
+      bySubject.set(subjectKey, subjectStat);
+
+      return {
+        id: String(row._id),
+        title: row.title,
+        class: row.class,
+        section: row.section,
+        subject: subjectName,
+        teacher: teacherName,
+        status: row.status,
+        dueDate: row.dueDate,
+        postedDate: row.postedDate,
+        lastEditedAt: row.lastEditedAt || null,
+        submissions: {
+          total: submissions.length,
+          draft: statusCounts.draft,
+          submitted: statusCounts.submitted,
+          received: statusCounts.received,
+          returned: statusCounts.returned
+        }
+      };
+    });
+
+    return res.json({
+      summary,
+      byTeacher: Array.from(byTeacher.values()).sort((a, b) => b.pendingReview - a.pendingReview),
+      bySubject: Array.from(bySubject.values()).sort((a, b) => b.pendingReview - a.pendingReview),
+      audits
+    });
   } catch (err) {
     next(err);
   }
@@ -617,6 +753,7 @@ module.exports = {
   getHomeworksForAdminPrincipal,
   getHomework,
   updateHomework,
+  deleteHomework,
   updateSubmissionDraft,
   uploadSubmissionFiles,
   submitHomework,
@@ -624,5 +761,6 @@ module.exports = {
   receiveSubmission,
   gradeSubmission,
   uploadAttachments,
-  getHomeworkFile
+  getHomeworkFile,
+  getHomeworkAuditSummary
 };

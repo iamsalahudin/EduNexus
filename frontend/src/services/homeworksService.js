@@ -29,6 +29,11 @@ export const homeworksService = {
     return data
   },
 
+  remove: async (id) => {
+    const { data } = await api.delete(`/homeworks/${id}`)
+    return data
+  },
+
   uploadAttachments: async (id, fileList) => {
     const form = new FormData()
     Array.from(fileList || []).forEach((f) => form.append('files', f))

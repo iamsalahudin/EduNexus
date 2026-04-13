@@ -23,7 +23,8 @@ const getReportCardsSchema = Joi.object({
     studentId: Joi.string(),
     term: Joi.string(),
     year: Joi.number(),
-    status: Joi.string().valid('draft', 'published')
+    status: Joi.string().valid('draft', 'published'),
+    includeArchived: Joi.string().valid('true', 'false')
   })
 });
 

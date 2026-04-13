@@ -1,95 +1,173 @@
 "use client"
-import { useEffect } from 'react'
-import { fetchFeeStructure } from '@/services/feesService'
-import { useForm, Controller } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, Card, Input, PageHeader } from '@/components/ui'
 
-const StructureSchema = z.object({
-  regularFees: z.array(z.object({ label: z.string(), amount: z.number().min(0) })),
-  tuition: z.object({ type: z.string(), levels: z.record(z.number()) })
-})
+import { useEffect, useMemo, useState } from 'react'
+import classesService from '@/services/classesService'
+import { Button, Card, Input, PageHeader, Select } from '@/components/ui'
 
-export default function FeeStructure(){
-  const { register, control, handleSubmit, reset } = useForm({ resolver: zodResolver(StructureSchema), defaultValues: { regularFees: [], tuition: { type:'Monthly', levels: {} } } })
+export default function FeeStructurePage() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [classes, setClasses] = useState([])
+  const [levelFeeMap, setLevelFeeMap] = useState({
+    'pre-primary': '',
+    primary: '',
+    middle: '',
+    high: ''
+  })
 
-  useEffect(()=>{ fetchFeeStructure().then(d=>{ reset(d) }) },[reset])
+  async function loadData() {
+    setLoading(true)
+    setError('')
+    try {
+      const { classes: list } = await classesService.listClasses()
+      const rows = Array.isArray(list) ? list : []
+      setClasses(rows)
 
-  function onSubmit(values){
-    console.log('Save structure', values)
-    alert('Saved (mock)')
+      const grouped = { 'pre-primary': '', primary: '', middle: '', high: '' }
+      rows.forEach((c) => {
+        if (c?.level && grouped[c.level] === '' && Number.isFinite(Number(c.tutionFee))) {
+          grouped[c.level] = String(c.tutionFee)
+        }
+      })
+      setLevelFeeMap(grouped)
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to load fee structure')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const classesByLevel = useMemo(() => {
+    return ['pre-primary', 'primary', 'middle', 'high'].reduce((acc, level) => {
+      acc[level] = classes.filter((c) => c.level === level)
+      return acc
+    }, {})
+  }, [classes])
+
+  async function saveClassFee(classId, fee) {
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      await classesService.updateClass(classId, { tutionFee: Number(fee || 0) })
+      setSuccess('Fee structure updated')
+      await loadData()
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to update class fee')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function applyLevelFee(level) {
+    const fee = Number(levelFeeMap[level] || 0)
+    const rows = classesByLevel[level] || []
+    if (rows.length === 0) {
+      setError(`No classes found for level: ${level}`)
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      await Promise.all(rows.map((c) => classesService.updateClass(c._id, { tutionFee: fee })))
+      setSuccess(`Applied ${fee} to all ${level} classes`)
+      await loadData()
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to apply level fee')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <div>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <PageHeader title="Fee Structure" />
-        <Card className="mt-4">
-          <h3 className="font-medium">Regular Fees</h3>
-          <div className="mt-2 space-y-2">
-            <Controller name="regularFees" control={control} render={({ field })=> (
-              <div>
-                {field.value?.map((r,idx)=> (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div>{r.label}</div>
-                    {(() => {
-                      const { ref, ...amountReg } = register(`regularFees.${idx}.amount`, { valueAsNumber: true })
-                      return (
-                        <Input
-                          type="number"
-                          {...amountReg}
-                          ref={ref}
-                          defaultValue={r.amount}
-                          inputClassName="w-24"
-                        />
-                      )
-                    })()}
-                  </div>
-                ))}
-              </div>
-            )} />
-          </div>
-        </Card>
+    <div className="space-y-6">
+      <PageHeader title="Fee Structure" subtitle="Manage tuition fee by class and level." />
 
-        <Card className="mt-4">
-          <h3 className="font-medium">Tuition Fee</h3>
-          <Controller name="tuition" control={control} render={({ field })=> (
-            <div>
-              <div className="mt-2 text-sm flex items-center gap-2">
-                <div>Type:</div>
-                {(() => {
-                  const { ref, ...typeReg } = register('tuition.type')
-                  return <Input {...typeReg} ref={ref} inputClassName="w-32" />
-                })()}
-              </div>
-              <div className="mt-2 space-y-2">
-                {Object.entries(field.value.levels || {}).map(([lvl,amt])=> (
-                  <div key={lvl} className="flex items-center justify-between">
-                    <div>{lvl}</div>
-                    {(() => {
-                      const { ref, ...lvlReg } = register(`tuition.levels.${lvl}`, { valueAsNumber: true })
-                      return (
-                        <Input
-                          type="number"
-                          {...lvlReg}
-                          ref={ref}
-                          defaultValue={amt}
-                          inputClassName="w-28"
-                        />
-                      )
-                    })()}
-                  </div>
-                ))}
+      {error ? <div className="text-sm text-red-600">{error}</div> : null}
+      {success ? <div className="text-sm text-green-700">{success}</div> : null}
+
+      <Card>
+        <h3 className="font-medium">Apply By Level</h3>
+        <p className="text-sm text-gray-600 mt-1">Set one tuition fee value for all classes in a level.</p>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {['pre-primary', 'primary', 'middle', 'high'].map((level) => (
+            <div key={level} className="border rounded p-3">
+              <div className="text-sm font-medium capitalize">{level}</div>
+              <div className="mt-2 flex gap-2 items-center">
+                <Input
+                  type="number"
+                  value={levelFeeMap[level]}
+                  onChange={(e) => setLevelFeeMap((prev) => ({ ...prev, [level]: e.target.value }))}
+                  placeholder="Tuition fee"
+                />
+                <Button type="button" onClick={() => applyLevelFee(level)} disabled={saving}>
+                  Apply
+                </Button>
               </div>
             </div>
-          )} />
-        </Card>
-
-        <div className="mt-4">
-          <Button type="submit" variant="primary">Save Structure</Button>
+          ))}
         </div>
-      </form>
+      </Card>
+
+      <Card>
+        <h3 className="font-medium">Class-wise Tuition Fee</h3>
+        <p className="text-sm text-gray-600 mt-1">Each class stores its tuition fee in SchoolClass.tutionFee.</p>
+
+        {loading ? (
+          <div className="text-sm text-gray-600 mt-3">Loading classes...</div>
+        ) : (
+          <div className="mt-4 overflow-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-600">
+                  <th className="py-2 pr-3">Class</th>
+                  <th className="py-2 pr-3">Level</th>
+                  <th className="py-2 pr-3">Tuition Fee</th>
+                  <th className="py-2 pr-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {classes.map((c) => (
+                  <ClassRow key={c._id} row={c} disabled={saving} onSave={saveClassFee} />
+                ))}
+              </tbody>
+            </table>
+            {classes.length === 0 ? <div className="text-sm text-gray-600 mt-2">No classes found.</div> : null}
+          </div>
+        )}
+      </Card>
     </div>
+  )
+}
+
+function ClassRow({ row, onSave, disabled }) {
+  const [fee, setFee] = useState(String(row?.tutionFee ?? 0))
+
+  useEffect(() => {
+    setFee(String(row?.tutionFee ?? 0))
+  }, [row?.tutionFee])
+
+  return (
+    <tr className="border-t">
+      <td className="py-2 pr-3 whitespace-nowrap">{row.name}</td>
+      <td className="py-2 pr-3 whitespace-nowrap capitalize">{row.level || '-'}</td>
+      <td className="py-2 pr-3">
+        <Input type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
+      </td>
+      <td className="py-2 pr-3">
+        <Button type="button" disabled={disabled} onClick={() => onSave(row._id, fee)}>
+          Save
+        </Button>
+      </td>
+    </tr>
   )
 }

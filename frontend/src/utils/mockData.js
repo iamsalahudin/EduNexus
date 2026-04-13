@@ -6,13 +6,6 @@ export const mockTeachers = [
   "Naveen Kumar"
 ]
 
-export const mockRooms = [
-  "Room 101",
-  "Room 102",
-  "Lab A",
-  "Art Room"
-]
-
 // subjects by class id
 export const mockSubjects = {
   "class-1": ["Math", "English", "EVS"],

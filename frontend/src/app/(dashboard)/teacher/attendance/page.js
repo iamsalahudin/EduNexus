@@ -1,65 +1,55 @@
 ﻿"use client"
 
-import { useEffect, useState } from 'react'
-import { ButtonLink, Card, PageHeader, StatCard } from '@/components/ui'
-import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
+import { ButtonLink, Card, PageHeader } from '@/components/ui'
+import StaffAttendanceRecordsView from '@/components/attendance/StaffAttendanceRecordsView'
 
-export default function Page() {
-  const [studentSummary, setStudentSummary] = useState(null)
-  const [staffSummary, setStaffSummary] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-    async function load() {
-      setLoading(true)
-      try {
-        const [s1, s2] = await Promise.all([
-          fetchStudentAttendanceSummary(),
-          fetchStaffAttendanceSummary()
-        ])
-        if (!mounted) return
-        setStudentSummary(s1.summary || [])
-        setStaffSummary(s2.summary || null)
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  const studentCount = Array.isArray(studentSummary) ? studentSummary.length : 0
-
+export default function TeacherAttendanceDashboard() {
   return (
     <div>
-      <PageHeader title="Attendance" subtitle="Student attendance + your own attendance." />
-
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Student Summary (rows)" value={loading ? '...' : studentCount} />
-        <StatCard label="My Total" value={loading ? '...' : (staffSummary?.total ?? 0)} />
-        <StatCard label="My Present" value={loading ? '...' : (staffSummary?.present ?? 0)} />
-        <StatCard label="My Absent" value={loading ? '...' : (staffSummary?.absent ?? 0)} />
-      </div>
+      <PageHeader
+        title="Attendance"
+        subtitle="View your own attendance and access student-marking tools from the same hub."
+      />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <h3 className="font-medium">Student Attendance</h3>
-          <p className="text-sm text-gray-600 mt-1">Mark attendance for your class.</p>
-          <div className="mt-4">
-            <ButtonLink href="/teacher/student-attendance" variant="secondary">Open</ButtonLink>
+        <Card className="hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-lg">Mark Class Attendance</h3>
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-lg">📝</span>
+            </div>
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Quick access to mark attendance for your assigned class. View and update daily records.
+          </p>
+          <ButtonLink href="/teacher/attendance/mark" variant="primary" className="w-full">
+            Mark Attendance Now
+          </ButtonLink>
         </Card>
-        <Card>
-          <h3 className="font-medium">My Attendance</h3>
-          <p className="text-sm text-gray-600 mt-1">Mark your own staff attendance.</p>
-          <div className="mt-4">
-            <ButtonLink href="/teacher/attendance/my" variant="secondary">Open</ButtonLink>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-lg">My Attendance</h3>
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-lg">✓</span>
+            </div>
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Mark your own daily attendance including present, absent, late, and leave status.
+          </p>
+          <ButtonLink href="/teacher/attendance/my" variant="primary" className="w-full">
+            Open My Attendance
+          </ButtonLink>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <h3 className="font-semibold mb-4">My Attendance Records</h3>
+        <StaffAttendanceRecordsView
+          title="My Attendance"
+          description="Auto-loaded teacher attendance with monthly, yearly, and custom range summaries."
+        />
+      </Card>
     </div>
   )
 }
