@@ -6,10 +6,32 @@ import Sidebar from '@/components/layout/Sidebar'
 import SubHeader from '@/components/layout/SubHeader'
 import ChatSubHeader from '@/components/layout/ChatSubHeader'
 import routes from '@/components/layout/routes/routes'
+import { useAuth } from '@/context/AuthContext'
 import { useEffect, useMemo, useState } from 'react';
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
+function normalizeRoleSegment(role) {
+  const value = String(role || '').trim()
+  if (!value) return ''
+
+  const byRoleName = {
+    Admin: 'admin',
+    Principal: 'principal',
+    Teacher: 'teacher',
+    Student: 'student',
+    Parent: 'parent',
+    HR: 'hr',
+    Finance: 'accountant',
+    Reception: 'receptionist',
+  }
+
+  if (byRoleName[value]) return byRoleName[value]
+  return value.toLowerCase()
+}
 
 export default function DashboardRoot({ children }){
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [isLg, setIsLg] = useState(false)
   // Desktop: sidebar visible by default
   const [desktopHidden, setDesktopHidden] = useState(false)
@@ -44,6 +66,8 @@ export default function DashboardRoot({ children }){
     return `${pathname.split('/')[1] || ''}`
   }, [pathname])
 
+  const expectedRoleSegment = useMemo(() => normalizeRoleSegment(user?.role), [user?.role])
+
   const sidebarRouteSet = useMemo(() => {
     const roleRoutes = routes?.[roleSegment] || {}
     const values = Object.values(roleRoutes || {})
@@ -66,6 +90,23 @@ export default function DashboardRoot({ children }){
   const isChatRoute = useMemo(() => {
     return (pathname || '').includes('/chat')
   }, [pathname])
+
+  useEffect(() => {
+    if (authLoading) return
+
+    if (!user) {
+      router.replace('/login')
+      return
+    }
+
+    if (!expectedRoleSegment || !roleSegment) return
+
+    if (roleSegment !== expectedRoleSegment) {
+      router.replace(`/${expectedRoleSegment}/__not-found__`)
+    }
+  }, [authLoading, user, roleSegment, expectedRoleSegment, router])
+
+  const isRoleAllowed = !user || !roleSegment || !expectedRoleSegment || roleSegment === expectedRoleSegment
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -95,6 +136,10 @@ export default function DashboardRoot({ children }){
       setMobileOpen(false)
     }
   }, [pathname])
+
+  if (authLoading || !user || !isRoleAllowed) {
+    return null
+  }
 
   return (
     <div className="w-full min-h-screen flex bg-[var(--color-bg)] scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { jwtSecret } = require('../config');
 
 function signAccessToken(user, expiresIn = '15m') {
-  const payload = { sub: user._id.toString(), role: user.role, email: user.email };
+  const payload = { sub: user._id.toString(), role: user.role, username: user.username, email: user.email };
   return jwt.sign(payload, jwtSecret, { expiresIn });
 }
 

@@ -1,0 +1,283 @@
+"use client"
+
+import { useEffect, useState } from 'react'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { fetchStudentAttendance, fetchStaffAttendance, fetchStudents } from '@/services/attendanceService'
+import classesService from '@/services/classesService'
+import { api } from '@/services/api'
+
+function toInputDate(d) {
+  const dt = d ? new Date(d) : new Date()
+  const yyyy = dt.getFullYear()
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const dd = String(dt.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+export default function AttendanceReportsPage() {
+  const today = toInputDate(new Date())
+  const thirtyDaysAgo = toInputDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+
+  const [reportType, setReportType] = useState('class-wise')
+  const [fromDate, setFromDate] = useState(thirtyDaysAgo)
+  const [toDate, setToDate] = useState(today)
+  const [classId, setClassId] = useState('')
+  const [classes, setClasses] = useState([])
+
+  const [reportData, setReportData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Load classes
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const res = await classesService.listClasses({ active: true })
+        setClasses(Array.isArray(res?.classes) ? res.classes : [])
+      } catch (e) {
+        console.error('Failed to load classes:', e)
+      }
+    }
+    loadClasses()
+  }, [])
+
+  // Generate report
+  async function generateReport() {
+    setLoading(true)
+    setError(null)
+    setReportData(null)
+
+    try {
+      if (reportType === 'class-wise') {
+        // Class-wise attendance report
+        const classRes = await classesService.listClasses({ active: true })
+        const classList = Array.isArray(classRes?.classes) ? classRes.classes : []
+
+        const classData = []
+        for (const cls of classList) {
+          const attendanceRes = await fetchStudentAttendance({ classId: cls._id, fromDate, toDate })
+          const records = attendanceRes.records || []
+          const total = records.length
+          const present = records.filter((r) => r.status === 'present').length
+          const absent = records.filter((r) => r.status === 'absent').length
+          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
+
+          classData.push({
+            class: cls.name,
+            total,
+            present,
+            absent,
+            percentage
+          })
+        }
+        setReportData(classData)
+      } else if (reportType === 'student-wise' && classId) {
+        // Student-wise report
+        const studentsRes = await fetchStudents({ classId, limit: 500 })
+        const students = studentsRes.students || []
+        const attendanceRes = await fetchStudentAttendance({ classId, fromDate, toDate })
+        const records = attendanceRes.records || []
+
+        // Group by student
+        const studentData = []
+        for (const student of students) {
+          const studentRecords = records.filter((r) => String(r.student?._id || r.student) === String(student._id))
+          const present = studentRecords.filter((r) => r.status === 'present').length
+          const absent = studentRecords.filter((r) => r.status === 'absent').length
+          const total = studentRecords.length
+          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
+
+          studentData.push({
+            name: student.name,
+            total,
+            present,
+            absent,
+            percentage
+          })
+        }
+        setReportData(studentData)
+      } else if (reportType === 'teacher-search') {
+        // Teacher search and attendance
+        const teachersRes = await api.get('/users', { params: { role: 'Teacher', limit: 500 } })
+        const teachers = teachersRes.data.users || []
+
+        const teacherData = []
+        for (const teacher of teachers) {
+          const attendanceRes = await fetchStaffAttendance({ userId: teacher._id, fromDate, toDate })
+          const records = attendanceRes.records || []
+          const present = records.filter((r) => r.status === 'present').length
+          const absent = records.filter((r) => r.status === 'absent').length
+          const total = records.length
+          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
+
+          teacherData.push({
+            name: teacher.name,
+            total,
+            present,
+            absent,
+            percentage
+          })
+        }
+        setReportData(teacherData)
+      } else if (reportType === 'school-trends') {
+        // School-wide trends
+        const schoolRes = await fetchStudentAttendance({ fromDate, toDate })
+        const records = schoolRes.records || []
+
+        // Calculate daily trends
+        const byDate = {}
+        for (const record of records) {
+          const dateStr = String(record.date).slice(0, 10)
+          if (!byDate[dateStr]) {
+            byDate[dateStr] = { present: 0, absent: 0, late: 0, excused: 0 }
+          }
+          if (record.status === 'present') byDate[dateStr].present++
+          else if (record.status === 'absent') byDate[dateStr].absent++
+          else if (record.status === 'late') byDate[dateStr].late++
+          else if (record.status === 'excused') byDate[dateStr].excused++
+        }
+
+        const trendsData = Object.keys(byDate)
+          .sort()
+          .map((date) => {
+            const total = byDate[date].present + byDate[date].absent + byDate[date].late + byDate[date].excused
+            return {
+              date,
+              ...byDate[date],
+              total,
+              percentage: total > 0 ? ((byDate[date].present / total) * 100).toFixed(1) : 0
+            }
+          })
+
+        setReportData(trendsData)
+      }
+    } catch (e) {
+      setError(e?.response?.data?.error || e.message || 'Failed to generate report')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const maxDate = toInputDate(new Date())
+
+  return (
+    <div>
+      <PageHeader
+        title="Attendance Reports"
+        subtitle="Generate comprehensive attendance reports with various filters and analysis."
+        right={<ButtonLink href="/admin/attendance" variant="secondary">Back</ButtonLink>}
+      />
+
+      {error ? (
+        <Card className="mt-6 bg-red-50 border border-red-200">
+          <div className="text-sm text-red-700">{error}</div>
+        </Card>
+      ) : null}
+
+      {/* REPORT FILTERS */}
+      <Card className="mt-6">
+        <h3 className="font-semibold mb-4">Report Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Select
+            label="Report Type"
+            value={reportType}
+            onChange={(e) => setReportType(e.target.value)}
+            options={[
+              { value: 'class-wise', label: 'Class-wise Report' },
+              { value: 'student-wise', label: 'Student-wise Report' },
+              { value: 'teacher-search', label: 'Teacher Attendance' },
+              { value: 'school-trends', label: 'School Trends' }
+            ]}
+          />
+          <Input
+            label="From Date"
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            max={maxDate}
+          />
+          <Input
+            label="To Date"
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            max={maxDate}
+          />
+          {reportType === 'student-wise' && (
+            <Select
+              label="Class"
+              value={classId}
+              onChange={(e) => setClassId(e.target.value)}
+              options={[
+                { value: '', label: 'Select Class' },
+                ...classes.map((c) => ({ value: c._id, label: c.name }))
+              ]}
+            />
+          )}
+          <div className="flex items-end">
+            <Button
+              variant="primary"
+              onClick={generateReport}
+              disabled={loading || (reportType === 'student-wise' && !classId)}
+              className="w-full"
+            >
+              {loading ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* REPORT DATA */}
+      {loading ? (
+        <div className="mt-6">
+          <Skeleton className="h-64" />
+        </div>
+      ) : reportData ? (
+        <Card className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Report Results</h3>
+            <p className="text-sm text-gray-500">
+              {fromDate} to {toDate}
+            </p>
+          </div>
+
+          <div className="overflow-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left border-b bg-gray-50">
+                  <th className="py-3 px-4 font-semibold">
+                    {reportType === 'class-wise' ? 'Class' : reportType === 'student-wise' ? 'Student' : reportType === 'teacher-search' ? 'Teacher' : 'Date'}
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-center">Total</th>
+                  <th className="py-3 px-4 font-semibold text-center">Present</th>
+                  <th className="py-3 px-4 font-semibold text-center">Absent</th>
+                  {reportType === 'school-trends' && <th className="py-3 px-4 font-semibold text-center">Late</th>}
+                  <th className="py-3 px-4 font-semibold text-center">Rate %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.map((row, idx) => {
+                  const key = reportType === 'class-wise' ? row.class : reportType === 'school-trends' ? row.date : row.name
+                  return (
+                    <tr key={idx} className="border-b last:border-b-0 hover:bg-gray-50">
+                      <td className="py-3 px-4 font-medium">{key}</td>
+                      <td className="py-3 px-4 text-center">{row.total}</td>
+                      <td className="py-3 px-4 text-center text-green-600 font-semibold">{row.present}</td>
+                      <td className="py-3 px-4 text-center text-red-600 font-semibold">{row.absent}</td>
+                      {reportType === 'school-trends' && <td className="py-3 px-4 text-center text-amber-600 font-semibold">{row.late}</td>}
+                      <td className="py-3 px-4 text-center font-semibold">{row.percentage}%</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        <Card className="mt-6 bg-blue-50 border border-blue-200">
+          <p className="text-center text-blue-600 text-sm">Configure filters and generate a report to see results.</p>
+        </Card>
+      )}
+    </div>
+  )
+}

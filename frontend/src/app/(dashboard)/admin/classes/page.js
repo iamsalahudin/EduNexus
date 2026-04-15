@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import classesService from '@/services/classesService'
-import { Button, Card, Input, PageHeader, Select, Skeleton, Textarea, ToggleBox } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Textarea, ToggleBox } from '@/components/ui'
 
 function parseSections(text) {
   const raw = String(text || '')
@@ -20,6 +20,7 @@ function sectionsToText(sections) {
 export default function Page() {
   const [loading, setLoading] = useState(true)
   const [classes, setClasses] = useState([])
+  const [levels, setLevels] = useState([])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -50,10 +51,30 @@ export default function Page() {
     }
   }
 
+  async function loadLevels() {
+    try {
+      const { levels: list } = await classesService.listLevels()
+      setLevels(Array.isArray(list) ? list : [])
+    } catch {
+      setLevels([])
+    }
+  }
+
   useEffect(() => {
     loadClasses()
+    loadLevels()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const levelOptions = useMemo(() => {
+    const values = [
+      ...levels,
+      ...classes.map((c) => c?.level).filter(Boolean),
+      newLevel,
+      editLevel
+    ].filter(Boolean)
+    return [...new Set(values.map((v) => String(v).trim().toLowerCase()).filter(Boolean))]
+  }, [levels, classes, newLevel, editLevel])
 
   const createPayload = useMemo(() => {
     const payload = { name: String(newName || '').trim() }
@@ -150,6 +171,12 @@ export default function Page() {
       <PageHeader
         title="Classes/Sections"
         subtitle="Manage classes and their sections (e.g., Boys/Girls)."
+        actions={(
+          <div className="flex gap-2">
+            <ButtonLink href="/admin/classes/rooms">Manage Rooms</ButtonLink>
+            <ButtonLink href="/admin/classes/levels">Manage Levels</ButtonLink>
+          </div>
+        )}
       />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
@@ -170,9 +197,9 @@ export default function Page() {
 
             <Select value={newLevel} onChange={(e) => setNewLevel(e.target.value)}>
               <option value="">Level (optional)</option>
-              <option value="pre-primary">Pre-primary</option>
-              <option value="primary">Primary</option>
-              <option value="middle">Middle</option>
+              {levelOptions.map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
             </Select>
 
             <div className="flex items-center gap-2 text-sm">
@@ -265,9 +292,9 @@ export default function Page() {
 
                 <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
                   <option value="">Level (optional)</option>
-                  <option value="pre-primary">Pre-primary</option>
-                  <option value="primary">Primary</option>
-                  <option value="middle">Middle</option>
+                  {levelOptions.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
                 </Select>
 
                 <div className="flex items-center gap-2 text-sm">

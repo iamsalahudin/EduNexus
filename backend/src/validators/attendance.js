@@ -26,10 +26,14 @@ const markAttendanceSchema = Joi.object({
 const getAttendanceSchema = Joi.object({
   query: Joi.object({
     studentId: Joi.string(),
+    childId: Joi.string(),
     classId: Joi.string(),
     date: Joi.date(),
     fromDate: Joi.date(),
-    toDate: Joi.date()
+    toDate: Joi.date(),
+    period: Joi.string().valid('month', 'year', 'custom'),
+    month: Joi.number().integer().min(1).max(12),
+    year: Joi.number().integer().min(2000).max(2100)
   })
 });
 
@@ -40,4 +44,12 @@ const updateAttendanceSchema = Joi.object({
   })
 });
 
-module.exports = { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema };
+const attendanceAssignmentSchema = Joi.object({
+  body: Joi.object({
+    teacherId: Joi.string().required(),
+    className: Joi.string().required(),
+    section: Joi.string().allow('').default('')
+  })
+});
+
+module.exports = { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, attendanceAssignmentSchema };

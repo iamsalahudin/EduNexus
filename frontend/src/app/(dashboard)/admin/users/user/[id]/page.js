@@ -15,6 +15,9 @@ export default function UserDetail() {
   const [user, setUser] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
+  const isAdminUser = user?.role === 'Admin'
+  const canManageUser = !!user && !isAdminUser
+
   useEffect(() => {
     let mounted = true
 
@@ -60,20 +63,25 @@ export default function UserDetail() {
         title="User Detail"
         subtitle="View user profile and status."
         right={
-          <div className="flex gap-2">
-            <ButtonLink href={`/admin/users/update?id=${encodeURIComponent(String(id || ''))}`} variant="secondary">
-              Edit
-            </ButtonLink>
-            <Button
-              type="button"
-              variant="outline"
-              style={{ borderColor: 'var(--color-cta)', color: 'var(--color-cta)' }}
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </div>
+          canManageUser ? (
+            <div className="flex gap-2">
+              <ButtonLink
+                href={`/admin/users/update?id=${encodeURIComponent(String(id || ''))}`}
+                variant="secondary"
+              >
+                Edit
+              </ButtonLink>
+              <Button
+                type="button"
+                variant="outline"
+                style={{ borderColor: 'var(--color-cta)', color: 'var(--color-cta)' }}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          ) : null
         }
       />
 
@@ -93,6 +101,10 @@ export default function UserDetail() {
             <div>
               <div className="text-gray-600">Email</div>
               <div className="font-medium">{user.email || '-'}</div>
+            </div>
+            <div>
+              <div className="text-gray-600">Username</div>
+              <div className="font-medium">{user.username || '-'}</div>
             </div>
             <div>
               <div className="text-gray-600">Role</div>

@@ -15,8 +15,8 @@ const {
 // Read: any authenticated role
 router.get('/', requireAuth, validate(listSubjectsSchema), subjectsController.listSubjects);
 
-// Write: Admin-only
-router.use(requireAuth, requireRole('Admin'));
+// Write: Admin and Principal
+router.use(requireAuth, requireRole('Admin', 'Principal'));
 router.post('/', validate(createSubjectSchema), subjectsController.createSubject);
 router.patch('/:id', validate(updateSubjectSchema), subjectsController.updateSubject);
 router.delete('/:id', subjectsController.deleteSubject);

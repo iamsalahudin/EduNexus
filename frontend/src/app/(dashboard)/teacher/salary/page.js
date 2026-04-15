@@ -1,12 +1,14 @@
-export default function Page() {
+import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
 
+export default function Page() {
   return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Salary</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
+    <SalaryWorkspace
+      roleBase="/teacher"
+      title="Salary"
+      subtitle="View personal salary history, detailed slips, and downloadable salary PDFs."
+      showGenerate={false}
+      allowPayments={false}
+      personalOnly
+    />
   )
 }

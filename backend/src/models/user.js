@@ -4,9 +4,10 @@ const bcrypt = require('bcryptjs');
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, enum: ['Admin','Principal','Finance','HR','Reception','Teacher','Student','Parent'], default: 'Teacher' },
+    role: { type: String, required: true, enum: ['Admin','Principal','Finance','HR','Reception','Receptionist','Teacher','Student','Parent'], default: 'Teacher' },
     active: { type: Boolean, default: true },
     profile: { type: mongoose.Schema.Types.Mixed }
   },
@@ -14,6 +15,7 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Indexes for faster lookups
+UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });

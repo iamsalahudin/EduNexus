@@ -1,5 +1,9 @@
-const { SchoolClass } = require('../models');
+const { SchoolClass, LevelSetting, RoomSetting } = require('../models');
 const { ensureDefaultSubjectsForClass } = require('./subjectsController');
+const { ensureDefaultExamConfigForClass } = require('../services/examDefaults');
+
+const DEFAULT_LEVELS = ['pre-primary', 'primary', 'middle', 'high'];
+const DEFAULT_ROOMS = Array.from({ length: 12 }, (_, index) => `Room ${index + 1}`);
 
 function normalizeSections(sections) {
   if (!Array.isArray(sections)) return sections;
@@ -17,6 +21,59 @@ function normalizeSections(sections) {
     out.push(s);
   }
   return out;
+}
+
+function normalizeLevels(levels) {
+  if (!Array.isArray(levels)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const level of levels) {
+    const normalized = String(level || '').trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function normalizeRooms(rooms) {
+  if (!Array.isArray(rooms)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const room of rooms) {
+    const normalized = String(room || '').trim();
+    const key = normalized.toLowerCase();
+    if (!normalized || seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+async function getOrCreateLevelSettings() {
+  let settings = await LevelSetting.findOne({ key: 'default' });
+  if (!settings) {
+    settings = await LevelSetting.create({ key: 'default', levels: DEFAULT_LEVELS });
+  }
+  if (!Array.isArray(settings.levels) || settings.levels.length === 0) {
+    settings.levels = DEFAULT_LEVELS;
+    await settings.save();
+  }
+  return settings;
+}
+
+async function getOrCreateRoomSettings() {
+  let settings = await RoomSetting.findOne({ key: 'default' });
+  if (!settings) {
+    settings = await RoomSetting.create({ key: 'default', rooms: DEFAULT_ROOMS });
+  }
+
+  if (!Array.isArray(settings.rooms) || settings.rooms.length === 0) {
+    settings.rooms = DEFAULT_ROOMS;
+    await settings.save();
+  }
+
+  return settings;
 }
 
 async function listClasses(req, res, next) {
@@ -45,12 +102,13 @@ async function listClasses(req, res, next) {
 
 async function createClass(req, res, next) {
   try {
-    const { name, sections, active, level } = req.body;
+    const { name, sections, active, level, tutionFee } = req.body;
 
     const payload = {
       name: String(name).trim(),
       active: typeof active === 'boolean' ? active : true,
-      level: level ? String(level).trim() : undefined
+      level: level ? String(level).trim() : undefined,
+      tutionFee: tutionFee !== undefined && tutionFee !== '' ? Number(tutionFee) : 0
     };
 
     // Default sections: Boys/Girls unless explicitly provided.
@@ -72,6 +130,13 @@ async function createClass(req, res, next) {
     } catch (e) {
       // ignore
     }
+
+    // Best-effort: create default exam structure for this class
+    try {
+      await ensureDefaultExamConfigForClass(created.name, req.user?.id);
+    } catch (e) {
+      // ignore
+    }
     res.status(201).json({ schoolClass: created });
   } catch (err) {
     next(err);
@@ -84,6 +149,7 @@ async function updateClass(req, res, next) {
 
     if (updates.name) updates.name = String(updates.name).trim();
     if (typeof updates.level !== 'undefined') updates.level = updates.level ? String(updates.level).trim() : undefined;
+    if (typeof updates.tutionFee !== 'undefined') updates.tutionFee = updates.tutionFee !== '' ? Number(updates.tutionFee) : 0;
     if (Array.isArray(updates.sections)) updates.sections = normalizeSections(updates.sections);
 
     if (updates.name) {
@@ -109,4 +175,65 @@ async function deleteClass(req, res, next) {
   }
 }
 
-module.exports = { listClasses, createClass, updateClass, deleteClass };
+async function listLevels(req, res, next) {
+  try {
+    const settings = await getOrCreateLevelSettings();
+    res.json({ levels: settings.levels || DEFAULT_LEVELS });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateLevels(req, res, next) {
+  try {
+    const incoming = normalizeLevels(req.body?.levels);
+    if (incoming.length === 0) {
+      return res.status(400).json({ error: 'At least one level is required' });
+    }
+
+    const settings = await getOrCreateLevelSettings();
+    settings.levels = incoming;
+    await settings.save();
+
+    res.json({ levels: settings.levels });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listRooms(req, res, next) {
+  try {
+    const settings = await getOrCreateRoomSettings();
+    res.json({ rooms: settings.rooms || DEFAULT_ROOMS });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateRooms(req, res, next) {
+  try {
+    const incoming = normalizeRooms(req.body?.rooms);
+    if (incoming.length === 0) {
+      return res.status(400).json({ error: 'At least one room is required' });
+    }
+
+    const settings = await getOrCreateRoomSettings();
+    settings.rooms = incoming;
+    await settings.save();
+
+    res.json({ rooms: settings.rooms });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  listClasses,
+  createClass,
+  updateClass,
+  deleteClass,
+  listLevels,
+  updateLevels,
+  listRooms,
+  updateRooms
+};

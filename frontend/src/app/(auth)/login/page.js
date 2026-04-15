@@ -10,7 +10,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const emailRef = useRef(null)
+  const usernameRef = useRef(null)
   const passRef = useRef(null)
 
   function roleToPath(role) {
@@ -21,8 +21,8 @@ export default function LoginPage() {
       Student: 'student',
       Parent: 'parent',
       HR: 'hr',
-      Finance: 'finance',
-      Reception: 'reception',
+      Finance: 'accountant',
+      Reception: 'receptionist',
     }
     if (!role) return 'admin'
     return map[role] || String(role).toLowerCase()
@@ -33,11 +33,11 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     const form = new FormData(e.target)
-    const email = form.get('email')
+    const username = form.get('username')
     const password = form.get('password')
 
     try {
-      const result = await login({ email, password })
+      const result = await login({ username, password })
       const rolePath = roleToPath(result?.user?.role)
       router.push(`/${rolePath}`)
     } catch (err) {
@@ -62,7 +62,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'admin@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'admin'
             if (passRef.current) passRef.current.value = 'admin@123'
           }}
         >
@@ -73,7 +73,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'principal@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'principal'
             if (passRef.current) passRef.current.value = 'principal@123'
           }}
         >
@@ -84,7 +84,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'teacher@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'teacher'
             if (passRef.current) passRef.current.value = 'teacher@123'
           }}
         >
@@ -95,7 +95,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'student@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'student'
             if (passRef.current) passRef.current.value = 'student@123'
           }}
         >
@@ -106,7 +106,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'parent@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'parent'
             if (passRef.current) passRef.current.value = 'parent@123'
           }}
         >
@@ -117,7 +117,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'hr@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'hr'
             if (passRef.current) passRef.current.value = 'hr@123'
           }}
         >
@@ -128,7 +128,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'finance@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'finance'
             if (passRef.current) passRef.current.value = 'finance@123'
           }}
         >
@@ -139,7 +139,7 @@ export default function LoginPage() {
           variant="outline"
           size="sm"
           onClick={() => {
-            if (emailRef.current) emailRef.current.value = 'reception@edu.com'
+            if (usernameRef.current) usernameRef.current.value = 'reception'
             if (passRef.current) passRef.current.value = 'reception@123'
           }}
         >
@@ -148,7 +148,7 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <Input ref={emailRef} name="email" type="email" label="Email" required />
+        <Input ref={usernameRef} name="username" label="Username" required />
         <Input ref={passRef} name="password" type="password" label="Password" required />
         {error && (
           <div className="text-sm text-red-700 bg-red-50 dark:bg-transparent dark:text-red-400 p-2 rounded">

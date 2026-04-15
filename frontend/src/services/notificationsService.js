@@ -41,6 +41,27 @@ export const notificationsService = {
     return data
   },
 
+  createBroadcast: async (payload) => {
+    const { data } = await api.post('/notifications/broadcast', payload)
+    return data
+  },
+
+  listBroadcast: async (params = undefined) => {
+    const { data } = await api.get('/notifications/broadcast', params ? { params } : undefined)
+    return data
+  },
+
+  updateBroadcast: async (id, payload) => {
+    const { data } = await api.patch(`/notifications/broadcast/${id}`, payload)
+    return data
+  },
+
+  deleteBroadcast: async (id) => {
+    const { data } = await api.delete(`/notifications/broadcast/${id}`)
+    return data
+  },
+
+  // Backward compatibility aliases
   adminCreateBroadcast: async (payload) => {
     const { data } = await api.post('/notifications/broadcast', payload)
     return data

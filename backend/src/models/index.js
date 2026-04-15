@@ -1,11 +1,17 @@
 const Role = require('./role');
 const User = require('./user');
 const Student = require('./student');
+const Parent = require('./parent');
 const Subject = require('./subject');
 const Attendance = require('./attendance');
 const StaffAttendance = require('./staffAttendance');
 const SchoolClass = require('./schoolClass');
 const ReportCard = require('./reportCard');
+const ExamConfig = require('./examConfig');
+const Exam = require('./exam');
+const ExamMark = require('./examMark');
+const Marksheet = require('./marksheet');
+const GradeScale = require('./gradeScale');
 const Fee = require('./fee');
 const Complaint = require('./complaint');
 const Message = require('./message');
@@ -21,16 +27,36 @@ const ChatMessage = require('./chatMessage');
 const ChatFile = require('./chatFile');
 const Notification = require('./notification');
 const NotificationRead = require('./notificationRead');
+const Teacher = require('./teacher');
+const Transport = require('./transport');
+const TransportRoute = require('./transportRoute');
+const TransportEnrollment = require('./transportEnrollment');
+const TransportPayment = require('./transportPayment');
+const TransportRequest = require('./transportRequest');
+const StudentCertificate = require('./studentCertificate');
+const LevelSetting = require('./levelSetting');
+const RoomSetting = require('./roomSetting');
+const AttendanceAssignment = require('./attendanceAssignment');
+const DailyDiary = require('./dailyDiary');
+const SalaryStructure = require('./salaryStructure');
+const SalaryStaff = require('./salaryStaff');
+const SalarySlip = require('./salarySlip');
 
 module.exports = {
 	Role,
 	User,
 	Student,
+	Parent,
 	Subject,
 	Attendance,
 	StaffAttendance,
 	SchoolClass,
 	ReportCard,
+	ExamConfig,
+	Exam,
+	ExamMark,
+	Marksheet,
+	GradeScale,
 	Fee,
 	Complaint,
 	Message,
@@ -45,5 +71,19 @@ module.exports = {
 	ChatMessage,
 	ChatFile,
 	Notification,
-	NotificationRead
+	NotificationRead,
+	Teacher,
+	Transport,
+	TransportRoute,
+	TransportEnrollment,
+	TransportPayment,
+	TransportRequest,
+	StudentCertificate,
+	LevelSetting,
+	RoomSetting,
+	AttendanceAssignment,
+	DailyDiary,
+	SalaryStructure,
+	SalaryStaff,
+	SalarySlip
 };

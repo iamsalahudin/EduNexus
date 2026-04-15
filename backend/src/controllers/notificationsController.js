@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
 const { Notification, NotificationRead, SchoolClass, Student, User } = require('../models');
 
+function isPrincipal(user) {
+  return String(user?.role || '') === 'Principal';
+}
+
+function enforcePrincipalSystemRestriction(user, category) {
+  if (!isPrincipal(user)) return null;
+  if (String(category || '').toLowerCase() === 'system') {
+    return 'Principal cannot create or manage System notifications';
+  }
+  return null;
+}
+
 function toObjectId(value) {
   try {
     return new mongoose.Types.ObjectId(value);
@@ -64,6 +76,11 @@ async function createBroadcast(req, res, next) {
       recipientRoles
     } = req.body;
 
+    const principalRestrictionError = enforcePrincipalSystemRestriction(req.user, category);
+    if (principalRestrictionError) {
+      return res.status(403).json({ error: principalRestrictionError });
+    }
+
     const doc = {
       kind: 'broadcast',
       scope,
@@ -119,8 +136,13 @@ async function deleteBroadcast(req, res, next) {
     const id = toObjectId(req.params.id);
     if (!id) return res.status(400).json({ error: 'Invalid notification id' });
 
-    const n = await Notification.findById(id).select('_id kind').lean();
+    const n = await Notification.findById(id).select('_id kind category').lean();
     if (!n || n.kind !== 'broadcast') return res.status(404).json({ error: 'Not found' });
+
+    const principalRestrictionError = enforcePrincipalSystemRestriction(req.user, n.category);
+    if (principalRestrictionError) {
+      return res.status(403).json({ error: principalRestrictionError });
+    }
 
     await Notification.deleteOne({ _id: id });
     await NotificationRead.deleteMany({ notification: id });
@@ -135,7 +157,17 @@ async function listBroadcast(req, res, next) {
     const { scope, category, limit } = req.query;
     const filter = { kind: 'broadcast' };
     if (scope) filter.scope = scope;
-    if (category) filter.category = category;
+    if (category) {
+      const principalRestrictionError = enforcePrincipalSystemRestriction(req.user, category);
+      if (principalRestrictionError) {
+        return res.status(403).json({ error: principalRestrictionError });
+      }
+      filter.category = category;
+    }
+
+    if (isPrincipal(req.user) && !filter.category) {
+      filter.category = { $ne: 'system' };
+    }
 
     const list = await Notification.find(filter)
       .sort({ createdAt: -1 })
@@ -144,6 +176,40 @@ async function listBroadcast(req, res, next) {
       .lean();
 
     res.json({ notifications: list });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateBroadcast(req, res, next) {
+  try {
+    const id = toObjectId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid notification id' });
+
+    const existing = await Notification.findById(id).select('_id kind category').lean();
+    if (!existing || existing.kind !== 'broadcast') return res.status(404).json({ error: 'Not found' });
+
+    const existingRestrictionError = enforcePrincipalSystemRestriction(req.user, existing.category);
+    if (existingRestrictionError) {
+      return res.status(403).json({ error: existingRestrictionError });
+    }
+
+    const nextCategory = req.body?.category !== undefined ? req.body.category : existing.category;
+    const payloadRestrictionError = enforcePrincipalSystemRestriction(req.user, nextCategory);
+    if (payloadRestrictionError) {
+      return res.status(403).json({ error: payloadRestrictionError });
+    }
+
+    const updates = {};
+    if (req.body?.title !== undefined) updates.title = String(req.body.title || '').trim();
+    if (req.body?.body !== undefined) updates.body = String(req.body.body || '');
+    if (req.body?.category !== undefined) updates.category = String(req.body.category || '').trim();
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'expiresAt')) {
+      updates.expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
+    }
+
+    const updated = await Notification.findByIdAndUpdate(id, updates, { new: true }).lean();
+    return res.json({ notification: updated });
   } catch (err) {
     next(err);
   }
@@ -437,6 +503,7 @@ async function inbox(req, res, next) {
 module.exports = {
   createBroadcast,
   listBroadcast,
+  updateBroadcast,
   deleteBroadcast,
   createRequest,
   listRequests,
