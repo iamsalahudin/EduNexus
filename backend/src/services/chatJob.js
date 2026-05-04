@@ -23,17 +23,49 @@ async function processChat(payload) {
 
     logger.info('[CHAT][JOB] n8n raw response:', JSON.stringify(response.data, null, 2));
 
-    if (!response.data || !response.data.reply) {
-      throw new Error('Invalid response from agent');
+    // Flexible extraction to support different n8n node output shapes.
+    const extractReply = (data) => {
+      if (!data) return null;
+      if (typeof data === 'string') return data;
+      // n8n often returns an array of items: [ { output: '...' } ]
+      if (Array.isArray(data) && data.length > 0) {
+        const first = data[0];
+        const payload = first.json || first;
+        if (!payload) return null;
+        return payload.reply || payload.output || payload.text || payload.answer || null;
+      }
+      if (typeof data === 'object') {
+        return data.reply || data.output || data.text || (data.data && data.data.reply) || null;
+      }
+      return null;
+    };
+
+    const reply = extractReply(response.data);
+    if (!reply) {
+      throw new Error('Invalid response from agent: missing reply/output');
     }
 
-    return {
-      reply: response.data.reply,
-      data: response.data.data || null,
-      actions: response.data.actions || [],
-      sources: response.data.sources || [],
-      attachments: response.data.attachments || []
+    // Attempt to map commonly used fields from agent output
+    const normalized = {
+      reply,
+      data: (response.data && response.data.data) || null,
+      actions: (response.data && response.data.actions) || [],
+      sources: (response.data && response.data.sources) || [],
+      attachments: (response.data && response.data.attachments) || [],
     };
+
+    // If response.data is an array and first element contains additional json fields, merge them
+    if (Array.isArray(response.data) && response.data[0]) {
+      const first = response.data[0].json || response.data[0];
+      if (first) {
+        normalized.data = normalized.data || first.data || null;
+        normalized.actions = normalized.actions.length ? normalized.actions : (first.actions || []);
+        normalized.sources = normalized.sources.length ? normalized.sources : (first.sources || []);
+        normalized.attachments = normalized.attachments.length ? normalized.attachments : (first.attachments || []);
+      }
+    }
+
+    return normalized;
   } catch (err) {
     logger.error('[CHAT][JOB] failed to POST to n8n webhook:', err.message);
     if (err.response) {
