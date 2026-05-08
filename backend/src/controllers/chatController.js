@@ -3,6 +3,7 @@ const { addChatJob, isQueueReady, waitForQueueReady } = require('../queues/chatQ
 const { processChat } = require('../services/chatJob');
 const cache = require('../utils/cache');
 const redisCache = require('../utils/redisCache');
+const { getRoleAccessProfile } = require('../utils/roleDataAccess');
 const { ChatSession, ChatMessage, ChatFile } = require('../models');
 
 const MAX_ATTACHMENT_BYTES = parseInt(process.env.CHAT_ATTACHMENT_MAX_BYTES || '5242880', 10);
@@ -96,11 +97,13 @@ exports.sendMessage = async (req, res) => {
     const session = await ensureSession({ userId: user.id, sessionId, role: user.role });
 
     // Build payload for n8n with user credentials & context
+    const roleAccess = getRoleAccessProfile(user.role);
     const n8nPayload = {
       sessionId: session.sessionKey,
       userId: user.id.toString(),
       email: user.email,
       role: user.role,
+      roleAccess,
       message: message.trim(),
       timestamp: new Date().toISOString()
     };
