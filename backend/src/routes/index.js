@@ -8,6 +8,9 @@ router.get('/health', healthController.health);
 // Auth routes
 router.use('/auth', require('./auth'));
 
+// Dashboard analytics (admin)
+router.use('/dashboard', require('./dashboard'));
+
 // User management (admin)
 router.use('/users', require('./users'));
 
@@ -25,6 +28,12 @@ router.use('/students', require('./students'));
 
 // Classes/Grades management (Admin)
 router.use('/classes', require('./classes'));
+
+// Syllabus management (Admin/Principal)
+router.use('/syllabus', require('./syllabus'));
+
+// Inventory management (Admin)
+router.use('/inventory', require('./inventory'));
 
 // Subjects management (read for all roles, write Admin-only)
 router.use('/subjects', require('./subjects'));
@@ -67,6 +76,7 @@ router.use('/salary', require('./salary'));
 
 // Complaints & feedback
 router.use('/complaints', require('./complaints'));
+router.use('/complaint-categories', require('./complaintCategories'));
 
 // Real-time messaging
 router.use('/messages', require('./messaging'));

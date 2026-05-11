@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import { fetchStudentAttendance, updateStudentAttendance } from '@/services/attendanceService'
+import classesService from '@/services/classesService'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -33,6 +34,33 @@ export default function StudentAttendanceUpdateManagerView({
   const [savingId, setSavingId] = useState('')
   const [error, setError] = useState('')
   const [rows, setRows] = useState([])
+  const [classes, setClasses] = useState([])
+  const [classesLoading, setClassesLoading] = useState(true)
+
+  // Load available classes on mount
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const res = await classesService.listClasses()
+        setClasses(Array.isArray(res?.classes) ? res.classes : [])
+      } catch (e) {
+        console.error('Failed to load classes:', e)
+        setClasses([])
+      } finally {
+        setClassesLoading(false)
+      }
+    }
+    loadClasses()
+  }, [])
+
+  // Get unique sections for the selected class
+  const sectionsForClass = useMemo(() => {
+    if (!classId) return []
+    const selectedClass = classes.find((c) => String(c._id || c.name) === classId)
+    if (!selectedClass) return []
+    const sectionArray = selectedClass.sections || []
+    return Array.isArray(sectionArray) ? sectionArray.filter(Boolean) : []
+  }, [classId, classes])
 
   async function load() {
     if (!classId.trim()) {
@@ -112,8 +140,22 @@ export default function StudentAttendanceUpdateManagerView({
       <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <Input label="Class" value={classId} onChange={(e) => setClassId(e.target.value)} placeholder="e.g. 10" />
-          <Input label="Section (optional)" value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A" />
+          <Select label="Class" value={classId} onChange={(e) => { setClassId(e.target.value); setSection('') }} disabled={classesLoading}>
+            <option value="">-- Select Class --</option>
+            {classes.map((cls) => (
+              <option key={String(cls._id || cls.name)} value={String(cls._id || cls.name)}>
+                {cls.name}
+              </option>
+            ))}
+          </Select>
+          <Select label="Section (optional)" value={section} onChange={(e) => setSection(e.target.value)} disabled={!classId || sectionsForClass.length === 0}>
+            <option value="">-- All Sections --</option>
+            {sectionsForClass.map((sec) => (
+              <option key={sec} value={sec}>
+                {sec}
+              </option>
+            ))}
+          </Select>
           <Input label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Student name or ID" />
         </div>
 

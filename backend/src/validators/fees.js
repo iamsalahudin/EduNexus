@@ -56,4 +56,20 @@ const updateFeeStatusSchema = Joi.object({
   })
 });
 
-module.exports = { createFeeSchema, generateMonthlyFeesSchema, recordPaymentSchema, updateFeeSchema, updateFeeStatusSchema };
+const feeVoucherTemplateSchema = Joi.object({
+  body: Joi.object({
+    schoolName: Joi.string().min(1).max(200).required(),
+    schoolAddress: Joi.string().min(1).max(300).required(),
+    banks: Joi.array()
+      .items(
+        Joi.object({
+          bankName: Joi.string().min(1).max(200).required(),
+          account: Joi.string().min(1).max(200).required()
+        })
+      )
+      .min(1)
+      .required()
+  })
+});
+
+module.exports = { createFeeSchema, generateMonthlyFeesSchema, recordPaymentSchema, updateFeeSchema, updateFeeStatusSchema, feeVoucherTemplateSchema };

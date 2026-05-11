@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
-import { fetchStudentAttendance, fetchStaffAttendance, fetchStudents } from '@/services/attendanceService'
+import { fetchAttendanceReport } from '@/services/attendanceService'
 import classesService from '@/services/classesService'
-import { api } from '@/services/api'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -48,109 +47,14 @@ export default function AttendanceReportsPage() {
     setReportData(null)
 
     try {
-      if (reportType === 'class-wise') {
-        // Class-wise attendance report
-        const classRes = await classesService.listClasses({ active: true })
-        const classList = Array.isArray(classRes?.classes) ? classRes.classes : []
+      const reportRes = await fetchAttendanceReport({
+        reportType,
+        classId: reportType === 'student-wise' ? classId : '',
+        fromDate,
+        toDate
+      })
 
-        const classData = []
-        for (const cls of classList) {
-          const attendanceRes = await fetchStudentAttendance({ classId: cls._id, fromDate, toDate })
-          const records = attendanceRes.records || []
-          const total = records.length
-          const present = records.filter((r) => r.status === 'present').length
-          const absent = records.filter((r) => r.status === 'absent').length
-          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
-
-          classData.push({
-            class: cls.name,
-            total,
-            present,
-            absent,
-            percentage
-          })
-        }
-        setReportData(classData)
-      } else if (reportType === 'student-wise' && classId) {
-        // Student-wise report
-        const studentsRes = await fetchStudents({ classId, limit: 500 })
-        const students = studentsRes.students || []
-        const attendanceRes = await fetchStudentAttendance({ classId, fromDate, toDate })
-        const records = attendanceRes.records || []
-
-        // Group by student
-        const studentData = []
-        for (const student of students) {
-          const studentRecords = records.filter((r) => String(r.student?._id || r.student) === String(student._id))
-          const present = studentRecords.filter((r) => r.status === 'present').length
-          const absent = studentRecords.filter((r) => r.status === 'absent').length
-          const total = studentRecords.length
-          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
-
-          studentData.push({
-            name: student.name,
-            total,
-            present,
-            absent,
-            percentage
-          })
-        }
-        setReportData(studentData)
-      } else if (reportType === 'teacher-search') {
-        // Teacher search and attendance
-        const teachersRes = await api.get('/users', { params: { role: 'Teacher', limit: 500 } })
-        const teachers = teachersRes.data.users || []
-
-        const teacherData = []
-        for (const teacher of teachers) {
-          const attendanceRes = await fetchStaffAttendance({ userId: teacher._id, fromDate, toDate })
-          const records = attendanceRes.records || []
-          const present = records.filter((r) => r.status === 'present').length
-          const absent = records.filter((r) => r.status === 'absent').length
-          const total = records.length
-          const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0
-
-          teacherData.push({
-            name: teacher.name,
-            total,
-            present,
-            absent,
-            percentage
-          })
-        }
-        setReportData(teacherData)
-      } else if (reportType === 'school-trends') {
-        // School-wide trends
-        const schoolRes = await fetchStudentAttendance({ fromDate, toDate })
-        const records = schoolRes.records || []
-
-        // Calculate daily trends
-        const byDate = {}
-        for (const record of records) {
-          const dateStr = String(record.date).slice(0, 10)
-          if (!byDate[dateStr]) {
-            byDate[dateStr] = { present: 0, absent: 0, late: 0, excused: 0 }
-          }
-          if (record.status === 'present') byDate[dateStr].present++
-          else if (record.status === 'absent') byDate[dateStr].absent++
-          else if (record.status === 'late') byDate[dateStr].late++
-          else if (record.status === 'excused') byDate[dateStr].excused++
-        }
-
-        const trendsData = Object.keys(byDate)
-          .sort()
-          .map((date) => {
-            const total = byDate[date].present + byDate[date].absent + byDate[date].late + byDate[date].excused
-            return {
-              date,
-              ...byDate[date],
-              total,
-              percentage: total > 0 ? ((byDate[date].present / total) * 100).toFixed(1) : 0
-            }
-          })
-
-        setReportData(trendsData)
-      }
+      setReportData(Array.isArray(reportRes?.report) ? reportRes.report : [])
     } catch (e) {
       setError(e?.response?.data?.error || e.message || 'Failed to generate report')
     } finally {
@@ -163,7 +67,7 @@ export default function AttendanceReportsPage() {
   return (
     <div>
       <PageHeader
-        title="Attendance Reports"
+        title="Teachers Attendance Reports"
         subtitle="Generate comprehensive attendance reports with various filters and analysis."
         right={<ButtonLink href="/admin/attendance" variant="secondary">Back</ButtonLink>}
       />
@@ -182,13 +86,12 @@ export default function AttendanceReportsPage() {
             label="Report Type"
             value={reportType}
             onChange={(e) => setReportType(e.target.value)}
-            options={[
-              { value: 'class-wise', label: 'Class-wise Report' },
-              { value: 'student-wise', label: 'Student-wise Report' },
-              { value: 'teacher-search', label: 'Teacher Attendance' },
-              { value: 'school-trends', label: 'School Trends' }
-            ]}
-          />
+          >
+            <option value="class-wise">Class-wise Report</option>
+            <option value="student-wise">Student-wise Report</option>
+            <option value="teacher-search">Teacher Attendance</option>
+            <option value="school-trends">School Trends</option>
+          </Select>
           <Input
             label="From Date"
             type="date"
@@ -208,11 +111,12 @@ export default function AttendanceReportsPage() {
               label="Class"
               value={classId}
               onChange={(e) => setClassId(e.target.value)}
-              options={[
-                { value: '', label: 'Select Class' },
-                ...classes.map((c) => ({ value: c._id, label: c.name }))
-              ]}
-            />
+            >
+              <option value="">Select Class</option>
+              {classes.map((c) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </Select>
           )}
           <div className="flex items-end">
             <Button

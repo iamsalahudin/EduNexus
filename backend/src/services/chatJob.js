@@ -17,7 +17,7 @@ async function processChat(payload) {
 
   try {
     const response = await axios.post(N8N_WEBHOOK_URL, payload, {
-      timeout: 30000,
+      timeout: 60000,
       headers: { 'Content-Type': 'application/json' },
     });
 

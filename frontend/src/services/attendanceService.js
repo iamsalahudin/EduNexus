@@ -48,6 +48,21 @@ export async function fetchStudentAttendanceSummary({ classId, studentId, childI
   return res.data
 }
 
+export async function fetchAttendanceReport({ reportType, classId, fromDate, toDate, period, month, year } = {}) {
+  const res = await api.get('/attendance/reports', {
+    params: {
+      ...(reportType ? { reportType } : {}),
+      ...(classId ? { classId } : {}),
+      ...(fromDate ? { fromDate } : {}),
+      ...(toDate ? { toDate } : {}),
+      ...(period ? { period } : {}),
+      ...(month ? { month } : {}),
+      ...(year ? { year } : {})
+    }
+  })
+  return res.data
+}
+
 export async function markStudentAttendance({ date, entries }) {
   const res = await api.post('/attendance', { date, entries })
   return res.data

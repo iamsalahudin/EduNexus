@@ -63,4 +63,9 @@ export const resetPasswordApi = async (payload) => {
   return data
 }
 
+export const sendOtpApi = async (payload) => {
+  const { data } = await api.post('/auth/send-otp', payload)
+  return data
+}
+
 export default authService

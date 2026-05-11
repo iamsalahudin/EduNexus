@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import PasswordStrength from '@/components/ui/PasswordStrength';
@@ -35,6 +35,11 @@ export default function ConfirmPasswordPage() {
       setLoading(false);
     }
   };
+
+  // prevent direct access without email
+  useEffect(() => {
+    if (!email) router.push('/forgot-password');
+  }, [email, router]);
 
   return (
     <div className="space-y-5">

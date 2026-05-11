@@ -150,6 +150,22 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input ref={usernameRef} name="username" label="Username" required />
         <Input ref={passRef} name="password" type="password" label="Password" required />
+        <div className="text-right text-sm">
+          <button
+            type="button"
+            className="underline underline-offset-1 text-grey-600"
+            onClick={() => {
+              const uname = usernameRef.current?.value || '';
+              const emailParam = uname.includes('@') ? uname : '';
+              const query = new URLSearchParams();
+              if (uname) query.set('username', uname);
+              if (emailParam) query.set('email', emailParam);
+              router.push(`/forgot-password?${query.toString()}`);
+            }}
+          >
+            Forgot password?
+          </button>
+        </div>
         {error && (
           <div className="text-sm text-red-700 bg-red-50 dark:bg-transparent dark:text-red-400 p-2 rounded">
             {error}

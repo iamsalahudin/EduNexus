@@ -260,28 +260,20 @@ export default function TeacherAttendanceManagerView({
 
       <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Select
-            label="Selection Mode"
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            options={[
-              { value: 'day', label: 'Day Wise' },
-              { value: 'teacher', label: 'Teacher Wise' },
-            ]}
-          />
+          <Select label="Selection Mode" value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="day">Day Wise</option>
+            <option value="teacher">Teacher Wise</option>
+          </Select>
 
           {mode === 'day' ? (
             <Input label="Date" type="date" value={date} max={maxDate} onChange={(e) => setDate(e.target.value)} />
           ) : (
-            <Select
-              label="Teacher"
-              value={selectedTeacherId}
-              onChange={(e) => setSelectedTeacherId(e.target.value)}
-              options={[
-                { value: '', label: 'Select Teacher' },
-                ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name })),
-              ]}
-            />
+            <Select label="Teacher" value={selectedTeacherId} onChange={(e) => setSelectedTeacherId(e.target.value)}>
+              <option value="">Select Teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
+              ))}
+            </Select>
           )}
 
           {mode === 'teacher' ? (
@@ -344,9 +336,12 @@ export default function TeacherAttendanceManagerView({
                         <Select
                           value={row.status}
                           onChange={(e) => updateRow(row.key, { status: e.target.value })}
-                          options={STATUS_OPTIONS}
                           disabled={saving}
-                        />
+                        >
+                          {STATUS_OPTIONS.map((statusItem) => (
+                            <option key={statusItem.value} value={statusItem.value}>{statusItem.label}</option>
+                          ))}
+                        </Select>
                       </td>
                       <td className="py-2 px-4 min-w-[220px]">
                         <Input

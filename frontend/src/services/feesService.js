@@ -84,3 +84,13 @@ export async function fetchFeeStructure() {
     }
   }
 }
+
+export async function getFeeVoucherTemplate() {
+  const { data } = await api.get('/fees/voucher-template')
+  return data?.template || null
+}
+
+export async function saveFeeVoucherTemplate(payload = {}) {
+  const { data } = await api.put('/fees/voucher-template', payload)
+  return data?.template || null
+}

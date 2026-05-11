@@ -4,6 +4,7 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button, Card, Input, PageHeader } from '@/components/ui'
+import { getFeeVoucherTemplate, saveFeeVoucherTemplate } from '@/services/feesService'
 
 const BankSchema = z.object({ bankName: z.string().min(1), account: z.string().min(1) })
 const VoucherSchema = z.object({
@@ -15,7 +16,7 @@ const VoucherSchema = z.object({
 export default function FeeVoucher(){
   const [saveMessage, setSaveMessage] = useState('')
   const [savedTemplate, setSavedTemplate] = useState(null)
-  const { register, control, handleSubmit, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(VoucherSchema),
     defaultValues: { schoolName:'My School', schoolAddress:'Address', banks: [{ bankName:'Bank A', account:'XXXX' }] }
   })
@@ -23,19 +24,33 @@ export default function FeeVoucher(){
   const { fields, append, remove } = useFieldArray({ name: 'banks', control })
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('feeVoucherTemplate')
-      if (stored) {
-        setSavedTemplate(JSON.parse(stored))
-      }
-    } catch {
-      setSavedTemplate(null)
-    }
-  }, [])
+    let active = true
 
-  function onSubmit(values){
-    localStorage.setItem('feeVoucherTemplate', JSON.stringify(values))
-    setSavedTemplate(values)
+    ;(async () => {
+      try {
+        const template = await getFeeVoucherTemplate()
+        if (!active) return
+        setSavedTemplate(template)
+        if (template) {
+          reset({
+            schoolName: template.schoolName || 'My School',
+            schoolAddress: template.schoolAddress || 'Address',
+            banks: Array.isArray(template.banks) && template.banks.length > 0 ? template.banks : [{ bankName:'Bank A', account:'XXXX' }]
+          })
+        }
+      } catch {
+        if (active) setSavedTemplate(null)
+      }
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [reset])
+
+  async function onSubmit(values){
+    const template = await saveFeeVoucherTemplate(values)
+    setSavedTemplate(template)
     setSaveMessage('Voucher template saved.')
   }
 

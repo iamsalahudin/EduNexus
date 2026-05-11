@@ -24,12 +24,6 @@ export default function Page() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Create
-  const [newName, setNewName] = useState('')
-  const [newLevel, setNewLevel] = useState('')
-  const [newNoSections, setNewNoSections] = useState(false)
-  const [newSectionsText, setNewSectionsText] = useState('')
-
   // Edit
   const [selected, setSelected] = useState(null)
   const [editName, setEditName] = useState('')
@@ -70,60 +64,16 @@ export default function Page() {
     const values = [
       ...levels,
       ...classes.map((c) => c?.level).filter(Boolean),
-      newLevel,
-      editLevel
+      editLevel,
     ].filter(Boolean)
     return [...new Set(values.map((v) => String(v).trim().toLowerCase()).filter(Boolean))]
-  }, [levels, classes, newLevel, editLevel])
-
-  const createPayload = useMemo(() => {
-    const payload = { name: String(newName || '').trim() }
-
-    if (newLevel) payload.level = newLevel
-
-    if (newNoSections) {
-      payload.sections = []
-    } else {
-      const parsed = parseSections(newSectionsText)
-      // If sections is omitted, backend defaults to Boys/Girls
-      if (parsed.length > 0) payload.sections = parsed
-    }
-
-    return payload
-  }, [newName, newLevel, newNoSections, newSectionsText])
-
-  async function createClass(e) {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-    try {
-      await classesService.createClass(createPayload)
-      setSuccess('Class created')
-      setNewName('')
-      setNewLevel('')
-      setNewNoSections(false)
-      setNewSectionsText('')
-      await loadClasses()
-    } catch (e2) {
-      setError(e2?.response?.data?.error || 'Failed to create class')
-    }
-  }
-
-  function startEdit(c) {
-    setSelected(c)
-    setEditName(c?.name || '')
-    setEditLevel(c?.level || '')
-    setEditActive(typeof c?.active === 'boolean' ? c.active : true)
-    const secs = Array.isArray(c?.sections) ? c.sections : []
-    setEditNoSections(secs.length === 0)
-    setEditSectionsText(sectionsToText(secs))
-  }
+  }, [levels, classes, editLevel])
 
   const editPayload = useMemo(() => {
     const payload = {
       name: String(editName || '').trim(),
       active: !!editActive,
-      level: editLevel || undefined
+      level: editLevel || undefined,
     }
 
     if (editNoSections) {
@@ -134,6 +84,16 @@ export default function Page() {
 
     return payload
   }, [editName, editLevel, editActive, editNoSections, editSectionsText])
+
+  function startEdit(c) {
+    setSelected(c)
+    setEditName(c?.name || '')
+    setEditLevel(c?.level || '')
+    setEditActive(typeof c?.active === 'boolean' ? c.active : true)
+    const secs = Array.isArray(c?.sections) ? c.sections : []
+    setEditNoSections(secs.length === 0)
+    setEditSectionsText(sectionsToText(secs))
+  }
 
   async function saveEdit(e) {
     e.preventDefault()
@@ -173,6 +133,7 @@ export default function Page() {
         subtitle="Manage classes and their sections (e.g., Boys/Girls)."
         actions={(
           <div className="flex gap-2">
+            <ButtonLink href="/admin/classes/add">Add Class</ButtonLink>
             <ButtonLink href="/admin/classes/rooms">Manage Rooms</ButtonLink>
             <ButtonLink href="/admin/classes/levels">Manage Levels</ButtonLink>
           </div>
@@ -182,56 +143,13 @@ export default function Page() {
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <h2 className="font-medium">Create Class</h2>
-          <p className="text-sm text-gray-600 mt-1">If you leave sections blank, default sections are Boys and Girls.</p>
-
-          <form className="mt-4 space-y-3" onSubmit={createClass}>
-            <Input
-              placeholder="Class name (e.g., Grade 1)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              required
-            />
-
-            <Select value={newLevel} onChange={(e) => setNewLevel(e.target.value)}>
-              <option value="">Level (optional)</option>
-              {levelOptions.map((level) => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </Select>
-
-            <div className="flex items-center gap-2 text-sm">
-              <ToggleBox
-                active={newNoSections}
-                onToggle={(next) => {
-                  setNewNoSections(next)
-                  if (next) setNewSectionsText('')
-                }}
-              >
-                Create with no sections
-              </ToggleBox>
-            </div>
-
-            <Textarea
-              textareaClassName="min-h-[96px]"
-              placeholder={'Sections (one per line)\nBoys\nGirls'}
-              value={newSectionsText}
-              onChange={(e) => setNewSectionsText(e.target.value)}
-              disabled={newNoSections}
-            />
-            <Button variant="primary" type="submit">
-              Create
-            </Button>
-          </form>
-        </Card>
-
-        <Card>
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Left: Master Table */}
+        <Card className="lg:col-span-2 ">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-medium">Class Master</h2>
-              <p className="text-sm text-gray-600 mt-1">Edit, deactivate, or delete classes.</p>
+              <p className="text-sm text-gray-600 mt-1">Click Edit to update a class on the right.</p>
             </div>
             <Button type="button" onClick={loadClasses}>
               Refresh
@@ -254,11 +172,18 @@ export default function Page() {
                 </thead>
                 <tbody>
                   {classes.map((c) => (
-                    <tr key={c._id} className="border-t">
+                    <tr
+                      key={c._id}
+                      className={`border-t ${selected?._id === c._id ? 'bg-blue-50' : ''}`}
+                    >
                       <td className="py-2 pr-3 whitespace-nowrap">{c.name}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{c.level || <span className="text-gray-500">(none)</span>}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">
+                        {c.level || <span className="text-gray-500">(none)</span>}
+                      </td>
                       <td className="py-2 pr-3">
-                        {Array.isArray(c.sections) && c.sections.length > 0 ? c.sections.join(', ') : <span className="text-gray-500">(none)</span>}
+                        {Array.isArray(c.sections) && c.sections.length > 0
+                          ? c.sections.join(', ')
+                          : <span className="text-gray-500">(none)</span>}
                       </td>
                       <td className="py-2 pr-3 whitespace-nowrap">{String(c.active ?? true)}</td>
                       <td className="py-2 pr-3 whitespace-nowrap flex gap-2">
@@ -273,64 +198,77 @@ export default function Page() {
                   ))}
                 </tbody>
               </table>
-              {classes.length === 0 ? <div className="text-sm text-gray-600 mt-3">No classes found.</div> : null}
+              {classes.length === 0 ? (
+                <div className="text-sm text-gray-600 mt-3">No classes found.</div>
+              ) : null}
             </div>
           )}
+        </Card>
+
+        {/* Right: Edit Panel */}
+        <Card>
+          <h2 className="font-medium">Edit Class</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {selected
+              ? `Editing: ${selected.name}`
+              : 'Select a class from the table to edit it here.'}
+          </p>
 
           {selected ? (
-            <div className="mt-6 border-t pt-4">
-              <h3 className="font-medium">Edit Class</h3>
-              <form className="mt-3 space-y-3" onSubmit={saveEdit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-                  <div className="flex items-center gap-2 text-sm">
-                    <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>
-                      Active
-                    </ToggleBox>
-                  </div>
-                </div>
+            <form className="mt-4 space-y-3" onSubmit={saveEdit}>
+              <Input
+                placeholder="Name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                required
+              />
 
-                <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
-                  <option value="">Level (optional)</option>
-                  {levelOptions.map((level) => (
-                    <option key={level} value={level}>{level}</option>
-                  ))}
-                </Select>
+              <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
+                <option value="">Level (optional)</option>
+                {levelOptions.map((level) => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </Select>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <ToggleBox
-                    active={editNoSections}
-                    onToggle={(next) => {
-                      setEditNoSections(next)
-                      if (next) setEditSectionsText('')
-                    }}
-                  >
-                    No sections
-                  </ToggleBox>
-                </div>
+              <div className="flex items-center gap-4 text-sm">
+                <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>
+                  Active
+                </ToggleBox>
+                <ToggleBox
+                  active={editNoSections}
+                  onToggle={(next) => {
+                    setEditNoSections(next)
+                    if (next) setEditSectionsText('')
+                  }}
+                >
+                  No sections
+                </ToggleBox>
+              </div>
 
-                <Textarea
-                  textareaClassName="min-h-[96px]"
-                  placeholder={'Sections (one per line)\nBoys\nGirls'}
-                  value={editSectionsText}
-                  onChange={(e) => setEditSectionsText(e.target.value)}
-                  disabled={editNoSections}
-                />
+              <Textarea
+                textareaClassName="min-h-[96px]"
+                placeholder={'Sections (one per line)\nBoys\nGirls'}
+                value={editSectionsText}
+                onChange={(e) => setEditSectionsText(e.target.value)}
+                disabled={editNoSections}
+              />
 
-                <div className="flex gap-2">
-                  <Button variant="primary" type="submit">
-                    Save
-                  </Button>
-                  <Button type="button" onClick={() => setSelected(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+              <div className="flex gap-2">
+                <Button variant="primary" type="submit">
+                  Save
+                </Button>
+                <Button type="button" onClick={() => setSelected(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-4 flex items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-lg">
+              <p className="text-sm text-gray-400">No class selected</p>
             </div>
-          ) : null}
+          )}
         </Card>
       </div>
     </div>
   )
 }
-
