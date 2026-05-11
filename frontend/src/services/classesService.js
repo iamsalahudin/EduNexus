@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { api } from './api'
 
 export const classesService = {
@@ -44,50 +43,3 @@ export const classesService = {
 }
 
 export default classesService
-=======
-import { api } from './api'
-
-export const classesService = {
-  listClasses: async (params = undefined) => {
-    const { data } = await api.get('/classes', params ? { params } : undefined)
-    return data
-  },
-
-  createClass: async (payload) => {
-    const { data } = await api.post('/classes', payload)
-    return data
-  },
-
-  updateClass: async (id, payload) => {
-    const { data } = await api.patch(`/classes/${id}`, payload)
-    return data
-  },
-
-  deleteClass: async (id) => {
-    const { data } = await api.delete(`/classes/${id}`)
-    return data
-  },
-
-  listLevels: async () => {
-    const { data } = await api.get('/classes/levels')
-    return data
-  },
-
-  updateLevels: async (payload) => {
-    const { data } = await api.put('/classes/levels', payload)
-    return data
-  },
-
-  listRooms: async () => {
-    const { data } = await api.get('/classes/rooms')
-    return data
-  },
-
-  updateRooms: async (payload) => {
-    const { data } = await api.put('/classes/rooms', payload)
-    return data
-  }
-}
-
-export default classesService
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 'use client'
 
 import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
@@ -16,23 +15,4 @@ export default function SalaryStructurePage() {
       reportHref="/principal/salary/report"
     />
   )
-=======
-'use client'
-
-import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
-
-export default function SalaryStructurePage() {
-  return (
-    <SalaryWorkspace
-      roleBase="/principal"
-      title="Salary Structure"
-      subtitle="Create and maintain salary structures for teachers and salary-only staff."
-      showStaffManagement={false}
-      showStructureManagement
-      showGenerate={false}
-      allowPayments={false}
-      reportHref="/principal/salary/report"
-    />
-  )
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 }

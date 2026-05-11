@@ -22,7 +22,6 @@ export default function AttendanceHome() {
         ])
         if (!mounted) return
         // Convert summary data to aggregated stats
-<<<<<<< HEAD
         const studentTotals = s1.totals || {}
         setStudentStats({
           total: studentTotals.totalDays || 0,
@@ -40,20 +39,6 @@ export default function AttendanceHome() {
           late: staffTotals.lateDays || 0,
           leave: staffTotals.excusedDays || 0,
           notMarkedYet: Math.max(0, (staffTotals.totalDays || 0) - ((staffTotals.presentDays || 0) + (staffTotals.absentDays || 0) + (staffTotals.lateDays || 0) + (staffTotals.excusedDays || 0)))
-=======
-        const studentSummary = s1.summary || {}
-        setStudentStats({
-          total: studentSummary.total || 0,
-          present: studentSummary.present || 0,
-          absent: studentSummary.absent || 0,
-          leave: studentSummary.leave || 0
-        })
-        setStaffStats(s2.summary || {
-          total: 0,
-          present: 0,
-          absent: 0,
-          leave: 0
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
         })
       } catch (e) {
         if (mounted) {
@@ -89,18 +74,13 @@ export default function AttendanceHome() {
         {/* STUDENTS SECTION */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Students</h3>
-<<<<<<< HEAD
           <div className="grid grid-cols-3 gap-3">
-=======
-          <div className="grid grid-cols-2 gap-3">
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
             {loading ? (
               <>
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
-<<<<<<< HEAD
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
               </>
@@ -112,15 +92,6 @@ export default function AttendanceHome() {
                 <StatCard label="Late" value={studentStats?.late ?? 0} color="orange" />
                 <StatCard label="Leave" value={studentStats?.leave ?? 0} color="amber" />
                 <StatCard label="Not Marked Yet" value={studentStats?.notMarkedYet ?? 0} color="gray" />
-=======
-              </>
-            ) : (
-              <>
-                <StatCard label="Total Students" value={studentStats?.total ?? 0} />
-                <StatCard label="Present" value={studentStats?.present ?? 0} color="green" />
-                <StatCard label="Absent" value={studentStats?.absent ?? 0} color="red" />
-                <StatCard label="Leave" value={studentStats?.leave ?? 0} color="amber" />
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
               </>
             )}
           </div>
@@ -129,18 +100,13 @@ export default function AttendanceHome() {
         {/* STAFF/TEACHERS SECTION */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Staff & Teachers</h3>
-<<<<<<< HEAD
           <div className="grid grid-cols-3 gap-3">
-=======
-          <div className="grid grid-cols-2 gap-3">
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
             {loading ? (
               <>
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
-<<<<<<< HEAD
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
               </>
@@ -152,15 +118,6 @@ export default function AttendanceHome() {
                 <StatCard label="Late" value={staffStats?.late ?? 0} color="orange" />
                 <StatCard label="Leave" value={staffStats?.leave ?? 0} color="amber" />
                 <StatCard label="Not Marked Yet" value={staffStats?.notMarkedYet ?? 0} color="gray" />
-=======
-              </>
-            ) : (
-              <>
-                <StatCard label="Total Staff" value={staffStats?.total ?? 0} />
-                <StatCard label="Present" value={staffStats?.present ?? 0} color="green" />
-                <StatCard label="Absent" value={staffStats?.absent ?? 0} color="red" />
-                <StatCard label="Leave" value={staffStats?.leave ?? 0} color="amber" />
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
               </>
             )}
           </div>
@@ -223,7 +180,6 @@ export default function AttendanceHome() {
                     <span className="text-xs text-gray-500">{studentStats?.total ? ((studentStats.leave / studentStats.total) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
-<<<<<<< HEAD
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Late</span>
@@ -254,8 +210,6 @@ export default function AttendanceHome() {
                     <span className="text-xs text-gray-500">{studentStats?.total ? ((studentStats.notMarkedYet / studentStats.total) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
               </div>
             )}
           </div>
@@ -312,7 +266,6 @@ export default function AttendanceHome() {
                     <span className="text-xs text-gray-500">{staffStats?.total ? ((staffStats.leave / staffStats.total) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
-<<<<<<< HEAD
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Late</span>
@@ -343,8 +296,6 @@ export default function AttendanceHome() {
                     <span className="text-xs text-gray-500">{staffStats?.total ? ((staffStats.notMarkedYet / staffStats.total) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
               </div>
             )}
           </div>

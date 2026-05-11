@@ -56,7 +56,6 @@ const updateFeeStatusSchema = Joi.object({
   })
 });
 
-<<<<<<< HEAD
 const feeVoucherTemplateSchema = Joi.object({
   body: Joi.object({
     schoolName: Joi.string().min(1).max(200).required(),
@@ -74,6 +73,3 @@ const feeVoucherTemplateSchema = Joi.object({
 });
 
 module.exports = { createFeeSchema, generateMonthlyFeesSchema, recordPaymentSchema, updateFeeSchema, updateFeeStatusSchema, feeVoucherTemplateSchema };
-=======
-module.exports = { createFeeSchema, generateMonthlyFeesSchema, recordPaymentSchema, updateFeeSchema, updateFeeStatusSchema };
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854

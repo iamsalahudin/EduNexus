@@ -3,10 +3,7 @@ const PasswordReset = require('../models/passwordReset');
 const { signAccessToken, createRefreshToken } = require('../utils/jwt');
 const config = require('../config');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
-<<<<<<< HEAD
 const mailService = require('../services/mailService');
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
 async function register(req, res, next) {
   try {

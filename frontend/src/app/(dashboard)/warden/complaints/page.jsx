@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import ComplaintsWorkspace from '@/components/complaints/ComplaintsWorkspace'
 
 export default function HostelComplaintsPage() {
@@ -11,17 +10,3 @@ export default function HostelComplaintsPage() {
     />
   )
 }
-=======
-import ComplaintsWorkspace from '@/components/complaints/ComplaintsWorkspace'
-
-export default function HostelComplaintsPage() {
-  return (
-    <ComplaintsWorkspace
-      title="Assigned Complaints"
-      subtitle="Review and resolve complaints assigned to hostel management."
-      allowStatus
-      showOnlyAssigned
-    />
-  )
-}
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854

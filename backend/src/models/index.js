@@ -42,15 +42,12 @@ const DailyDiary = require('./dailyDiary');
 const SalaryStructure = require('./salaryStructure');
 const SalaryStaff = require('./salaryStaff');
 const SalarySlip = require('./salarySlip');
-<<<<<<< HEAD
 const FeeVoucherTemplate = require('./feeVoucherTemplate');
 const Syllabus = require('./syllabus');
 const InventoryCategory = require('./inventoryCategory');
 const InventoryItem = require('./inventoryItem');
 const InventoryStockMovement = require('./inventoryStockMovement');
 const InventoryDistribution = require('./inventoryDistribution');
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
 module.exports = {
 	Role,
@@ -96,7 +93,6 @@ module.exports = {
 	DailyDiary,
 	SalaryStructure,
 	SalaryStaff,
-<<<<<<< HEAD
 	SalarySlip,
 	FeeVoucherTemplate,
 	Syllabus,
@@ -104,7 +100,4 @@ module.exports = {
 	InventoryItem,
 	InventoryStockMovement,
 	InventoryDistribution
-=======
-	SalarySlip
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 };

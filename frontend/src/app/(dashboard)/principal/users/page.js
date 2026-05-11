@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 "use client"
 
 import ReadOnlyUsersDashboard from '@/components/users/ReadOnlyUsersDashboard'
@@ -11,17 +10,3 @@ export default function PrincipalUsersPage() {
     />
   )
 }
-=======
-"use client"
-
-import ReadOnlyUsersDashboard from '@/components/users/ReadOnlyUsersDashboard'
-
-export default function PrincipalUsersPage() {
-  return (
-    <ReadOnlyUsersDashboard
-      title="Users"
-      subtitle="Read-only users overview for principal role."
-    />
-  )
-}
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854

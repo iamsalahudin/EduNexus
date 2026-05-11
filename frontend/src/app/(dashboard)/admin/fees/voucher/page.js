@@ -16,11 +16,7 @@ const VoucherSchema = z.object({
 export default function FeeVoucher(){
   const [saveMessage, setSaveMessage] = useState('')
   const [savedTemplate, setSavedTemplate] = useState(null)
-<<<<<<< HEAD
   const { register, control, handleSubmit, reset, formState: { errors } } = useForm({
-=======
-  const { register, control, handleSubmit, formState: { errors } } = useForm({
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     resolver: zodResolver(VoucherSchema),
     defaultValues: { schoolName:'My School', schoolAddress:'Address', banks: [{ bankName:'Bank A', account:'XXXX' }] }
   })
@@ -28,7 +24,6 @@ export default function FeeVoucher(){
   const { fields, append, remove } = useFieldArray({ name: 'banks', control })
 
   useEffect(() => {
-<<<<<<< HEAD
     let active = true
 
     ;(async () => {
@@ -56,21 +51,6 @@ export default function FeeVoucher(){
   async function onSubmit(values){
     const template = await saveFeeVoucherTemplate(values)
     setSavedTemplate(template)
-=======
-    try {
-      const stored = localStorage.getItem('feeVoucherTemplate')
-      if (stored) {
-        setSavedTemplate(JSON.parse(stored))
-      }
-    } catch {
-      setSavedTemplate(null)
-    }
-  }, [])
-
-  function onSubmit(values){
-    localStorage.setItem('feeVoucherTemplate', JSON.stringify(values))
-    setSavedTemplate(values)
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     setSaveMessage('Voucher template saved.')
   }
 

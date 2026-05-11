@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 const { Fee, FeeVoucherTemplate, Student, User, SchoolClass } = require('../models');
-=======
-const { Fee, Student, User, SchoolClass } = require('../models');
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 const mongoose = require('mongoose');
 
 function toObjectId(value) {
@@ -733,7 +729,6 @@ async function deleteFee(req, res, next) {
   }
 }
 
-<<<<<<< HEAD
 async function getFeeVoucherTemplate(req, res, next) {
   try {
     const template = await FeeVoucherTemplate.findOne({ key: 'default' }).lean();
@@ -774,8 +769,6 @@ async function saveFeeVoucherTemplate(req, res, next) {
   }
 }
 
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 module.exports = {
   createFee,
   ensureMonthlyFeesGenerated,
@@ -788,11 +781,7 @@ module.exports = {
   recordPayment,
   updateFeeStatus,
   updateFee,
-<<<<<<< HEAD
   deleteFee,
   getFeeVoucherTemplate,
   saveFeeVoucherTemplate
-=======
-  deleteFee
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 };

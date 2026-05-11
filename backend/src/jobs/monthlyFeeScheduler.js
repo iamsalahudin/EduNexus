@@ -1,11 +1,8 @@
 const { ensureMonthlyFeesGenerated } = require('../controllers/feeController')
 const logger = require('../utils/logger')
 
-<<<<<<< HEAD
 const MAX_TIMEOUT_MS = 2147483647
 
-=======
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 function shouldEnableMonthlyFeeScheduler() {
   if (process.env.NODE_ENV === 'test') return false
   if (String(process.env.FEE_SCHEDULER_DISABLED || '').toLowerCase() === 'true') return false
@@ -34,7 +31,6 @@ function startMonthlyFeeScheduler() {
   const scheduleNext = () => {
     const now = new Date()
     const nextRun = getNextMonthlyRun(now)
-<<<<<<< HEAD
     const delay = nextRun.getTime() - now.getTime()
     const safeDelay = Math.min(MAX_TIMEOUT_MS, Math.max(1000, delay))
     const shouldRun = delay <= MAX_TIMEOUT_MS
@@ -45,11 +41,6 @@ function startMonthlyFeeScheduler() {
         return
       }
 
-=======
-    const delay = Math.max(1000, nextRun.getTime() - now.getTime())
-
-    timer = setTimeout(async () => {
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
       try {
         await runMonthlyFeeGeneration()
       } catch (error) {
@@ -57,11 +48,7 @@ function startMonthlyFeeScheduler() {
       } finally {
         scheduleNext()
       }
-<<<<<<< HEAD
     }, safeDelay)
-=======
-    }, delay)
->>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
     if (timer && typeof timer.unref === 'function') {
       timer.unref()
