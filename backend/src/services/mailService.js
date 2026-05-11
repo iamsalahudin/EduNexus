@@ -6,7 +6,11 @@ function getTransporterConfig() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
+<<<<<<< HEAD
   const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
+=======
+  const pass = process.env.SMTP_PASS;
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
   return { host, port, user, pass };
 }
@@ -24,6 +28,7 @@ function getTransporter() {
 
   if (cachedTransporter) return cachedTransporter;
 
+<<<<<<< HEAD
   const isGmailHost = /(^|\.)gmail\.com$/i.test(host) || /smtp\.gmail\.com$/i.test(host);
 
   cachedTransporter = isGmailHost
@@ -38,6 +43,14 @@ function getTransporter() {
         requireTLS: port === 587,
         auth: { user, pass }
       });
+=======
+  cachedTransporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass }
+  });
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
   return cachedTransporter;
 }
@@ -60,12 +73,17 @@ function ensureMailerConfigured() {
 async function sendMail({ to, subject, html, text, from }) {
   const transporter = ensureMailerConfigured();
 
+<<<<<<< HEAD
   const mail = {
+=======
+  await transporter.sendMail({
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     from: from || process.env.EMAIL_FROM || process.env.SMTP_USER,
     to,
     subject,
     html,
     text
+<<<<<<< HEAD
   };
 
   try {
@@ -89,6 +107,9 @@ async function sendMail({ to, subject, html, text, from }) {
 
     throw err;
   }
+=======
+  });
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 }
 
 function buildWelcomeCredentialsTemplate({ recipientName, roleLabel, email, username, temporaryPassword }) {

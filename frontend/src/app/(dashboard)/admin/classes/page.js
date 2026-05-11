@@ -64,10 +64,61 @@ export default function Page() {
     const values = [
       ...levels,
       ...classes.map((c) => c?.level).filter(Boolean),
+<<<<<<< HEAD
       editLevel,
     ].filter(Boolean)
     return [...new Set(values.map((v) => String(v).trim().toLowerCase()).filter(Boolean))]
   }, [levels, classes, editLevel])
+=======
+      newLevel,
+      editLevel
+    ].filter(Boolean)
+    return [...new Set(values.map((v) => String(v).trim().toLowerCase()).filter(Boolean))]
+  }, [levels, classes, newLevel, editLevel])
+
+  const createPayload = useMemo(() => {
+    const payload = { name: String(newName || '').trim() }
+
+    if (newLevel) payload.level = newLevel
+
+    if (newNoSections) {
+      payload.sections = []
+    } else {
+      const parsed = parseSections(newSectionsText)
+      // If sections is omitted, backend defaults to Boys/Girls
+      if (parsed.length > 0) payload.sections = parsed
+    }
+
+    return payload
+  }, [newName, newLevel, newNoSections, newSectionsText])
+
+  async function createClass(e) {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    try {
+      await classesService.createClass(createPayload)
+      setSuccess('Class created')
+      setNewName('')
+      setNewLevel('')
+      setNewNoSections(false)
+      setNewSectionsText('')
+      await loadClasses()
+    } catch (e2) {
+      setError(e2?.response?.data?.error || 'Failed to create class')
+    }
+  }
+
+  function startEdit(c) {
+    setSelected(c)
+    setEditName(c?.name || '')
+    setEditLevel(c?.level || '')
+    setEditActive(typeof c?.active === 'boolean' ? c.active : true)
+    const secs = Array.isArray(c?.sections) ? c.sections : []
+    setEditNoSections(secs.length === 0)
+    setEditSectionsText(sectionsToText(secs))
+  }
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
   const editPayload = useMemo(() => {
     const payload = {
@@ -133,7 +184,10 @@ export default function Page() {
         subtitle="Manage classes and their sections (e.g., Boys/Girls)."
         actions={(
           <div className="flex gap-2">
+<<<<<<< HEAD
             <ButtonLink href="/admin/classes/add">Add Class</ButtonLink>
+=======
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
             <ButtonLink href="/admin/classes/rooms">Manage Rooms</ButtonLink>
             <ButtonLink href="/admin/classes/levels">Manage Levels</ButtonLink>
           </div>
@@ -143,9 +197,58 @@ export default function Page() {
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
+<<<<<<< HEAD
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left: Master Table */}
         <Card className="lg:col-span-2 ">
+=======
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <h2 className="font-medium">Create Class</h2>
+          <p className="text-sm text-gray-600 mt-1">If you leave sections blank, default sections are Boys and Girls.</p>
+
+          <form className="mt-4 space-y-3" onSubmit={createClass}>
+            <Input
+              placeholder="Class name (e.g., Grade 1)"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
+            />
+
+            <Select value={newLevel} onChange={(e) => setNewLevel(e.target.value)}>
+              <option value="">Level (optional)</option>
+              {levelOptions.map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </Select>
+
+            <div className="flex items-center gap-2 text-sm">
+              <ToggleBox
+                active={newNoSections}
+                onToggle={(next) => {
+                  setNewNoSections(next)
+                  if (next) setNewSectionsText('')
+                }}
+              >
+                Create with no sections
+              </ToggleBox>
+            </div>
+
+            <Textarea
+              textareaClassName="min-h-[96px]"
+              placeholder={'Sections (one per line)\nBoys\nGirls'}
+              value={newSectionsText}
+              onChange={(e) => setNewSectionsText(e.target.value)}
+              disabled={newNoSections}
+            />
+            <Button variant="primary" type="submit">
+              Create
+            </Button>
+          </form>
+        </Card>
+
+        <Card>
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-medium">Class Master</h2>
@@ -223,12 +326,21 @@ export default function Page() {
                 required
               />
 
+<<<<<<< HEAD
               <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
                 <option value="">Level (optional)</option>
                 {levelOptions.map((level) => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </Select>
+=======
+                <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
+                  <option value="">Level (optional)</option>
+                  {levelOptions.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </Select>
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 
               <div className="flex items-center gap-4 text-sm">
                 <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>

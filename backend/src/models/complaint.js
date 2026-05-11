@@ -9,7 +9,16 @@ const CommentSchema = new mongoose.Schema({
 const ComplaintSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+<<<<<<< HEAD
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'ComplaintCategory', index: true },
+=======
+    category: {
+      type: String,
+      enum: ['general', 'academic', 'discipline', 'behavior', 'transport', 'fees', 'other'],
+      default: 'general',
+      index: true
+    },
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     type: { type: String },
     priority: {
       type: String,

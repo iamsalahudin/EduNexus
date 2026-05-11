@@ -88,6 +88,7 @@ export default function AdminResultsPage() {
     try {
       setLoading(true);
       setError('');
+<<<<<<< HEAD
       const result = await examsService.updateExam(selectedExam._id, { resultWeights: weights });
       if (result?.exam) {
         setSelectedExam(result.exam);
@@ -95,6 +96,11 @@ export default function AdminResultsPage() {
       }
     } catch (err) {
       setError(err?.response?.data?.error || err.message || 'Failed to save weights');
+=======
+      alert('Weights updated successfully');
+    } catch (err) {
+      setError(err.message);
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     } finally {
       setLoading(false);
     }

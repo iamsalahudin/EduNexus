@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { api } from './api'
 
 export const timetableService = {
@@ -42,4 +43,50 @@ export const timetableService = {
   },
 }
 
+=======
+import { api } from './api'
+
+export const timetableService = {
+  listTimetables: async (params = undefined) => {
+    const { data } = await api.get('/timetables', params ? { params } : undefined)
+    return data
+  },
+
+  listTeacherPersonalTimetables: async (params = {}) => {
+    const { data } = await api.get('/timetables', { params: { ...params, view: 'teacher-personal' } })
+    return data
+  },
+
+  listStudentClassTimetables: async (params = {}) => {
+    const { data } = await api.get('/timetables', { params: { ...params, view: 'student-class' } })
+    return data
+  },
+
+  listParentChildTimetables: async (params = {}) => {
+    const { data } = await api.get('/timetables', { params: { ...params, view: 'parent-child' } })
+    return data
+  },
+
+  getTimetable: async (id) => {
+    const { data } = await api.get(`/timetables/${id}`)
+    return data
+  },
+
+  createTimetable: async (payload) => {
+    const { data } = await api.post('/timetables', payload)
+    return data
+  },
+
+  updateTimetable: async (id, payload) => {
+    const { data } = await api.patch(`/timetables/${id}`, payload)
+    return data
+  },
+
+  deleteTimetable: async (id) => {
+    const { data } = await api.delete(`/timetables/${id}`)
+    return data
+  },
+}
+
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 export default timetableService

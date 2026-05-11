@@ -119,12 +119,15 @@ const updateExamSchema = Joi.object({
     year: Joi.number(),
     month: Joi.number().min(1).max(12).allow(null, ''),
     instructions: Joi.string().allow(''),
+<<<<<<< HEAD
     resultWeights: Joi.object({
       exam: Joi.number().min(0).max(100),
       attendance: Joi.number().min(0).max(100),
       homework: Joi.number().min(0).max(100),
       gr: Joi.number().min(0).max(100)
     }),
+=======
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
     subjects: Joi.array().items(
       Joi.object({
         subject: Joi.string(),

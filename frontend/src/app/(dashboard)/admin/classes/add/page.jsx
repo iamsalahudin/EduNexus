@@ -1,5 +1,6 @@
 'use client'
 
+<<<<<<< HEAD
 import { useEffect, useMemo, useState } from 'react'
 import classesService from '@/services/classesService'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Textarea, ToggleBox } from '@/components/ui'
@@ -157,3 +158,16 @@ export default function AddClassPage() {
     </div>
   )
 }
+=======
+export default function AddClassPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Add Class</h1>
+        <p className="text-gray-600 mt-2">Create a new class</p>
+      </div>
+      {/* Form will be added here */}
+    </div>
+  )
+}
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854

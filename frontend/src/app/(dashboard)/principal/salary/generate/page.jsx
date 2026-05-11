@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 'use client'
 
 import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
@@ -15,4 +16,23 @@ export default function GenerateSalaryPage() {
       reportHref="/principal/salary/report"
     />
   )
+=======
+'use client'
+
+import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
+
+export default function GenerateSalaryPage() {
+  return (
+    <SalaryWorkspace
+      roleBase="/principal"
+      title="Generate Salary"
+      subtitle="Generate monthly salary slips with deductions and advances applied."
+      showStaffManagement={false}
+      showStructureManagement={false}
+      showGenerate
+      allowPayments={false}
+      reportHref="/principal/salary/report"
+    />
+  )
+>>>>>>> 840ff67df38f58f0f98a7d641b0485545e8e9854
 }
