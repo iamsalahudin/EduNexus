@@ -169,24 +169,28 @@ export default function FeeStructurePage() {
             value={otherFeeDefaults.admissionFee}
             onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, admissionFee: e.target.value }))}
             placeholder="Admission fee"
+            label="Admission Fee"
           />
           <Input
             type="number"
             value={otherFeeDefaults.registrationFee}
             onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, registrationFee: e.target.value }))}
             placeholder="Registration fee"
+            label="Registration Fee"
           />
           <Input
             type="number"
             value={otherFeeDefaults.stationeryFee}
             onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, stationeryFee: e.target.value }))}
             placeholder="Stationery fee"
+            label="Stationery Fee"
           />
           <Input
             type="number"
             value={otherFeeDefaults.annualFee}
             onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, annualFee: e.target.value }))}
             placeholder="Annual fee"
+            label="Annual Fee"
           />
         </div>
 

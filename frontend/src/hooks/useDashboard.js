@@ -13,6 +13,7 @@ export function useDashboard(options = {}) {
     fetchNotifications = true,
     autoRefreshInterval = 60000,
   } = options;
+  const shouldFetchAny = fetchSummary || fetchAttendance || fetchFinance || fetchClasses || fetchActivities || fetchNotifications;
 
   const [data, setData] = useState({
     summary: null,
@@ -31,6 +32,14 @@ export function useDashboard(options = {}) {
   const isFetchingRef = useRef(false); // guard against concurrent calls
 
   const fetchAllData = useCallback(async () => {
+    if (!shouldFetchAny) {
+      isFetchingRef.current = false;
+      setLoading(false);
+      setRefreshing(false);
+      hasDataRef.current = true;
+      return;
+    }
+
     // Prevent overlapping fetches
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
@@ -95,17 +104,22 @@ export function useDashboard(options = {}) {
       setRefreshing(false);
       isFetchingRef.current = false;
     }
-  }, [fetchSummary, fetchAttendance, fetchFinance, fetchClasses, fetchActivities, fetchNotifications]);
+  }, [shouldFetchAny, fetchSummary, fetchAttendance, fetchFinance, fetchClasses, fetchActivities, fetchNotifications]);
 
   useEffect(() => {
+    if (!shouldFetchAny) {
+      setLoading(false);
+      return;
+    }
+
     fetchAllData();
   }, [fetchAllData]); // initial load only
 
   useEffect(() => {
-    if (!autoRefreshInterval) return;
+    if (!autoRefreshInterval || !shouldFetchAny) return;
     const interval = setInterval(fetchAllData, autoRefreshInterval);
     return () => clearInterval(interval);
-  }, [fetchAllData, autoRefreshInterval]); // interval separately
+  }, [fetchAllData, autoRefreshInterval, shouldFetchAny]); // interval separately
 
   return {
     ...data,

@@ -8,7 +8,6 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
-const rateLimit = require('express-rate-limit');
 const { connectDB } = require('./config/db');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
@@ -38,15 +37,6 @@ app.use(cookieParser());
 
 // prevent NoSQL injection
 app.use(mongoSanitize());
-
-// basic rate limiter for all requests
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use(apiLimiter);
 
 // trust proxy for secure cookies when behind proxies/load balancers
 if (process.env.NODE_ENV === 'production') {

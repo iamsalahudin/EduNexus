@@ -5,13 +5,15 @@ import Skeleton from '@/components/ui/Skeleton';
 import Card from '@/components/ui/Card';
 
 export function ClassStrengthTable({ classes: providedClasses, loading: loadingOverride, maxRows = 8, standalone = false }) {
+  const shouldFetchClasses = providedClasses == null;
   const { classes: fetchedClasses, loading: fetchedLoading } = useDashboard({
     fetchSummary: false,
     fetchAttendance: false,
     fetchFinance: false,
-    fetchClasses: true,
+    fetchClasses: shouldFetchClasses,
     fetchActivities: false,
-    fetchNotifications: false
+    fetchNotifications: false,
+    autoRefreshInterval: shouldFetchClasses ? 60000 : false
   });
 
   const classes = providedClasses ?? fetchedClasses;

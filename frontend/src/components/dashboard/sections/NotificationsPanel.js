@@ -12,13 +12,15 @@ const priorityConfig = {
 };
 
 export function NotificationsPanel({ notifications: providedNotifications, loading: loadingOverride, maxNotifications = 5, standalone = false }) {
+  const shouldFetchNotifications = providedNotifications == null;
   const { notifications: fetchedNotifications, loading: fetchedLoading } = useDashboard({
     fetchSummary: false,
     fetchAttendance: false,
     fetchFinance: false,
     fetchClasses: false,
     fetchActivities: false,
-    fetchNotifications: true
+    fetchNotifications: shouldFetchNotifications,
+    autoRefreshInterval: shouldFetchNotifications ? 60000 : false
   });
 
   const notifications = providedNotifications ?? fetchedNotifications;

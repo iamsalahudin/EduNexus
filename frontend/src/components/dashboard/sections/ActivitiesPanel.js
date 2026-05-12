@@ -5,13 +5,15 @@ import Skeleton from '@/components/ui/Skeleton';
 import Card from '@/components/ui/Card';
 
 export function ActivitiesPanel({ activities: providedActivities, loading: loadingOverride, maxActivities = 5, standalone = false }) {
+  const shouldFetchActivities = providedActivities == null;
   const { activities: fetchedActivities, loading: fetchedLoading } = useDashboard({
     fetchSummary: false,
     fetchAttendance: false,
     fetchFinance: false,
     fetchClasses: false,
-    fetchActivities: true,
-    fetchNotifications: false
+    fetchActivities: shouldFetchActivities,
+    fetchNotifications: false,
+    autoRefreshInterval: shouldFetchActivities ? 60000 : false
   });
 
   const activities = providedActivities ?? fetchedActivities;
