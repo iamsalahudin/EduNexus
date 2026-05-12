@@ -7,7 +7,11 @@ const SchoolClassSchema = new mongoose.Schema(
     level: { type: String, trim: true, default: undefined },
     sections: [{ type: String, trim: true }],
     active: { type: Boolean, default: true },
-    tutionFee: { type: Number, default: 0 }
+    tutionFee: { type: Number, default: 0 },
+    admissionFee: { type: Number, default: 0 },
+    registrationFee: { type: Number, default: 0 },
+    stationeryFee: { type: Number, default: 0 },
+    annualFee: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

@@ -8,7 +8,7 @@ export default function ExamMarksManagementPage() {
       title="Exam Lifecycle"
       subtitle="Track state transitions, archive records, and finalize publication."
       baseRole="admin"
-      setupHref="/admin/exams/create"
+      setupHref="/admin/exams/add"
     />
   )
 }

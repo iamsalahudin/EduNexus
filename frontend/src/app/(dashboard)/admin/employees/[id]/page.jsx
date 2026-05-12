@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ButtonLink, PageHeader, Skeleton } from '@/components/ui'
 import EmployeeForm from '@/components/employees/EmployeeForm'
 import employeeService from '@/services/employeeService'
@@ -30,30 +30,51 @@ function validateForm(form) {
   return errors
 }
 
-export default function AddEmployeePage() {
+export default function EditEmployeePage() {
   const router = useRouter()
+  const { id } = useParams()
   const [form, setForm] = useState(INITIAL_FORM)
   const [departments, setDepartments] = useState([])
-  const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
 
   useEffect(() => {
     async function load() {
+      setLoading(true)
+      setError('')
       try {
-        const res = await employeeService.listDepartments()
-        setDepartments(Array.isArray(res?.departments) ? res.departments : [])
-      } catch {
-        setDepartments([])
+        const [employeeRes, departmentRes] = await Promise.all([
+          employeeService.getEmployee(id),
+          employeeService.listDepartments().catch(() => ({ departments: [] }))
+        ])
+
+        const staff = employeeRes?.staff || employeeRes?.employee || employeeRes || {}
+        setForm({
+          name: staff.name || '',
+          employeeId: staff.employeeId || '',
+          designation: staff.designation || '',
+          department: staff.department || '',
+          staffType: staff.staffType || 'staff',
+          monthlySalary: staff.monthlySalary ?? '',
+          advanceBalance: staff.advanceBalance ?? '',
+          status: staff.status || 'active',
+          bankName: staff.bankName || '',
+          bankAccount: staff.bankAccount || '',
+          notes: staff.notes || ''
+        })
+        setDepartments(Array.isArray(departmentRes?.departments) ? departmentRes.departments : [])
+      } catch (err) {
+        setError(err?.response?.data?.error || err.message || 'Unable to load employee.')
       } finally {
         setLoading(false)
       }
     }
 
-    load()
-  }, [])
+    if (id) load()
+  }, [id])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -71,11 +92,11 @@ export default function AddEmployeePage() {
         monthlySalary: form.monthlySalary === '' ? undefined : Number(form.monthlySalary),
         advanceBalance: form.advanceBalance === '' ? undefined : Number(form.advanceBalance)
       }
-      await employeeService.createEmployee(payload)
-      setSuccess('Employee created successfully.')
+      await employeeService.updateEmployee(id, payload)
+      setSuccess('Employee updated successfully.')
       setTimeout(() => router.push('/admin/employees'), 1200)
     } catch (err) {
-      setError(err?.response?.data?.error || err.message || 'Unable to create employee.')
+      setError(err?.response?.data?.error || err.message || 'Unable to update employee.')
       setSubmitting(false)
     }
   }
@@ -83,8 +104,8 @@ export default function AddEmployeePage() {
   return (
     <div>
       <PageHeader
-        title="Add Employee"
-        subtitle="Hire a new employee and store their salary staff record."
+        title="Edit Employee"
+        subtitle="Update a salary staff record."
         right={<ButtonLink href="/admin/employees" variant="secondary">Back</ButtonLink>}
       />
 
@@ -94,14 +115,14 @@ export default function AddEmployeePage() {
       <div className="mt-6">
         {loading ? <Skeleton className="h-96" /> : (
           <EmployeeForm
-            mode="create"
+            mode="edit"
             form={form}
             setForm={setForm}
             fieldErrors={fieldErrors}
             submitting={submitting}
             onSubmit={handleSubmit}
             onCancel={() => router.push('/admin/employees')}
-            submitLabel="Create Employee"
+            submitLabel="Update Employee"
             departments={departments}
           />
         )}

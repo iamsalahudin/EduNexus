@@ -48,6 +48,7 @@ const InventoryCategory = require('./inventoryCategory');
 const InventoryItem = require('./inventoryItem');
 const InventoryStockMovement = require('./inventoryStockMovement');
 const InventoryDistribution = require('./inventoryDistribution');
+const Department = require('./department');
 
 module.exports = {
 	Role,
@@ -99,5 +100,6 @@ module.exports = {
 	InventoryCategory,
 	InventoryItem,
 	InventoryStockMovement,
-	InventoryDistribution
+	InventoryDistribution,
+	Department
 };

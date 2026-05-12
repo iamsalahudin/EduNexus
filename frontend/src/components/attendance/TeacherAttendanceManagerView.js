@@ -335,7 +335,11 @@ export default function TeacherAttendanceManagerView({
                       <td className="py-2 px-4 min-w-[160px]">
                         <Select
                           value={row.status}
-                          onChange={(e) => updateRow(row.key, { status: e.target.value })}
+                          onChange={(e) => {
+                            const newStatus = e.target.value
+                            updateRow(row.key, { status: newStatus })
+                            saveRow({ ...row, status: newStatus })
+                          }}
                           disabled={saving}
                         >
                           {STATUS_OPTIONS.map((statusItem) => (

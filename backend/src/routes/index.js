@@ -14,6 +14,9 @@ router.use('/dashboard', require('./dashboard'));
 // User management (admin)
 router.use('/users', require('./users'));
 
+// Department management (admin)
+router.use('/departments', require('./departments'));
+
 // Directory lookups (non-admin safe)
 router.use('/directory', require('./directory'));
 

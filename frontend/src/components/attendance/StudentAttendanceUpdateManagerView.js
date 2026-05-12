@@ -204,7 +204,11 @@ export default function StudentAttendanceUpdateManagerView({
                       </td>
                       <td className="py-2 pr-3">{row?.record?.student?.studentId || '-'}</td>
                       <td className="py-2 pr-3 min-w-[160px]">
-                        <Select value={row.status} onChange={(e) => updateRow(row.recordId, { status: e.target.value })}>
+                        <Select value={row.status} onChange={(e) => {
+                          const newStatus = e.target.value
+                          updateRow(row.recordId, { status: newStatus })
+                          saveRow({ ...row, status: newStatus })
+                        }}>
                           {STATUSES.map((statusItem) => (
                             <option key={statusItem.value} value={statusItem.value}>{statusItem.label}</option>
                           ))}

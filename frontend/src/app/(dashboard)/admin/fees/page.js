@@ -111,7 +111,6 @@ export default function FeesHome(){
         <ButtonLink href="/admin/fees/defaulters" variant="outline">Defaulters</ButtonLink>
         <ButtonLink href="/admin/fees/structure" variant="outline">Fee Structure</ButtonLink>
         <ButtonLink href="/admin/fees/voucher" variant="outline">Fee Voucher</ButtonLink>
-        <ButtonLink href="/admin/fees/report" variant="outline">Fee Reports</ButtonLink>
       </div>
     </div>
   )

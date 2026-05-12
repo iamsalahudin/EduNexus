@@ -40,6 +40,33 @@ export default function AttendanceReportsPage() {
     loadClasses()
   }, [])
 
+  // Auto-generate report when filters change
+  useEffect(() => {
+    if (!reportType) return
+    const autoGenerate = async () => {
+      setLoading(true)
+      setError(null)
+      setReportData(null)
+      try {
+        const reportRes = await fetchAttendanceReport({
+          reportType,
+          classId: reportType === 'student-wise' ? classId : '',
+          fromDate,
+          toDate
+        })
+        setReportData(Array.isArray(reportRes?.report) ? reportRes.report : [])
+      } catch (e) {
+        setError(e?.response?.data?.error || e.message || 'Failed to generate report')
+      } finally {
+        setLoading(false)
+      }
+    }
+    // Only auto-generate if classId is set for student-wise or no classId required
+    if (reportType === 'student-wise' && !classId) return
+    autoGenerate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportType, fromDate, toDate, classId])
+
   // Generate report
   async function generateReport() {
     setLoading(true)
