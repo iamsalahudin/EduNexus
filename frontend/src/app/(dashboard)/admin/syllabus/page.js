@@ -1,12 +1,5 @@
-export default function Page() {
+import SyllabusWorkspace from '@/components/syllabus/SyllabusWorkspace'
 
-  return (
-    <div>
-      {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Syllabus</h1>
-      <p className="text-sm text-gray-600 mt-1">
-        Under construction - Coming Soon!
-      </p>
-    </div>
-  )
+export default function Page() {
+  return <SyllabusWorkspace />
 }

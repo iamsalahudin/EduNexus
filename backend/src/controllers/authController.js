@@ -1,7 +1,9 @@
 const { User, RefreshToken } = require('../models');
+const PasswordReset = require('../models/passwordReset');
 const { signAccessToken, createRefreshToken } = require('../utils/jwt');
 const config = require('../config');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
+const mailService = require('../services/mailService');
 
 async function register(req, res, next) {
   try {
@@ -165,4 +167,91 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, refresh, logout, changePassword };
+async function sendOtp(req, res, next) {
+  try {
+    const { username, email } = req.body;
+    if (!username || !email) return res.status(400).json({ error: 'Missing fields' });
+
+    const normalizedUsername = username ? String(username).trim().toLowerCase() : null;
+    const normalizedEmail = String(email).trim().toLowerCase();
+    let user = null;
+    if (normalizedUsername) user = await User.findOne({ username: normalizedUsername });
+    if (!user) user = await User.findOne({ email: normalizedEmail });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (String(user.email).trim().toLowerCase() !== normalizedEmail) {
+      return res.status(400).json({ error: 'Email does not match username' });
+    }
+
+    // create 4-digit OTP to match frontend length
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await PasswordReset.create({ user: user._id, email: normalizedEmail, otp, expiresAt });
+
+    // send mail (will throw if not configured)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const subject = 'EduNexus Password Reset OTP';
+    const html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;">
+        <p>Hello ${user.name || user.username},</p>
+        <p>Your password reset code is <strong>${otp}</strong>. It expires in 10 minutes.</p>
+        <p>If you did not request this, ignore this email.</p>
+        <p>Login page: <a href="${frontendUrl}/login">${frontendUrl}/login</a></p>
+      </div>
+    `;
+    const text = `Your EduNexus password reset code is ${otp}. It expires in 10 minutes.`;
+
+    if (mailService.isConfigured()) {
+      await mailService.sendMail({ to: normalizedEmail, subject, html, text });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function verifyOtp(req, res, next) {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Missing fields' });
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const reset = await PasswordReset.findOne({ email: normalizedEmail, otp, used: false }).sort({ createdAt: -1 });
+    if (!reset) return res.status(400).json({ error: 'Invalid or expired OTP' });
+    if (reset.expiresAt < new Date()) return res.status(400).json({ error: 'OTP expired' });
+
+    reset.verified = true;
+    await reset.save();
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const reset = await PasswordReset.findOne({ email: normalizedEmail, verified: true, used: false }).sort({ createdAt: -1 });
+    if (!reset) return res.status(400).json({ error: 'No verified reset request found' });
+    if (reset.expiresAt < new Date()) return res.status(400).json({ error: 'Reset request expired' });
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.password = password;
+    await user.save();
+
+    reset.used = true;
+    await reset.save();
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, refresh, logout, changePassword, sendOtp, verifyOtp, resetPassword };

@@ -519,6 +519,150 @@ async function getAttendanceSummary(req, res, next) {
   }
 }
 
+async function getAttendanceReport(req, res, next) {
+  try {
+    const reportType = String(req.query.reportType || req.query.type || 'class-wise').trim();
+    const classId = String(req.query.classId || '').trim();
+    const fromDate = String(req.query.fromDate || '').trim();
+    const toDate = String(req.query.toDate || '').trim();
+
+    const derived = applyPeriodRange(req.query.period, req.query.year, req.query.month);
+    const rangeFrom = fromDate || derived?.fromDate || null;
+    const rangeTo = toDate || derived?.toDate || null;
+
+    const buildDateFilter = () => {
+      const filter = {};
+      if (rangeFrom) {
+        const d = normalizeDay(rangeFrom);
+        if (!d) return null;
+        filter.$gte = d;
+      }
+      if (rangeTo) {
+        const d = normalizeDay(rangeTo);
+        if (!d) return null;
+        const end = new Date(d);
+        end.setHours(23, 59, 59, 999);
+        filter.$lte = end;
+      }
+      return Object.keys(filter).length > 0 ? filter : null;
+    };
+
+    const dateFilter = buildDateFilter();
+    if (dateFilter === null && (rangeFrom || rangeTo)) {
+      return res.status(400).json({ error: 'Invalid date range' });
+    }
+
+    const attendanceFilter = {};
+    if (dateFilter) attendanceFilter.date = dateFilter;
+    if (classId) attendanceFilter.class = classId;
+
+    if (reportType === 'class-wise') {
+      const { SchoolClass } = require('../models');
+      const classes = await SchoolClass.find({ active: { $ne: false } }).select('name').sort({ name: 1 }).lean();
+      const report = [];
+
+      for (const cls of classes) {
+        const records = await Attendance.find({
+          ...attendanceFilter,
+          class: cls.name
+        }).select('status').lean();
+
+        const total = records.length;
+        const present = records.filter((row) => row.status === 'present').length;
+        const absent = records.filter((row) => row.status === 'absent').length;
+        const percentage = total > 0 ? Number(((present / total) * 100).toFixed(1)) : 0;
+
+        report.push({ class: cls.name, total, present, absent, percentage });
+      }
+
+      return res.json({ report });
+    }
+
+    if (reportType === 'student-wise') {
+      if (!classId) return res.status(400).json({ error: 'classId is required for student-wise reports' });
+
+      const students = await Student.find({ class: classId }).populate('user', 'name').select('user').lean();
+      const records = await Attendance.find({
+        ...attendanceFilter,
+        class: classId
+      }).populate('student', 'user').select('student status').lean();
+
+      const report = students.map((student) => {
+        const studentId = String(student?._id || student?.user || '');
+        const studentRecords = records.filter((record) => String(record?.student?._id || record?.student) === studentId);
+        const total = studentRecords.length;
+        const present = studentRecords.filter((row) => row.status === 'present').length;
+        const absent = studentRecords.filter((row) => row.status === 'absent').length;
+        const percentage = total > 0 ? Number(((present / total) * 100).toFixed(1)) : 0;
+
+        return {
+          name: student?.user?.name || '-',
+          total,
+          present,
+          absent,
+          percentage
+        };
+      });
+
+      return res.json({ report });
+    }
+
+    if (reportType === 'teacher-search') {
+      const teachers = await User.find({ role: 'Teacher' }).select('name').sort({ name: 1 }).lean();
+      const report = [];
+
+      for (const teacher of teachers) {
+        const records = await Attendance.find({
+          ...attendanceFilter,
+          teacher: teacher._id
+        }).select('status').lean();
+
+        const total = records.length;
+        const present = records.filter((row) => row.status === 'present').length;
+        const absent = records.filter((row) => row.status === 'absent').length;
+        const percentage = total > 0 ? Number(((present / total) * 100).toFixed(1)) : 0;
+
+        report.push({ name: teacher.name, total, present, absent, percentage });
+      }
+
+      return res.json({ report });
+    }
+
+    if (reportType === 'school-trends') {
+      const records = await Attendance.find(attendanceFilter).select('date status').sort({ date: 1 }).lean();
+      const buckets = new Map();
+
+      for (const record of records) {
+        const dateKey = String(record?.date || '').slice(0, 10);
+        if (!dateKey) continue;
+        if (!buckets.has(dateKey)) {
+          buckets.set(dateKey, { date: dateKey, present: 0, absent: 0, late: 0, excused: 0 });
+        }
+        const bucket = buckets.get(dateKey);
+        if (record.status === 'present') bucket.present += 1;
+        else if (record.status === 'absent') bucket.absent += 1;
+        else if (record.status === 'late') bucket.late += 1;
+        else if (record.status === 'excused') bucket.excused += 1;
+      }
+
+      const report = [...buckets.values()].map((row) => {
+        const total = row.present + row.absent + row.late + row.excused;
+        return {
+          ...row,
+          total,
+          percentage: total > 0 ? Number(((row.present / total) * 100).toFixed(1)) : 0
+        };
+      });
+
+      return res.json({ report });
+    }
+
+    return res.status(400).json({ error: 'Invalid reportType' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // Update single attendance record
 async function updateAttendance(req, res, next) {
   try {
@@ -662,6 +806,7 @@ module.exports = {
   markAttendance,
   getAttendance,
   getAttendanceSummary,
+  getAttendanceReport,
   updateAttendance,
   deleteAttendance,
   exportAttendance

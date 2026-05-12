@@ -13,6 +13,10 @@ const createClassSchema = Joi.object({
     level: Joi.string().trim().max(50).optional(),
     sections: Joi.array().items(Joi.string().max(50)).optional(),
     tutionFee: Joi.number().min(0),
+    admissionFee: Joi.number().min(0),
+    registrationFee: Joi.number().min(0),
+    stationeryFee: Joi.number().min(0),
+    annualFee: Joi.number().min(0),
     active: Joi.boolean()
   })
 });
@@ -23,6 +27,10 @@ const updateClassSchema = Joi.object({
     level: Joi.string().trim().max(50).allow(null, ''),
     sections: Joi.array().items(Joi.string().max(50)),
     tutionFee: Joi.number().min(0),
+    admissionFee: Joi.number().min(0),
+    registrationFee: Joi.number().min(0),
+    stationeryFee: Joi.number().min(0),
+    annualFee: Joi.number().min(0),
     active: Joi.boolean()
   })
 });

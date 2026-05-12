@@ -1,6 +1,8 @@
 const { ensureMonthlyFeesGenerated } = require('../controllers/feeController')
 const logger = require('../utils/logger')
 
+const MAX_TIMEOUT_MS = 2147483647
+
 function shouldEnableMonthlyFeeScheduler() {
   if (process.env.NODE_ENV === 'test') return false
   if (String(process.env.FEE_SCHEDULER_DISABLED || '').toLowerCase() === 'true') return false
@@ -29,9 +31,16 @@ function startMonthlyFeeScheduler() {
   const scheduleNext = () => {
     const now = new Date()
     const nextRun = getNextMonthlyRun(now)
-    const delay = Math.max(1000, nextRun.getTime() - now.getTime())
+    const delay = nextRun.getTime() - now.getTime()
+    const safeDelay = Math.min(MAX_TIMEOUT_MS, Math.max(1000, delay))
+    const shouldRun = delay <= MAX_TIMEOUT_MS
 
     timer = setTimeout(async () => {
+      if (!shouldRun) {
+        scheduleNext()
+        return
+      }
+
       try {
         await runMonthlyFeeGeneration()
       } catch (error) {
@@ -39,7 +48,7 @@ function startMonthlyFeeScheduler() {
       } finally {
         scheduleNext()
       }
-    }, delay)
+    }, safeDelay)
 
     if (timer && typeof timer.unref === 'function') {
       timer.unref()

@@ -32,4 +32,35 @@ const changePasswordSchema = Joi.object({
   })
 });
 
-module.exports = { registerSchema, loginSchema, refreshSchema, logoutSchema, changePasswordSchema };
+const sendOtpSchema = Joi.object({
+  body: Joi.object({
+    username: Joi.string().min(3).max(50).optional(),
+    email: Joi.string().email().required()
+  })
+});
+
+const verifyOtpSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    otp: Joi.string().min(3).max(10).required()
+  })
+});
+
+const resetPasswordSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).max(128).required()
+  })
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  logoutSchema,
+  changePasswordSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  resetPasswordSchema
+};
+

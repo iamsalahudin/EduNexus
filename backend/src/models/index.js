@@ -14,6 +14,7 @@ const Marksheet = require('./marksheet');
 const GradeScale = require('./gradeScale');
 const Fee = require('./fee');
 const Complaint = require('./complaint');
+const ComplaintCategory = require('./complaintCategory');
 const Message = require('./message');
 const RefreshToken = require('./refreshToken');
 const Timetable = require('./timetable');
@@ -41,6 +42,13 @@ const DailyDiary = require('./dailyDiary');
 const SalaryStructure = require('./salaryStructure');
 const SalaryStaff = require('./salaryStaff');
 const SalarySlip = require('./salarySlip');
+const FeeVoucherTemplate = require('./feeVoucherTemplate');
+const Syllabus = require('./syllabus');
+const InventoryCategory = require('./inventoryCategory');
+const InventoryItem = require('./inventoryItem');
+const InventoryStockMovement = require('./inventoryStockMovement');
+const InventoryDistribution = require('./inventoryDistribution');
+const Department = require('./department');
 
 module.exports = {
 	Role,
@@ -59,6 +67,7 @@ module.exports = {
 	GradeScale,
 	Fee,
 	Complaint,
+	ComplaintCategory,
 	Message,
 	RefreshToken,
 	Timetable,
@@ -85,5 +94,12 @@ module.exports = {
 	DailyDiary,
 	SalaryStructure,
 	SalaryStaff,
-	SalarySlip
+	SalarySlip,
+	FeeVoucherTemplate,
+	Syllabus,
+	InventoryCategory,
+	InventoryItem,
+	InventoryStockMovement,
+	InventoryDistribution,
+	Department
 };

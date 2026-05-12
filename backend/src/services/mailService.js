@@ -6,7 +6,7 @@ function getTransporterConfig() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
   return { host, port, user, pass };
 }
@@ -24,12 +24,20 @@ function getTransporter() {
 
   if (cachedTransporter) return cachedTransporter;
 
-  cachedTransporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass }
-  });
+  const isGmailHost = /(^|\.)gmail\.com$/i.test(host) || /smtp\.gmail\.com$/i.test(host);
+
+  cachedTransporter = isGmailHost
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass }
+      })
+    : nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        requireTLS: port === 587,
+        auth: { user, pass }
+      });
 
   return cachedTransporter;
 }
@@ -52,13 +60,35 @@ function ensureMailerConfigured() {
 async function sendMail({ to, subject, html, text, from }) {
   const transporter = ensureMailerConfigured();
 
-  await transporter.sendMail({
+  const mail = {
     from: from || process.env.EMAIL_FROM || process.env.SMTP_USER,
     to,
     subject,
     html,
     text
-  });
+  };
+
+  try {
+    await transporter.sendMail(mail);
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[mailService] sendMail failed', {
+        to,
+        subject,
+        code: err?.code,
+        message: err?.message
+      });
+    }
+
+    const isAuthError = err?.code === 'EAUTH' || /535-5\.7\.8|Username and Password not accepted/i.test(err?.message || '');
+    if (isAuthError) {
+      const authErr = new Error('Email authentication failed. Check SMTP_USER/SMTP_PASS and ensure Gmail app password is valid.');
+      authErr.status = 502;
+      throw authErr;
+    }
+
+    throw err;
+  }
 }
 
 function buildWelcomeCredentialsTemplate({ recipientName, roleLabel, email, username, temporaryPassword }) {

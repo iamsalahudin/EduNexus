@@ -1,4 +1,4 @@
-const { Fee, Student, User, SchoolClass } = require('../models');
+const { Fee, FeeVoucherTemplate, Student, User, SchoolClass } = require('../models');
 const mongoose = require('mongoose');
 
 function toObjectId(value) {
@@ -729,6 +729,46 @@ async function deleteFee(req, res, next) {
   }
 }
 
+async function getFeeVoucherTemplate(req, res, next) {
+  try {
+    const template = await FeeVoucherTemplate.findOne({ key: 'default' }).lean();
+    res.json({ template: template || null });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function saveFeeVoucherTemplate(req, res, next) {
+  try {
+    const body = req.body || {};
+    const update = {
+      key: 'default',
+      schoolName: String(body.schoolName || '').trim(),
+      schoolAddress: String(body.schoolAddress || '').trim(),
+      banks: Array.isArray(body.banks)
+        ? body.banks.map((bank) => ({
+            bankName: String(bank?.bankName || '').trim(),
+            account: String(bank?.account || '').trim()
+          }))
+        : [],
+      updatedBy: req.user?.id || undefined
+    };
+
+    const template = await FeeVoucherTemplate.findOneAndUpdate(
+      { key: 'default' },
+      {
+        $set: update,
+        $setOnInsert: { createdBy: req.user?.id || undefined }
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true }
+    ).lean();
+
+    res.json({ template });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createFee,
   ensureMonthlyFeesGenerated,
@@ -741,5 +781,7 @@ module.exports = {
   recordPayment,
   updateFeeStatus,
   updateFee,
-  deleteFee
+  deleteFee,
+  getFeeVoucherTemplate,
+  saveFeeVoucherTemplate
 };

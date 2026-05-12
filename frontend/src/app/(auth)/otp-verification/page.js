@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import OTPInput from '@/components/ui/OTPInput';
-import { verifyOtpApi } from '@/services/auth.service';
+import { verifyOtpApi, sendOtpApi } from '@/services/auth.service';
 
 export default function OTPVerificationPage() {
   const search = useSearchParams();
@@ -21,8 +21,17 @@ export default function OTPVerificationPage() {
     return () => clearTimeout(t);
   }, [seconds]);
 
+  // redirect if no email provided
+  useEffect(() => {
+    if (!email) router.push('/forgot-password');
+  }, [email, router]);
+
   const resend = async () => {
-    // call sendOtpApi if desired; here we just reset timer
+    try {
+      await sendOtpApi({ email });
+    } catch (err) {
+      // ignore errors but show timer
+    }
     setSeconds(30);
   };
 

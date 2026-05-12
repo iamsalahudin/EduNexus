@@ -283,6 +283,60 @@ async function listSalaryStaff(req, res, next) {
   }
 }
 
+async function getSalaryStaff(req, res, next) {
+  try {
+    await syncTeacherSalaryStaff()
+    const row = await SalaryStaff.findById(req.params.id)
+      .populate('teacher', 'employeeId designation department salary status')
+      .populate('user', 'name username email active role')
+      .populate('salaryStructure')
+
+    if (!row) {
+      return res.status(404).json({ error: 'Salary staff not found' })
+    }
+
+    return res.json({
+      staff: {
+        id: String(row._id),
+        name: row.name,
+        employeeId: row.employeeId,
+        designation: row.designation,
+        department: row.department,
+        staffType: row.staffType,
+        monthlySalary: toNumber(row.monthlySalary),
+        advanceBalance: toNumber(row.advanceBalance),
+        status: row.status,
+        salaryOnly: Boolean(row.salaryOnly),
+        bankName: row.bankName || '',
+        bankAccount: row.bankAccount || '',
+        notes: row.notes || '',
+        teacher: row.teacher ? {
+          id: String(row.teacher._id || row.teacher.id || ''),
+          employeeId: row.teacher.employeeId,
+          designation: row.teacher.designation,
+          department: row.teacher.department,
+          salary: toNumber(row.teacher.salary)
+        } : null,
+        user: row.user ? {
+          id: String(row.user._id || row.user.id || ''),
+          name: row.user.name,
+          username: row.user.username,
+          email: row.user.email
+        } : null,
+        salaryStructure: row.salaryStructure ? {
+          id: String(row.salaryStructure._id || row.salaryStructure.id || ''),
+          name: row.salaryStructure.name,
+          baseSalary: toNumber(row.salaryStructure.baseSalary),
+          allowancesTotal: toNumber(row.salaryStructure.allowancesTotal),
+          deductionsTotal: toNumber(row.salaryStructure.deductionsTotal)
+        } : null
+      }
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 async function upsertSalaryStaff(req, res, next) {
   try {
     const body = req.body || {}
@@ -337,6 +391,16 @@ async function upsertSalaryStaff(req, res, next) {
     })
   } catch (err) {
     if (err?.code === 11000) return res.status(409).json({ error: 'Salary staff already exists' })
+    next(err)
+  }
+}
+
+async function deleteSalaryStaff(req, res, next) {
+  try {
+    const deleted = await SalaryStaff.findByIdAndDelete(req.params.id)
+    if (!deleted) return res.status(404).json({ error: 'Salary staff not found' })
+    return res.json({ ok: true })
+  } catch (err) {
     next(err)
   }
 }
@@ -541,7 +605,9 @@ module.exports = {
   listSalaryStructures,
   upsertSalaryStructure,
   listSalaryStaff,
+  getSalaryStaff,
   upsertSalaryStaff,
+  deleteSalaryStaff,
   listSalaryRecords,
   generateMonthlySalary,
   updateSalaryStatus,

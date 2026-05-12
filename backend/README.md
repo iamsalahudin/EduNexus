@@ -36,4 +36,8 @@ FRONTEND_URL=http://localhost:3000
 BACKEND_PUBLIC_URL=http://localhost:4000
 ```
 
+If you use a Gmail app password, paste the 16-character password without spaces. The backend strips spaces automatically, but the underlying secret must still be a valid app password with 2FA enabled.
+
+For Gmail, the backend now uses Nodemailer's `gmail` transport automatically when `SMTP_HOST=smtp.gmail.com`. If you still see authentication failures, the issue is the Google account/app-password configuration, not the route itself.
+
 Use `backend/src/services/mailService.js` for common mail sending (`sendMail`, `sendWelcomeCredentialsEmail`) so new modules reuse the same transport and env configuration.

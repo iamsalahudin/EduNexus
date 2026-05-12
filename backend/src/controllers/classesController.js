@@ -102,13 +102,17 @@ async function listClasses(req, res, next) {
 
 async function createClass(req, res, next) {
   try {
-    const { name, sections, active, level, tutionFee } = req.body;
+    const { name, sections, active, level, tutionFee, admissionFee, registrationFee, stationeryFee, annualFee } = req.body;
 
     const payload = {
       name: String(name).trim(),
       active: typeof active === 'boolean' ? active : true,
       level: level ? String(level).trim() : undefined,
-      tutionFee: tutionFee !== undefined && tutionFee !== '' ? Number(tutionFee) : 0
+      tutionFee: tutionFee !== undefined && tutionFee !== '' ? Number(tutionFee) : 0,
+      admissionFee: admissionFee !== undefined && admissionFee !== '' ? Number(admissionFee) : 0,
+      registrationFee: registrationFee !== undefined && registrationFee !== '' ? Number(registrationFee) : 0,
+      stationeryFee: stationeryFee !== undefined && stationeryFee !== '' ? Number(stationeryFee) : 0,
+      annualFee: annualFee !== undefined && annualFee !== '' ? Number(annualFee) : 0
     };
 
     // Default sections: Boys/Girls unless explicitly provided.
@@ -150,6 +154,10 @@ async function updateClass(req, res, next) {
     if (updates.name) updates.name = String(updates.name).trim();
     if (typeof updates.level !== 'undefined') updates.level = updates.level ? String(updates.level).trim() : undefined;
     if (typeof updates.tutionFee !== 'undefined') updates.tutionFee = updates.tutionFee !== '' ? Number(updates.tutionFee) : 0;
+    if (typeof updates.admissionFee !== 'undefined') updates.admissionFee = updates.admissionFee !== '' ? Number(updates.admissionFee) : 0;
+    if (typeof updates.registrationFee !== 'undefined') updates.registrationFee = updates.registrationFee !== '' ? Number(updates.registrationFee) : 0;
+    if (typeof updates.stationeryFee !== 'undefined') updates.stationeryFee = updates.stationeryFee !== '' ? Number(updates.stationeryFee) : 0;
+    if (typeof updates.annualFee !== 'undefined') updates.annualFee = updates.annualFee !== '' ? Number(updates.annualFee) : 0;
     if (Array.isArray(updates.sections)) updates.sections = normalizeSections(updates.sections);
 
     if (updates.name) {

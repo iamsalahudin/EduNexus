@@ -16,6 +16,12 @@ export default function FeeStructurePage() {
     middle: '',
     high: ''
   })
+  const [otherFeeDefaults, setOtherFeeDefaults] = useState({
+    admissionFee: '',
+    registrationFee: '',
+    stationeryFee: '',
+    annualFee: ''
+  })
 
   async function loadData() {
     setLoading(true)
@@ -32,6 +38,14 @@ export default function FeeStructurePage() {
         }
       })
       setLevelFeeMap(grouped)
+
+      const first = rows[0] || {}
+      setOtherFeeDefaults({
+        admissionFee: String(first?.admissionFee ?? 0),
+        registrationFee: String(first?.registrationFee ?? 0),
+        stationeryFee: String(first?.stationeryFee ?? 0),
+        annualFee: String(first?.annualFee ?? 0)
+      })
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to load fee structure')
     } finally {
@@ -87,6 +101,33 @@ export default function FeeStructurePage() {
     }
   }
 
+  async function applyOtherFeesDefaults() {
+    if (!Array.isArray(classes) || classes.length === 0) {
+      setError('No classes found to apply other fees defaults')
+      return
+    }
+
+    const payload = {
+      admissionFee: Number(otherFeeDefaults.admissionFee || 0),
+      registrationFee: Number(otherFeeDefaults.registrationFee || 0),
+      stationeryFee: Number(otherFeeDefaults.stationeryFee || 0),
+      annualFee: Number(otherFeeDefaults.annualFee || 0)
+    }
+
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      await Promise.all(classes.map((c) => classesService.updateClass(c._id, payload)))
+      setSuccess('Other fees defaults applied to all classes')
+      await loadData()
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to apply other fees defaults')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Fee Structure" subtitle="Manage tuition fee by class and level." />
@@ -115,6 +156,44 @@ export default function FeeStructurePage() {
               </div>
             </div>
           ))}
+        </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-medium">Other Fees Defaults</h3>
+        <p className="text-sm text-gray-600 mt-1">Set default values for Admission, Registration, Stationery, and Annual fees across all classes.</p>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <Input
+            type="number"
+            value={otherFeeDefaults.admissionFee}
+            onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, admissionFee: e.target.value }))}
+            placeholder="Admission fee"
+          />
+          <Input
+            type="number"
+            value={otherFeeDefaults.registrationFee}
+            onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, registrationFee: e.target.value }))}
+            placeholder="Registration fee"
+          />
+          <Input
+            type="number"
+            value={otherFeeDefaults.stationeryFee}
+            onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, stationeryFee: e.target.value }))}
+            placeholder="Stationery fee"
+          />
+          <Input
+            type="number"
+            value={otherFeeDefaults.annualFee}
+            onChange={(e) => setOtherFeeDefaults((prev) => ({ ...prev, annualFee: e.target.value }))}
+            placeholder="Annual fee"
+          />
+        </div>
+
+        <div className="mt-4">
+          <Button type="button" onClick={applyOtherFeesDefaults} disabled={saving}>
+            Apply Other Fees Defaults
+          </Button>
         </div>
       </Card>
 
