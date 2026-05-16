@@ -4,13 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import complaintService from '@/services/complaint.service'
 import directoryService from '@/services/directoryService'
-
-const STATUS_OPTIONS = [
-  { value: 'open', label: 'Open' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'closed', label: 'Closed' }
-]
+import { COMPLAINT_STATUS_OPTIONS, SYSTEM_ROLES } from '@/utils/constants'
 
 export default function ComplaintResolutionPage() {
   const [complaints, setComplaints] = useState([])
@@ -46,9 +40,8 @@ export default function ComplaintResolutionPage() {
       setComplaints(complaintList)
 
       // Load staff for assignment
-      const roles = ['Admin', 'HR', 'Reception', 'Principal', 'Teacher']
       const responses = await Promise.allSettled(
-        roles.map((role) => directoryService.listUsers({ role, limit: 100 }))
+        SYSTEM_ROLES.map((role) => directoryService.listUsers({ role, limit: 100 }))
       )
       const staffList = []
       for (const result of responses) {

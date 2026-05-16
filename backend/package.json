@@ -14,12 +14,13 @@
     "migrate:transport": "node src/scripts/migrateTransportToDomain.js",
     "migrate:timetables:level": "node src/scripts/migrateTimetablesToLevelModel.js",
     "lint": "eslint . --ext .js",
-    "test": "jest --runInBand",
+    "test": "node src/scripts/downloadMongoBinary.js && jest --runInBand",
     "test:watch": "jest --watch"
   },
   "author": "26-FYP-217",
   "license": "MIT",
   "dependencies": {
+    "archiver": "^6.0.0",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "bull": "^4.16.5",
@@ -40,6 +41,7 @@
     "nodemailer": "^6.10.1",
     "pdfkit": "^0.18.0",
     "redis": "^4.6.12",
+    "resend": "^6.12.3",
     "socket.io": "^4.6.1"
   },
   "devDependencies": {

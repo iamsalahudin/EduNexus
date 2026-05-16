@@ -28,10 +28,19 @@ const getReportCardsSchema = Joi.object({
   })
 });
 
+const exportReportCardsSchema = Joi.object({
+  query: Joi.object({
+    studentId: Joi.string(),
+    studentIds: Joi.string().pattern(/^([0-9a-fA-F]{24})(,[0-9a-fA-F]{24})*$/),
+    term: Joi.string(),
+    year: Joi.number()
+  })
+});
+
 const rejectReportCardSchema = Joi.object({
   body: Joi.object({
     remarks: Joi.string().max(500)
   })
 });
 
-module.exports = { createReportCardSchema, getReportCardsSchema, rejectReportCardSchema };
+module.exports = { createReportCardSchema, getReportCardsSchema, exportReportCardsSchema, rejectReportCardSchema };

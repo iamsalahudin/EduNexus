@@ -3,13 +3,19 @@ const router = express.Router();
 const reportCardController = require('../controllers/reportCardController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
-const { createReportCardSchema, getReportCardsSchema, rejectReportCardSchema } = require('../validators/reportCards');
+const { createReportCardSchema, getReportCardsSchema, exportReportCardsSchema, rejectReportCardSchema } = require('../validators/reportCards');
 
 // All routes require auth
 router.use(requireAuth);
 
-// Create/update report card: teachers only
-router.post('/', requireRole('Teacher'), validate(createReportCardSchema), reportCardController.createUpdateReportCard);
+// Create/update report card: teachers and management
+router.post('/', requireRole('Teacher', 'Admin', 'Principal'), validate(createReportCardSchema), reportCardController.createUpdateReportCard);
+
+// Export report cards as PDF (Admin/Principal/Teacher)
+router.get('/export/pdf', requireRole('Teacher', 'Admin', 'Principal'), validate(exportReportCardsSchema), reportCardController.exportReportCardsPdf);
+
+// Export per-student PDFs as ZIP
+router.get('/export/zip', requireRole('Teacher', 'Admin', 'Principal'), validate(exportReportCardsSchema), reportCardController.exportReportCardsZip);
 
 // Get report cards: all roles (filtered by role)
 router.get('/', validate(getReportCardsSchema), reportCardController.getReportCards);

@@ -51,11 +51,15 @@ function ensureSubmission(homeworkDoc, student, studentUserId) {
 }
 
 function canStudentModifySubmission(homeworkDoc, submission) {
+  // Allow students to edit draft submissions even after due date so files can be attached;
+  // once submitted, enforce due-date restrictions for further changes.
+  if (!submission) return true;
+  if (['received', 'returned'].includes(submission.status)) return false;
+  if (submission.status === 'draft') return true;
+
   const now = Date.now();
   const due = new Date(homeworkDoc.dueDate).getTime();
   if (now > due) return false;
-  if (!submission) return true;
-  if (['received', 'returned'].includes(submission.status)) return false;
   return true;
 }
 

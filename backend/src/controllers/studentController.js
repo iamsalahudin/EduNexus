@@ -399,6 +399,16 @@ function toStudentListItem(doc) {
     status: doc.status,
     contact: doc.contact,
     user: doc.user,
+    parents: Array.isArray(doc.parents)
+      ? doc.parents.map((parent) => ({
+          _id: parent?._id,
+          name: parent?.name,
+          username: parent?.username,
+          email: parent?.email,
+          active: parent?.active,
+          profile: parent?.profile
+        }))
+      : [],
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
   };
@@ -479,7 +489,7 @@ async function searchParents(req, res, next) {
 
 async function listStudents(req, res, next) {
   try {
-    const { classId, section, status, active, q, limit, page, sortBy, sortOrder, recentHours } = req.query;
+    const { classId, section, status, active, q, limit, page, sortBy, sortOrder, recentHours, studentId, registrationNumber, admissionNumber, fatherName, mobile } = req.query;
     const filter = {};
 
     if (classId) filter.class = String(classId).trim();
@@ -500,6 +510,7 @@ async function listStudents(req, res, next) {
     const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
     const students = await Student.find(filter)
       .populate('user', 'name username email role active')
+      .populate('parents', 'name username email profile active')
       .lean();
 
     let enriched = students.map(toStudentListItem);
@@ -522,6 +533,31 @@ async function listStudents(req, res, next) {
           s?.user?.email
         ].some((v) => String(v || '').toLowerCase().includes(qLower))
       );
+    }
+
+    const explicitStudentId = String(studentId || '').trim().toLowerCase();
+    const explicitRegistration = String(registrationNumber || admissionNumber || '').trim().toLowerCase();
+    const explicitFatherName = String(fatherName || '').trim().toLowerCase();
+    const explicitMobile = String(mobile || '').trim().toLowerCase();
+
+    if (explicitStudentId) {
+      enriched = enriched.filter((s) => String(s.studentId || '').toLowerCase().includes(explicitStudentId));
+    }
+    if (explicitRegistration) {
+      enriched = enriched.filter((s) => String(s.registrationNumber || '').toLowerCase().includes(explicitRegistration));
+    }
+    if (explicitFatherName) {
+      enriched = enriched.filter((s) => {
+        const parents = Array.isArray(s.parents) ? s.parents : [];
+        return parents.some((parent) => String(parent?.name || '').toLowerCase().includes(explicitFatherName));
+      });
+    }
+    if (explicitMobile) {
+      enriched = enriched.filter((s) => {
+        const studentContact = String(s.contact || '').toLowerCase();
+        const parentContacts = (Array.isArray(s.parents) ? s.parents : []).map((parent) => String(parent?.profile?.phone || '').toLowerCase());
+        return studentContact.includes(explicitMobile) || parentContacts.some((phone) => phone.includes(explicitMobile));
+      });
     }
 
     const sortField = String(sortBy || 'updatedAt');

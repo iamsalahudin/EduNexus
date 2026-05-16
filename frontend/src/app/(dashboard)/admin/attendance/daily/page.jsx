@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 import { fetchStudents, fetchStudentAttendance, updateStudentAttendance } from '@/services/attendanceService'
 import classesService from '@/services/classesService'
+import { ATTENDANCE_STATUS_OPTIONS } from '@/utils/constants'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -12,13 +13,6 @@ function toInputDate(d) {
   const dd = String(dt.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
-
-const STATUSES = [
-  { value: 'present', label: 'Present' },
-  { value: 'absent', label: 'Absent' },
-  { value: 'late', label: 'Late' },
-  { value: 'excused', label: 'Excused' }
-]
 
 export default function DailyStudentAttendancePage() {
   const today = toInputDate(new Date())

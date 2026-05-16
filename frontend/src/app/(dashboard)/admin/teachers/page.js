@@ -120,6 +120,12 @@ export default function Page() {
       <PageHeader
         title="Teachers"
         subtitle="Track teacher accounts, profiles, and recent onboarding activity."
+        right={(
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href="/admin/teachers/add" variant="primary">Add Teacher</ButtonLink>
+            <ButtonLink href="/admin/settings/profile" variant="outline">Profile Settings</ButtonLink>
+          </div>
+        )}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

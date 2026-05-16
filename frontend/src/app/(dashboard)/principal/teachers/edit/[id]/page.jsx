@@ -214,8 +214,8 @@ export default function EditTeacherPage() {
             <Input label="Emergency Contact Phone" value={form.emergencyContactPhone} onChange={(e) => setField('emergencyContactPhone', e.target.value)} />
 
             <Select label="Status" value={form.status} onChange={(e) => setField('status', e.target.value)}>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
+              {TEACHER_EMPLOYMENT_STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </Select>
 

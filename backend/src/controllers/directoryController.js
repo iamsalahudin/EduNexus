@@ -2,7 +2,7 @@ const { User } = require('../models');
 
 async function listDirectoryUsers(req, res, next) {
   try {
-    const { role, q, active, limit, excludeRoles, sortBy, sortOrder } = req.query;
+    const { role, q, active, limit, excludeRoles, sortBy, sortOrder, userId, mobile } = req.query;
     const filter = {};
     const sortableFields = new Set(['createdAt', 'updatedAt', 'name', 'email', 'role']);
 
@@ -33,6 +33,20 @@ async function listDirectoryUsers(req, res, next) {
       ];
     }
 
+    const explicitUserId = String(userId || '').trim();
+    if (explicitUserId) {
+      if (explicitUserId.length === 24 && /^[a-f\d]{24}$/i.test(explicitUserId)) {
+        filter._id = explicitUserId;
+      } else {
+        filter._id = { $exists: true };
+      }
+    }
+
+    const explicitMobile = String(mobile || '').trim();
+    if (explicitMobile) {
+      filter['profile.phone'] = { $regex: explicitMobile, $options: 'i' };
+    }
+
     const max = Math.min(parseInt(limit || '200', 10) || 200, 500);
     const sortKey = sortableFields.has(String(sortBy)) ? String(sortBy) : 'updatedAt';
     const sortDirection = String(sortOrder).toLowerCase() === 'asc' ? 1 : -1;
@@ -43,7 +57,11 @@ async function listDirectoryUsers(req, res, next) {
       .sort(sort)
       .limit(max);
 
-    res.json({ users });
+    const finalUsers = explicitUserId && explicitUserId.length !== 24
+      ? users.filter((user) => String(user._id || '').includes(explicitUserId))
+      : users;
+
+    res.json({ users: finalUsers });
   } catch (err) {
     next(err);
   }

@@ -16,6 +16,8 @@ const { setupSocket } = require('./utils/socket');
 const { initializeFirebase } = require('./utils/fcm');
 const { startMonthlyFeeScheduler } = require('./jobs/monthlyFeeScheduler');
 const { startReportCardArchiveScheduler } = require('./jobs/reportCardArchiveScheduler');
+// Initialize export processor for async exports
+require('./queues/exportProcessor');
 
 const app = express();
 

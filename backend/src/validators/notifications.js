@@ -8,6 +8,7 @@ const createBroadcastSchema = Joi.object({
     category: category.default('normal'),
     title: Joi.string().min(1).max(120).required(),
     body: Joi.string().allow('').max(5000).default(''),
+    attachments: Joi.array().items(Joi.string().uri().max(1000)).max(8).default([]),
 
     expiresAt: Joi.date().iso().optional(),
 
@@ -46,7 +47,8 @@ const createRequestSchema = Joi.object({
   body: Joi.object({
     title: Joi.string().min(1).max(120).required(),
     message: Joi.string().min(1).max(5000).required(),
-    category: category.default('pending')
+    category: category.default('pending'),
+    attachments: Joi.array().items(Joi.string().uri().max(1000)).max(8).default([])
   })
 });
 

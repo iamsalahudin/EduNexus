@@ -5,6 +5,12 @@ import transportService from '@/services/transportService'
 import studentsService from '@/services/studentsService'
 import directoryService from '@/services/directoryService'
 import { Button, Card, Input, PageHeader, Select, Skeleton, Textarea } from '@/components/ui'
+import {
+  SUBJECT_ROLE,
+  TRANSPORT_PAYMENT_STATUS,
+  TRANSPORT_REQUEST_STATUS,
+  getStatusColor
+} from '@/utils/constants'
 
 function fmtDate(value) {
   if (!value) return '—'
@@ -14,17 +20,11 @@ function fmtDate(value) {
 }
 
 function paymentBadge(status) {
-  if (status === 'paid') return 'border-green-300 bg-green-50 text-green-700'
-  if (status === 'partial') return 'border-blue-300 bg-blue-50 text-blue-700'
-  if (status === 'overdue') return 'border-red-300 bg-red-50 text-red-700'
-  return 'border-yellow-300 bg-yellow-50 text-yellow-700'
+  return getStatusColor(status)
 }
 
 function requestBadge(status) {
-  if (status === 'approved') return 'border-green-300 bg-green-50 text-green-700'
-  if (status === 'rejected') return 'border-red-300 bg-red-50 text-red-700'
-  if (status === 'cancelled') return 'border-gray-300 bg-gray-100 text-gray-700'
-  return 'border-yellow-300 bg-yellow-50 text-yellow-700'
+  return getStatusColor(status)
 }
 
 export default function TransportManagementWorkspace({
@@ -58,11 +58,13 @@ export default function TransportManagementWorkspace({
     driverPhone: ''
   })
 
-  const [subjectRole, setSubjectRole] = useState('Student')
+  const [subjectRole, setSubjectRole] = useState(SUBJECT_ROLE.STUDENT)
   const [selectedRouteId, setSelectedRouteId] = useState('')
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [selectedTeacherUserId, setSelectedTeacherUserId] = useState('')
   const [enrollmentNotes, setEnrollmentNotes] = useState('')
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+  const [searchFields, setSearchFields] = useState({ name: '', studentId: '', userId: '', admissionNumber: '', fatherName: '', mobile: '' })
 
   const [summary, setSummary] = useState(null)
   const [routeCounts, setRouteCounts] = useState([])
@@ -112,7 +114,7 @@ export default function TransportManagementWorkspace({
     try {
       const [sRes, tRes] = await Promise.all([
         studentsService.listStudents({ limit: 200 }),
-        directoryService.listUsers({ role: 'Teacher', limit: 200 })
+        directoryService.listUsers({ role: SUBJECT_ROLE.TEACHER, limit: 200 })
       ])
       setStudents(Array.isArray(sRes?.students) ? sRes.students : [])
       setTeachers(Array.isArray(tRes?.users) ? tRes.users : [])
@@ -196,13 +198,13 @@ export default function TransportManagementWorkspace({
     setError('')
     setSuccess('')
     try {
-      const payload = {
+      const payload = { 
         routeId: selectedRouteId,
         subjectRole,
         notes: enrollmentNotes || undefined
       }
-      if (subjectRole === 'Student') payload.studentId = selectedStudentId
-      if (subjectRole === 'Teacher') payload.teacherUserId = selectedTeacherUserId
+      if (subjectRole === SUBJECT_ROLE.STUDENT) payload.studentId = selectedStudentId
+      if (subjectRole === SUBJECT_ROLE.TEACHER) payload.teacherUserId = selectedTeacherUserId
       await transportService.createEnrollment(payload)
       setSuccess('Enrollment saved')
       setEnrollmentNotes('')
@@ -254,8 +256,8 @@ export default function TransportManagementWorkspace({
       const payload = {
         status,
         amountDue: Number(existing?.amountDue || 0),
-        amountPaid: status === 'paid' ? Number(existing?.amountDue || existing?.amountPaid || 0) : Number(existing?.amountPaid || 0),
-        paidOn: status === 'paid' ? new Date().toISOString() : null
+        amountPaid: status === TRANSPORT_PAYMENT_STATUS.PAID ? Number(existing?.amountDue || existing?.amountPaid || 0) : Number(existing?.amountPaid || 0),
+        paidOn: status === TRANSPORT_PAYMENT_STATUS.PAID ? new Date().toISOString() : null
       }
       await transportService.updatePayment(paymentId, payload)
       setSuccess('Payment status updated')
@@ -272,7 +274,7 @@ export default function TransportManagementWorkspace({
     if (amountDue === null) return
     const amountPaid = window.prompt('Amount paid', String(row?.amountPaid ?? 0))
     if (amountPaid === null) return
-    const status = window.prompt('Status (paid/pending/partial/overdue)', String(row?.status || 'pending'))
+    const status = window.prompt('Status (paid/pending/partial/overdue)', String(row?.status || TRANSPORT_PAYMENT_STATUS.PENDING))
     if (status === null) return
     const remarks = window.prompt('Remarks', String(row?.remarks || ''))
     if (remarks === null) return
@@ -308,7 +310,7 @@ export default function TransportManagementWorkspace({
         periodYear: now.getFullYear(),
         amountDue: selectedRouteFee,
         amountPaid: 0,
-        status: 'pending'
+        status: TRANSPORT_PAYMENT_STATUS.PENDING
       })
       setSuccess('Current month payment generated')
       await loadAll()
@@ -413,14 +415,14 @@ export default function TransportManagementWorkspace({
         <h2 className="font-medium">Enrollment Management</h2>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-5 gap-2">
           <Select value={subjectRole} onChange={(e) => setSubjectRole(e.target.value)}>
-            <option value="Student">Student</option>
-            <option value="Teacher">Teacher</option>
+            <option value={SUBJECT_ROLE.STUDENT}>Student</option>
+            <option value={SUBJECT_ROLE.TEACHER}>Teacher</option>
           </Select>
           <Select value={selectedRouteId} onChange={(e) => setSelectedRouteId(e.target.value)}>
             <option value="">Select route</option>
             {routes.map((r) => <option key={r._id} value={r._id}>{r.name} ({r.fee})</option>)}
           </Select>
-          {subjectRole === 'Student' ? (
+          {subjectRole === SUBJECT_ROLE.STUDENT ? (
             <Select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)}>
               <option value="">Select student</option>
               {students.map((s) => <option key={s._id} value={s._id}>{s.studentId} - {(s.user?.name || s.fullName || 'Student')}</option>)}
@@ -431,8 +433,47 @@ export default function TransportManagementWorkspace({
               {teachers.map((t) => <option key={t._id} value={t._id}>{t.name} ({t.username})</option>)}
             </Select>
           )}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowAdvancedSearch((v) => !v)}>{showAdvancedSearch ? 'Hide Search' : 'Advanced Search'}</Button>
+            {showAdvancedSearch ? (
+              <div className="mt-2 w-full md:col-span-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <Input placeholder="Name" value={searchFields.name} onChange={(e) => setSearchFields((p) => ({ ...p, name: e.target.value }))} />
+                  <Input placeholder="Student / Teacher ID" value={searchFields.studentId} onChange={(e) => setSearchFields((p) => ({ ...p, studentId: e.target.value }))} />
+                  <Input placeholder="User ID" value={searchFields.userId} onChange={(e) => setSearchFields((p) => ({ ...p, userId: e.target.value }))} />
+                  <Input placeholder="Admission Number" value={searchFields.admissionNumber} onChange={(e) => setSearchFields((p) => ({ ...p, admissionNumber: e.target.value }))} />
+                  <Input placeholder="Father's Name" value={searchFields.fatherName} onChange={(e) => setSearchFields((p) => ({ ...p, fatherName: e.target.value }))} />
+                  <Input placeholder="Mobile" value={searchFields.mobile} onChange={(e) => setSearchFields((p) => ({ ...p, mobile: e.target.value }))} />
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <Button onClick={async () => {
+                    setError('')
+                    try {
+                      const params = {}
+                      if (searchFields.name) params.q = searchFields.name
+                      if (searchFields.userId) params.userId = searchFields.userId
+                      if (searchFields.studentId) params.studentId = searchFields.studentId
+                      if (searchFields.admissionNumber) params.admissionNumber = searchFields.admissionNumber
+                      if (searchFields.fatherName) params.fatherName = searchFields.fatherName
+                      if (searchFields.mobile) params.mobile = searchFields.mobile
+                      if (subjectRole === SUBJECT_ROLE.STUDENT) {
+                        const res = await studentsService.listStudents(params)
+                        setStudents(Array.isArray(res?.students) ? res.students : [])
+                      } else {
+                        const res = await directoryService.listUsers(params)
+                        setTeachers(Array.isArray(res?.users) ? res.users : [])
+                      }
+                    } catch (e) {
+                      setError(e?.response?.data?.error || 'Search failed')
+                    }
+                  }}>Search</Button>
+                  <Button variant="outline" onClick={() => { setSearchFields({ name: '', studentId: '', userId: '', admissionNumber: '', fatherName: '', mobile: '' }); loadPeople(); }}>Reset</Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
           <Textarea placeholder="Notes" value={enrollmentNotes} onChange={(e) => setEnrollmentNotes(e.target.value)} textareaClassName="min-h-[42px]" />
-          <Button variant="primary" onClick={enrollNow} disabled={!selectedRouteId || (subjectRole === 'Student' ? !selectedStudentId : !selectedTeacherUserId)}>Enroll</Button>
+          <Button variant="primary" onClick={enrollNow} disabled={!selectedRouteId || (subjectRole === SUBJECT_ROLE.STUDENT ? !selectedStudentId : !selectedTeacherUserId)}>Enroll</Button>
         </div>
 
         <div className="mt-4 overflow-auto">
@@ -453,7 +494,7 @@ export default function TransportManagementWorkspace({
                   <td className="py-2 pr-3">{row?.user?.name || row?.student?.studentId || row?.teacher?.employeeId || '—'}</td>
                   <td className="py-2 pr-3">{row.subjectRole}</td>
                   <td className="py-2 pr-3">{row?.route?.name || '—'}</td>
-                  <td className="py-2 pr-3">{row.status}</td>
+              <td className="py-2 pr-3">{row.status === TRANSPORT_REQUEST_STATUS.PENDING ? 'Pending' : row.status}</td>
                   <td className="py-2 pr-3">{fmtDate(row.updatedAt)}</td>
                   <td className="py-2 pr-3">
                     <div className="flex gap-1">
@@ -491,10 +532,10 @@ export default function TransportManagementWorkspace({
                   <td className="py-2 pr-3"><span className={`text-xs px-2 py-1 border rounded ${requestBadge(row.status)}`}>{row.status}</span></td>
                   <td className="py-2 pr-3">{fmtDate(row.createdAt)}</td>
                   <td className="py-2 pr-3">
-                    {row.status === 'pending' ? (
+                    {row.status === TRANSPORT_REQUEST_STATUS.PENDING ? (
                       <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setRequestStatus(row._id, 'approved')}>Approve</Button>
-                        <Button size="sm" variant="outline" onClick={() => setRequestStatus(row._id, 'rejected')}>Reject</Button>
+                        <Button size="sm" variant="outline" onClick={() => setRequestStatus(row._id, TRANSPORT_REQUEST_STATUS.APPROVED)}>Approve</Button>
+                        <Button size="sm" variant="outline" onClick={() => setRequestStatus(row._id, TRANSPORT_REQUEST_STATUS.REJECTED)}>Reject</Button>
                       </div>
                     ) : (
                       <span className="text-xs text-gray-500">Reviewed</span>
@@ -537,8 +578,8 @@ export default function TransportManagementWorkspace({
                     <td className="py-2 pr-3">
                         <div className="flex gap-1 flex-wrap">
                           <Button size="sm" variant="outline" onClick={() => editPayment(row)}>Edit</Button>
-                          <Button size="sm" variant="outline" onClick={() => setPaymentStatus(row._id, 'paid', row)}>Paid</Button>
-                          <Button size="sm" variant="outline" onClick={() => setPaymentStatus(row._id, 'pending', row)}>Pending</Button>
+                          <Button size="sm" variant="outline" onClick={() => setPaymentStatus(row._id, TRANSPORT_PAYMENT_STATUS.PAID, row)}>Paid</Button>
+                          <Button size="sm" variant="outline" onClick={() => setPaymentStatus(row._id, TRANSPORT_PAYMENT_STATUS.PENDING, row)}>Pending</Button>
                         </div>
                     </td>
                   </tr>
@@ -583,8 +624,55 @@ export default function TransportManagementWorkspace({
             </div>
           </div>
 
-          <div className="mt-4 text-sm">
+          <div className="mt-4 text-sm flex items-center gap-3">
             <a className="text-blue-600 underline" href={transportService.exportPaymentsCsvUrl()} target="_blank" rel="noreferrer">Export Payments CSV</a>
+            <button type="button" className="text-sm underline text-blue-600" onClick={async () => {
+              try {
+                const XLSX = await import('xlsx')
+                const payload = (payments || []).map(p => ({
+                  Name: p.user?.name || '-',
+                  Role: p.subjectRole || '-',
+                  Route: p.route?.name || '-',
+                  Period: `${p.periodMonth || '-'} / ${p.periodYear || '-'}`,
+                  Due: p.amountDue || 0,
+                  Paid: p.amountPaid || 0,
+                  Status: p.status || ''
+                }))
+                const ws = XLSX.utils.json_to_sheet(payload)
+                const wb = XLSX.utils.book_new()
+                XLSX.utils.book_append_sheet(wb, ws, 'Payments')
+                const wbOut = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+                const blob = new Blob([wbOut], { type: 'application/octet-stream' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `transport-payments.xlsx`
+                a.click()
+                URL.revokeObjectURL(url)
+              } catch (e) {
+                setError('Failed to export XLSX')
+              }
+            }}>Export Payments XLSX</button>
+            <button type="button" className="text-sm underline text-blue-600" onClick={async () => {
+              try {
+                const jsPDFModule = await import('jspdf')
+                const jsPDF = jsPDFModule.jsPDF || jsPDFModule.default
+                const doc = new jsPDF('portrait', 'pt', 'a4')
+                doc.setFontSize(14)
+                doc.text('Transport Payments Report', 40, 40)
+                doc.setFontSize(10)
+                let y = 70
+                ;(payments || []).forEach((p, i) => {
+                  const line = `${i + 1}. ${p.user?.name || '-'} | ${p.route?.name || '-'} | ${p.periodMonth || '-'}-${p.periodYear || '-'} | Due: ${p.amountDue || 0} | Paid: ${p.amountPaid || 0} | ${p.status || ''}`
+                  doc.text(line, 40, y)
+                  y += 16
+                  if (y > 720) { doc.addPage(); y = 40 }
+                })
+                doc.save('transport-payments.pdf')
+              } catch (e) {
+                setError('Failed to export PDF')
+              }
+            }}>Export Payments PDF</button>
           </div>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">

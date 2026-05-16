@@ -24,6 +24,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     title: { type: String, required: true, trim: true },
     body: { type: String, default: '', trim: true },
+    attachments: { type: [String], default: [] },
 
     // Optional expiry for broadcasts
     expiresAt: { type: Date, index: true },

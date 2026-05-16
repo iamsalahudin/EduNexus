@@ -42,6 +42,12 @@ const DailyDiary = require('./dailyDiary');
 const SalaryStructure = require('./salaryStructure');
 const SalaryStaff = require('./salaryStaff');
 const SalarySlip = require('./salarySlip');
+const FinanceSetting = require('./financeSetting');
+const FinanceCategory = require('./financeCategory');
+const FinanceExpense = require('./financeExpense');
+const FinanceIncome = require('./financeIncome');
+const FinanceLiability = require('./financeLiability');
+const FinanceLiabilityRepayment = require('./financeLiabilityRepayment');
 const FeeVoucherTemplate = require('./feeVoucherTemplate');
 const Syllabus = require('./syllabus');
 const InventoryCategory = require('./inventoryCategory');
@@ -49,6 +55,12 @@ const InventoryItem = require('./inventoryItem');
 const InventoryStockMovement = require('./inventoryStockMovement');
 const InventoryDistribution = require('./inventoryDistribution');
 const Department = require('./department');
+const LibraryBook = require('./libraryBook');
+const LibraryIssue = require('./libraryIssue');
+const Hostel = require('./hostel');
+const HostelRoom = require('./hostelRoom');
+const HostelResident = require('./hostelResident');
+const HostelFee = require('./hostelFee');
 
 module.exports = {
 	Role,
@@ -95,11 +107,23 @@ module.exports = {
 	SalaryStructure,
 	SalaryStaff,
 	SalarySlip,
+	FinanceSetting,
+	FinanceCategory,
+	FinanceExpense,
+	FinanceIncome,
+	FinanceLiability,
+	FinanceLiabilityRepayment,
 	FeeVoucherTemplate,
 	Syllabus,
 	InventoryCategory,
 	InventoryItem,
 	InventoryStockMovement,
 	InventoryDistribution,
-	Department
+	Department,
+	LibraryBook,
+	LibraryIssue,
+	Hostel,
+	HostelRoom,
+	HostelResident,
+	HostelFee
 };

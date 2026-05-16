@@ -168,4 +168,38 @@
   --nav-hover-text: var(--color-text-light);
 }
 
+/* Print styles for report cards and printable pages */
+@media print {
+  /* Preserve exact colors in print where supported */
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Hide non-essential UI chrome */
+  .no-print, header, nav, footer, .sidebar, .topbar, .page-actions { display: none !important; }
+
+  /* Report card container: A4 size with no margins for PDFs printed with browser printing */
+  .report-card {
+    width: 210mm;
+    height: 297mm;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+    color: #000 !important;
+    page-break-after: always;
+  }
+
+  /* Ensure table borders and text are legible when printed */
+  table { border-collapse: collapse !important; }
+  th, td { border: 1px solid #333 !important; padding: 4px !important; }
+
+  /* Remove interactive visuals that don't make sense on paper */
+  a::after { content: '' !important; }
+  button, input, select, textarea { display: none !important; }
+}
+
  

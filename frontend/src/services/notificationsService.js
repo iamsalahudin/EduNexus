@@ -1,5 +1,29 @@
 import { api } from './api'
 
+function isFormData(value) {
+  return typeof FormData !== 'undefined' && value instanceof FormData
+}
+
+function buildBroadcastPayload(payload) {
+  const formData = new FormData()
+  const files = Array.isArray(payload?.attachments) ? payload.attachments : []
+
+  Object.entries(payload || {}).forEach(([key, value]) => {
+    if (key === 'attachments') return
+    if (value === undefined || value === null || value === '') return
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => formData.append(key, item))
+      return
+    }
+
+    formData.append(key, value)
+  })
+
+  files.forEach((file) => formData.append('attachments', file))
+  return formData
+}
+
 export const notificationsService = {
   inbox: async (params = undefined) => {
     const { data } = await api.get('/notifications/inbox', params ? { params } : undefined)
@@ -17,7 +41,9 @@ export const notificationsService = {
   },
 
   createRequest: async (payload) => {
-    const { data } = await api.post('/notifications/requests', payload)
+    const body = isFormData(payload) ? payload : payload
+    const config = isFormData(body) ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    const { data } = await api.post('/notifications/requests', body, config)
     return data
   },
 
@@ -42,7 +68,10 @@ export const notificationsService = {
   },
 
   createBroadcast: async (payload) => {
-    const { data } = await api.post('/notifications/broadcast', payload)
+    const body = Array.isArray(payload?.attachments) || payload instanceof FormData ? payload : payload
+    const requestBody = isFormData(body) ? body : (Array.isArray(payload?.attachments) ? buildBroadcastPayload(payload) : payload)
+    const config = isFormData(requestBody) ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    const { data } = await api.post('/notifications/broadcast', requestBody, config)
     return data
   },
 
@@ -52,7 +81,9 @@ export const notificationsService = {
   },
 
   updateBroadcast: async (id, payload) => {
-    const { data } = await api.patch(`/notifications/broadcast/${id}`, payload)
+    const requestBody = isFormData(payload) ? payload : (Array.isArray(payload?.attachments) ? buildBroadcastPayload(payload) : payload)
+    const config = isFormData(requestBody) ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    const { data } = await api.patch(`/notifications/broadcast/${id}`, requestBody, config)
     return data
   },
 
@@ -63,7 +94,9 @@ export const notificationsService = {
 
   // Backward compatibility aliases
   adminCreateBroadcast: async (payload) => {
-    const { data } = await api.post('/notifications/broadcast', payload)
+    const requestBody = isFormData(payload) ? payload : (Array.isArray(payload?.attachments) ? buildBroadcastPayload(payload) : payload)
+    const config = isFormData(requestBody) ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    const { data } = await api.post('/notifications/broadcast', requestBody, config)
     return data
   },
 

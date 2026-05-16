@@ -408,12 +408,16 @@ async function deleteSalaryStaff(req, res, next) {
 async function listSalaryRecords(req, res, next) {
   try {
     await syncTeacherSalaryStaff()
-    const periodMonth = req.query?.periodMonth ? parseMonth(req.query.periodMonth) : null
+    // Default to parsed month (same behaviour as summary) when not provided
+    const periodMonth = parseMonth(req.query?.periodMonth)
     const status = String(req.query?.status || '').trim()
     const staffId = String(req.query?.staffId || '').trim()
     const range = String(req.query?.range || '').trim().toLowerCase()
     const query = String(req.query?.q || '').trim().toLowerCase()
     const scope = await resolveSalaryStaffScope(req)
+
+    // Ensure slips exist for this period
+    await ensureMonthlySlips({ periodMonth })
 
     const filter = {}
     if (periodMonth) filter.periodMonth = periodMonth

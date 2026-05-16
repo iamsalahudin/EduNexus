@@ -38,6 +38,12 @@ router.use('/syllabus', require('./syllabus'));
 // Inventory management (Admin)
 router.use('/inventory', require('./inventory'));
 
+// Library management
+router.use('/library', require('./library'));
+
+// Hostel management
+router.use('/hostel', require('./hostel'));
+
 // Subjects management (read for all roles, write Admin-only)
 router.use('/subjects', require('./subjects'));
 
@@ -71,6 +77,9 @@ router.use('/daily-diary', require('./dailyDiary'));
 // Fee management
 router.use('/fees', require('./fees'));
 
+// Finance management
+router.use('/finance', require('./finance'));
+
 // Transport management
 router.use('/transport', require('./transport'));
 
@@ -92,6 +101,9 @@ router.use('/notifications', require('./notifications'));
 
 // AI Chat agent
 router.use('/chat', require('./chat'));
+
+// Async exports (PDF, ZIP, etc.)
+router.use('/exports', require('./exports'));
 
 // Student certificates
 router.use('/certificates', require('./certificates'));

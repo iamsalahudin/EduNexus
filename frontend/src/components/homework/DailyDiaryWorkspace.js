@@ -5,6 +5,7 @@ import { Button, Card, Input, PageHeader, Select, Skeleton, Textarea } from '@/c
 import classesService from '@/services/classesService'
 import subjectsService from '@/services/subjectsService'
 import dailyDiaryService from '@/services/dailyDiaryService'
+import { DIARY_STATUS, DIARY_STATUS_DISPLAY, DIARY_STATUS_OPTIONS, getStatusColor } from '@/utils/constants'
 
 function fmtDate(value) {
   if (!value) return '—'
@@ -14,10 +15,7 @@ function fmtDate(value) {
 }
 
 function statusBadge(status) {
-  const s = String(status || '')
-  if (s === 'published') return 'inline-flex px-2 py-1 rounded text-xs border border-green-200 text-green-700 bg-green-50'
-  if (s === 'draft') return 'inline-flex px-2 py-1 rounded text-xs border border-amber-200 text-amber-700 bg-amber-50'
-  return 'inline-flex px-2 py-1 rounded text-xs border border-gray-200 text-gray-700 bg-gray-50'
+  return getStatusColor(status, 'diary')
 }
 
 export default function DailyDiaryWorkspace({
@@ -36,8 +34,9 @@ export default function DailyDiaryWorkspace({
   const [subjects, setSubjects] = useState([])
   const [query, setQuery] = useState({ class: '', section: '', date: '', q: '' })
   const [appliedQuery, setAppliedQuery] = useState({ class: '', section: '', date: '', q: '' })
-  const [form, setForm] = useState({ date: '', class: '', section: '', subject: '', title: '', content: '', status: 'published' })
+  const [form, setForm] = useState({ date: '', class: '', section: '', subject: '', title: '', content: '', status: DIARY_STATUS.PUBLISHED })
   const [editingId, setEditingId] = useState('')
+  const [formSubjects, setFormSubjects] = useState([])
 
   const selectedClass = useMemo(() => classes.find((c) => String(c?.name) === String(form.class)) || null, [classes, form.class])
   const sections = useMemo(() => (Array.isArray(selectedClass?.sections) ? selectedClass.sections : []), [selectedClass])
@@ -52,19 +51,31 @@ export default function DailyDiaryWorkspace({
       if (appliedQuery.date) params.date = appliedQuery.date
       if (appliedQuery.q) params.q = appliedQuery.q
 
-      const [diaryRes, classRes, subjectRes] = await Promise.all([
+      const [diaryRes, classRes] = await Promise.all([
         dailyDiaryService.list(params),
-        classesService.listClasses({ active: true }),
-        subjectsService.listSubjects({ active: true })
+        classesService.listClasses({ active: true })
       ])
 
       setRows(Array.isArray(diaryRes?.diaries) ? diaryRes.diaries : [])
       setClasses(Array.isArray(classRes?.classes) ? classRes.classes : [])
-      setSubjects(Array.isArray(subjectRes?.subjects) ? subjectRes.subjects : [])
+      // subjects will be loaded per selected class when creating an entry
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to load daily diary')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadSubjectsForClass(className) {
+    if (!className) return setSubjects([])
+    try {
+      const res = await subjectsService.listSubjects({ className, active: true })
+      const subs = Array.isArray(res?.subjects) ? res.subjects : []
+      setSubjects(subs)
+      // initialize form subject rows for quick multi-entry creation
+      setFormSubjects(subs.map((s) => ({ subject: s._id, title: '', content: '', status: form.status || DIARY_STATUS.PUBLISHED })))
+    } catch (e) {
+      setSubjects([])
     }
   }
 
@@ -79,31 +90,71 @@ export default function DailyDiaryWorkspace({
     }
   }, [form.class, form.section, sections])
 
+  useEffect(() => {
+    // When the add/edit form's class changes, load subjects assigned to that class
+    if (form.class) loadSubjectsForClass(form.class)
+    else setSubjects([])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.class])
+
+  useEffect(() => {
+    // when subjects change and we are not editing a single entry, reset formSubjects
+    if (!editingId && Array.isArray(subjects) && subjects.length) {
+      setFormSubjects(subjects.map((s) => ({ subject: s._id, title: '', content: '', status: form.status || DIARY_STATUS.PUBLISHED })))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjects])
+
   async function onSave(e) {
     e.preventDefault()
     setSaving(true)
     setError('')
     setMessage('')
     try {
-      const payload = {
-        date: form.date,
-        class: form.class,
-        section: form.section,
-        subject: form.subject,
-        title: form.title,
-        content: form.content,
-        status: form.status
-      }
-
       if (editingId) {
+        const payload = {
+          date: form.date,
+          class: form.class,
+          section: form.section,
+          subject: form.subject,
+          title: form.title,
+          content: form.content,
+          status: form.status
+        }
         await dailyDiaryService.update(editingId, payload)
         setMessage('Daily diary updated successfully.')
       } else {
-        await dailyDiaryService.create(payload)
-        setMessage('Daily diary created successfully.')
+        // If formSubjects present, create entries for each subject row that has content/title
+        if (Array.isArray(formSubjects) && formSubjects.length) {
+          const toCreate = formSubjects.filter((s) => (s.title && s.title.trim()) || (s.content && s.content.trim()))
+          if (toCreate.length === 0) throw new Error('Please provide title or content for at least one subject row.')
+          await Promise.all(toCreate.map((s) => dailyDiaryService.create({
+            date: form.date,
+            class: form.class,
+            section: form.section,
+            subject: s.subject,
+            title: s.title,
+            content: s.content,
+            status: s.status || form.status
+          })))
+          setMessage(`Created ${toCreate.length} diary entr${toCreate.length === 1 ? 'y' : 'ies'}.`)
+        } else {
+          const payload = {
+            date: form.date,
+            class: form.class,
+            section: form.section,
+            subject: form.subject,
+            title: form.title,
+            content: form.content,
+            status: form.status
+          }
+          await dailyDiaryService.create(payload)
+          setMessage('Daily diary created successfully.')
+        }
       }
 
-      setForm({ date: '', class: '', section: '', subject: '', title: '', content: '', status: 'published' })
+      setForm({ date: '', class: '', section: '', subject: '', title: '', content: '', status: DIARY_STATUS.PUBLISHED })
+      setFormSubjects([])
       setEditingId('')
       await load()
     } catch (e2) {
@@ -123,7 +174,7 @@ export default function DailyDiaryWorkspace({
       subject: row.subject?.id || '',
       title: row.title || '',
       content: row.content || '',
-      status: row.status || 'published'
+      status: row.status || DIARY_STATUS.PUBLISHED
     })
     setMessage('Editing selected diary entry.')
   }
@@ -147,8 +198,8 @@ export default function DailyDiaryWorkspace({
     const stats = { total: rows.length, published: 0, draft: 0 }
     rows.forEach((row) => {
       const key = String(row.status || '')
-      if (key === 'published') stats.published += 1
-      else if (key === 'draft') stats.draft += 1
+      if (key === DIARY_STATUS.PUBLISHED) stats.published += 1
+      else if (key === DIARY_STATUS.DRAFT) stats.draft += 1
     })
     return stats
   }, [rows])
@@ -208,13 +259,47 @@ export default function DailyDiaryWorkspace({
               <option value="">Select section</option>
               {sections.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
-            <Select value={form.subject} onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))} required>
-              <option value="">Select subject</option>
-              {subjects.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
-            </Select>
+            {Array.isArray(subjects) && subjects.length > 0 ? (
+              <div className="md:col-span-3 space-y-3">
+                {subjects.map((s, idx) => {
+                  const row = formSubjects[idx] || { subject: s._id, title: '', content: '', status: form.status }
+                  return (
+                    <div key={s._id} className="border rounded p-3">
+                      <div className="font-medium">{s.name}</div>
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <Input value={row.title} onChange={(e) => {
+                          const copy = [...formSubjects]
+                          copy[idx] = { ...(copy[idx] || { subject: s._id, title: '', content: '', status: form.status }), title: e.target.value }
+                          setFormSubjects(copy)
+                        }} placeholder="Entry title" />
+                        <Select value={row.status || form.status} onChange={(e) => {
+                          const copy = [...formSubjects]
+                          copy[idx] = { ...(copy[idx] || { subject: s._id, title: '', content: '', status: form.status }), status: e.target.value }
+                          setFormSubjects(copy)
+                        }}>
+                          {DIARY_STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </Select>
+                        <div className="hidden md:block" />
+                        <div className="md:col-span-3">
+                          <Textarea rows={3} value={row.content} onChange={(e) => {
+                            const copy = [...formSubjects]
+                            copy[idx] = { ...(copy[idx] || { subject: s._id, title: '', content: '', status: form.status }), content: e.target.value }
+                            setFormSubjects(copy)
+                          }} placeholder="Details (optional)" />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <Select value={form.subject} onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))} required>
+                <option value="">Select subject</option>
+                {subjects.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
+              </Select>
+            )}
             <Select value={form.status} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
+              {DIARY_STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </Select>
             <Input value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} placeholder="Diary title" required />
             <div className="md:col-span-3">
@@ -222,7 +307,7 @@ export default function DailyDiaryWorkspace({
             </div>
             <div className="md:col-span-3 flex gap-2">
               <Button type="submit" disabled={saving}>{saving ? 'Saving…' : editingId ? 'Update Diary' : 'Create Diary'}</Button>
-              {editingId ? <Button type="button" variant="outline" onClick={() => { setEditingId(''); setForm({ date: '', class: '', section: '', subject: '', title: '', content: '', status: 'published' }) }}>Cancel Edit</Button> : null}
+              {editingId ? <Button type="button" variant="outline" onClick={() => { setEditingId(''); setForm({ date: '', class: '', section: '', subject: '', title: '', content: '', status: DIARY_STATUS.PUBLISHED }) }}>Cancel Edit</Button> : null}
             </div>
           </form>
         </Card>

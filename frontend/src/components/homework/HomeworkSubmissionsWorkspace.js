@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button, ButtonLink, Card, PageHeader, Select, Skeleton } from '@/components/ui'
 import classesService from '@/services/classesService'
 import homeworksService from '@/services/homeworksService'
+import { HOMEWORK_STATUS, getStatusColor } from '@/utils/constants'
 
 function fmtDate(value) {
   if (!value) return '—'
@@ -15,7 +16,7 @@ function fmtDate(value) {
 function summarizeSubmissions(submissions = []) {
   const stats = { draft: 0, submitted: 0, received: 0, returned: 0 }
   submissions.forEach((item) => {
-    const key = String(item?.status || 'draft')
+    const key = String(item?.status || HOMEWORK_STATUS.DRAFT)
     if (stats[key] !== undefined) stats[key] += 1
   })
   return stats
@@ -23,9 +24,7 @@ function summarizeSubmissions(submissions = []) {
 
 function statusBadge(status) {
   const s = String(status || '')
-  if (s === 'published') return 'inline-flex px-2 py-1 rounded text-xs border border-green-200 text-green-700 bg-green-50'
-  if (s === 'closed') return 'inline-flex px-2 py-1 rounded text-xs border border-gray-200 text-gray-700 bg-gray-100'
-  if (s === 'draft') return 'inline-flex px-2 py-1 rounded text-xs border border-amber-200 text-amber-700 bg-amber-50'
+  if (s === HOMEWORK_STATUS.PUBLISHED || s === HOMEWORK_STATUS.CLOSED || s === HOMEWORK_STATUS.DRAFT) return getStatusColor(s)
   return 'inline-flex px-2 py-1 rounded text-xs border border-gray-200 text-gray-700'
 }
 

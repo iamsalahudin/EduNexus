@@ -5,13 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import timetableService from '@/services/timetableService'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
-
-const STATUS_OPTIONS = [
-  { value: 'present', label: 'Present' },
-  { value: 'absent', label: 'Absent' },
-  { value: 'late', label: 'Late' },
-  { value: 'excused', label: 'Excused' },
-]
+import { ATTENDANCE_STATUS_OPTIONS } from '@/utils/constants'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()

@@ -1,6 +1,7 @@
 const { ReportCard, Student, Subject } = require('../models');
 const { calculateGrade, calculateTotals } = require('../utils/grading');
 const mongoose = require('mongoose');
+const PDFDocument = require('pdfkit');
 
 async function resolveStudentForUser(userId) {
   return Student.findOne({ user: userId }).select('_id').lean();
@@ -27,6 +28,93 @@ function decorateReportCard(reportCardDoc) {
     comments: reportCard.comments || subjectRemarks?.remarks || '',
     publishedAt: reportCard.publishedAt || reportCard.approvedAt || reportCard.updatedAt
   };
+}
+
+function crc32(buffer) {
+  let crc = ~0;
+  for (let i = 0; i < buffer.length; i += 1) {
+    crc ^= buffer[i];
+    for (let j = 0; j < 8; j += 1) {
+      crc = (crc >>> 1) ^ (0xEDB88320 & -(crc & 1));
+    }
+  }
+  return (~crc) >>> 0;
+}
+
+function dosDateTime(date = new Date()) {
+  const year = Math.max(date.getFullYear(), 1980);
+  const dosTime = ((date.getHours() & 0x1f) << 11)
+    | ((date.getMinutes() & 0x3f) << 5)
+    | ((Math.floor(date.getSeconds() / 2)) & 0x1f);
+  const dosDate = (((year - 1980) & 0x7f) << 9)
+    | (((date.getMonth() + 1) & 0x0f) << 5)
+    | (date.getDate() & 0x1f);
+  return { dosTime, dosDate };
+}
+
+function buildZipBuffer(entries) {
+  const chunks = [];
+  const centralDirectory = [];
+  let offset = 0;
+  const now = new Date();
+  const { dosTime, dosDate } = dosDateTime(now);
+
+  entries.forEach((entry) => {
+    const fileName = Buffer.from(entry.name);
+    const data = Buffer.isBuffer(entry.data) ? entry.data : Buffer.from(entry.data);
+    const crc = crc32(data);
+
+    const localHeader = Buffer.alloc(30);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt16LE(0, 6);
+    localHeader.writeUInt16LE(0, 8);
+    localHeader.writeUInt16LE(dosTime, 10);
+    localHeader.writeUInt16LE(dosDate, 12);
+    localHeader.writeUInt32LE(crc, 14);
+    localHeader.writeUInt32LE(data.length, 18);
+    localHeader.writeUInt32LE(data.length, 22);
+    localHeader.writeUInt16LE(fileName.length, 26);
+    localHeader.writeUInt16LE(0, 28);
+
+    chunks.push(localHeader, fileName, data);
+
+    const centralHeader = Buffer.alloc(46);
+    centralHeader.writeUInt32LE(0x02014b50, 0);
+    centralHeader.writeUInt16LE(20, 4);
+    centralHeader.writeUInt16LE(20, 6);
+    centralHeader.writeUInt16LE(0, 8);
+    centralHeader.writeUInt16LE(0, 10);
+    centralHeader.writeUInt16LE(dosTime, 12);
+    centralHeader.writeUInt16LE(dosDate, 14);
+    centralHeader.writeUInt32LE(crc, 16);
+    centralHeader.writeUInt32LE(data.length, 20);
+    centralHeader.writeUInt32LE(data.length, 24);
+    centralHeader.writeUInt16LE(fileName.length, 28);
+    centralHeader.writeUInt16LE(0, 30);
+    centralHeader.writeUInt16LE(0, 32);
+    centralHeader.writeUInt16LE(0, 34);
+    centralHeader.writeUInt16LE(0, 36);
+    centralHeader.writeUInt32LE(0, 38);
+    centralHeader.writeUInt32LE(offset, 42);
+
+    centralDirectory.push(centralHeader, fileName);
+    offset += localHeader.length + fileName.length + data.length;
+  });
+
+  const centralSize = centralDirectory.reduce((sum, buf) => sum + buf.length, 0);
+  const centralOffset = chunks.reduce((sum, buf) => sum + buf.length, 0);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(entries.length, 8);
+  end.writeUInt16LE(entries.length, 10);
+  end.writeUInt32LE(centralSize, 12);
+  end.writeUInt32LE(centralOffset, 16);
+  end.writeUInt16LE(0, 20);
+
+  return Buffer.concat([...chunks, ...centralDirectory, end]);
 }
 
 // Teacher: Create or update report card with marks for a student
@@ -251,3 +339,302 @@ module.exports = {
   getReportCard,
   archiveOldReportCards
 };
+
+// Export multiple report cards as a single multi-page PDF (Admin/Principal/Teacher)
+async function exportReportCardsPdf(req, res, next) {
+  try {
+    const { studentId, term, year } = req.query;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let filter = {};
+    if (term) filter.term = term;
+    if (year) filter.year = parseInt(year, 10);
+    if (studentId) filter.student = studentId;
+    const studentIdsRaw = req.query.studentIds || req.query.studentIds;
+    if (studentIdsRaw) {
+      const ids = String(studentIdsRaw).split(',').map((s) => s.trim()).filter(Boolean).map((s) => new mongoose.Types.ObjectId(s));
+      if (ids.length) filter.student = { $in: ids };
+    }
+
+    // Role-based access
+    if (userRole === 'Teacher') {
+      filter.createdBy = new mongoose.Types.ObjectId(userId);
+    } else if (userRole === 'Student') {
+      const student = await resolveStudentForUser(userId);
+      if (!student) return res.status(404).json({ error: 'Student record not found' });
+      if (studentId && String(student._id) !== String(studentId)) return res.status(403).json({ error: 'Forbidden' });
+      filter.student = student._id;
+      filter.status = 'published';
+    } else if (userRole === 'Parent') {
+      const children = await Student.find({ parents: userId }).select('_id').lean();
+      const childIds = children.map((c) => String(c._id));
+      if (studentId && !childIds.includes(String(studentId))) return res.status(403).json({ error: 'Forbidden' });
+      filter.student = studentId ? new mongoose.Types.ObjectId(studentId) : { $in: childIds };
+      filter.status = 'published';
+    } else if (!['Admin', 'Principal'].includes(userRole)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const reportCards = await ReportCard.find(filter)
+      .populate('student', 'firstName lastName studentId class section')
+      .populate('subjects.subject', 'name code')
+      .sort({ year: -1, term: -1 })
+      .lean();
+
+    if (!reportCards || reportCards.length === 0) {
+      return res.status(404).json({ error: 'No report cards found for the given filters' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="report-cards.pdf"');
+
+    const doc = new PDFDocument({ autoFirstPage: false });
+    doc.pipe(res);
+
+    const margin = 50;
+    const pageWidth = 595.28; // A4 pt
+    const usableWidth = pageWidth - margin * 2;
+
+    function ensureSpace(height) {
+      const bottom = doc.page.height - margin;
+      if (doc.y + height > bottom) doc.addPage({ size: 'A4', margin });
+    }
+
+    function renderHeader(rc) {
+      const student = rc.student || {};
+      doc.fontSize(14).font('Helvetica-Bold').text(process.env.SCHOOL_NAME || 'School Name', { align: 'center' });
+      doc.moveDown(0.25);
+      doc.fontSize(10).font('Helvetica').text(`Report Card - ${rc.term || ''} ${rc.year || ''}`, { align: 'center' });
+      doc.moveDown(0.5);
+
+      const leftColX = margin;
+      const rightColX = margin + usableWidth / 2 + 10;
+      const startY = doc.y;
+
+      doc.fontSize(10).text(`Name: ${student.firstName || ''} ${student.lastName || ''}`, leftColX, startY);
+      doc.text(`Student ID: ${student.studentId || ''}`, leftColX, doc.y + 2);
+      doc.text(`Class: ${student.class || ''} ${student.section || ''}`, leftColX, doc.y + 2);
+
+      const createdBy = rc.createdBy ? (rc.createdBy.name || '') : '';
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, rightColX, startY);
+      if (createdBy) doc.text(`By: ${createdBy}`, rightColX, doc.y + 2);
+
+      doc.moveDown(1);
+    }
+
+    function renderSubjectsTable(rc) {
+      const cols = [usableWidth * 0.45, usableWidth * 0.15, usableWidth * 0.15, usableWidth * 0.25];
+      const headings = ['Subject', 'Marks', 'Grade', 'Remarks'];
+
+      // table header
+      ensureSpace(20 + 16);
+      const startX = margin;
+      let x = startX;
+      doc.fontSize(10).font('Helvetica-Bold');
+      for (let i = 0; i < headings.length; i++) {
+        doc.text(headings[i], x + 2, doc.y, { width: cols[i], continued: false });
+        x += cols[i];
+      }
+      doc.moveDown(0.5);
+      doc.font('Helvetica');
+
+      // rows
+      rc.subjects.forEach((s) => {
+        ensureSpace(16);
+        let rowX = startX;
+        const subjName = s.subject && s.subject.name ? s.subject.name : (s.subject || 'Unknown');
+        doc.fontSize(10).text(subjName, rowX + 2, doc.y, { width: cols[0] });
+        rowX += cols[0];
+        doc.text(String(s.marks ?? '-'), rowX + 2, doc.y, { width: cols[1] });
+        rowX += cols[1];
+        doc.text(String(s.grade ?? '-'), rowX + 2, doc.y, { width: cols[2] });
+        rowX += cols[2];
+        doc.text(s.remarks || '', rowX + 2, doc.y, { width: cols[3] });
+        doc.moveDown(0.5);
+      });
+
+      doc.moveDown(0.5);
+    }
+
+    reportCards.forEach((rc, idx) => {
+      doc.addPage({ size: 'A4', margin });
+      doc.y = margin;
+      renderHeader(rc);
+      doc.fontSize(12).font('Helvetica-Bold').text('Subjects & Marks');
+      doc.moveDown(0.25);
+      renderSubjectsTable(rc);
+
+      ensureSpace(30);
+      doc.fontSize(10).font('Helvetica-Bold').text(`Total Marks: ${rc.totalMarks ?? '-'}    Percentage: ${rc.percentage ?? '-'}%    Grade: ${rc.grade ?? '-'}`);
+      doc.moveDown(0.5);
+      if (rc.comments) {
+        ensureSpace(40);
+        doc.fontSize(10).font('Helvetica').text(`Comments: ${rc.comments}`);
+      }
+
+      // footer
+      ensureSpace(20);
+      doc.fontSize(9).font('Helvetica').text(`Generated: ${new Date().toLocaleString()}`, { align: 'right' });
+    });
+
+    doc.end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+// append export function to exports
+module.exports.exportReportCardsPdf = exportReportCardsPdf;
+
+// Generate a PDF buffer for a single report card
+function generatePdfBuffer(rc) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ autoFirstPage: false });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (e) => reject(e));
+
+      const margin = 50;
+      const pageWidth = 595.28; // A4
+      const usableWidth = pageWidth - margin * 2;
+
+      function ensureSpace(height) {
+        const bottom = doc.page.height - margin;
+        if (doc.y + height > bottom) doc.addPage({ size: 'A4', margin });
+      }
+
+      function renderHeader() {
+        const student = rc.student || {};
+        doc.addPage({ size: 'A4', margin });
+        doc.fontSize(14).font('Helvetica-Bold').text(process.env.SCHOOL_NAME || 'School Name', { align: 'center' });
+        doc.moveDown(0.25);
+        doc.fontSize(10).font('Helvetica').text(`Report Card - ${rc.term || ''} ${rc.year || ''}`, { align: 'center' });
+        doc.moveDown(0.5);
+
+        const leftColX = margin;
+        const rightColX = margin + usableWidth / 2 + 10;
+        const startY = doc.y;
+
+        doc.fontSize(10).text(`Name: ${student.firstName || ''} ${student.lastName || ''}`, leftColX, startY);
+        doc.text(`Student ID: ${student.studentId || ''}`, leftColX, doc.y + 2);
+        doc.text(`Class: ${student.class || ''} ${student.section || ''}`, leftColX, doc.y + 2);
+
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, rightColX, startY);
+        doc.moveDown(1);
+      }
+
+      function renderSubjectsTable() {
+        const cols = [usableWidth * 0.45, usableWidth * 0.15, usableWidth * 0.15, usableWidth * 0.25];
+        const headings = ['Subject', 'Marks', 'Grade', 'Remarks'];
+
+        ensureSpace(20 + 16);
+        const startX = margin;
+        let x = startX;
+        doc.fontSize(10).font('Helvetica-Bold');
+        for (let i = 0; i < headings.length; i++) {
+          doc.text(headings[i], x + 2, doc.y, { width: cols[i], continued: false });
+          x += cols[i];
+        }
+        doc.moveDown(0.5);
+        doc.font('Helvetica');
+
+        rc.subjects.forEach((s) => {
+          ensureSpace(16);
+          let rowX = startX;
+          const subjName = s.subject && s.subject.name ? s.subject.name : (s.subject || 'Unknown');
+          doc.fontSize(10).text(subjName, rowX + 2, doc.y, { width: cols[0] });
+          rowX += cols[0];
+          doc.text(String(s.marks ?? '-'), rowX + 2, doc.y, { width: cols[1] });
+          rowX += cols[1];
+          doc.text(String(s.grade ?? '-'), rowX + 2, doc.y, { width: cols[2] });
+          rowX += cols[2];
+          doc.text(s.remarks || '', rowX + 2, doc.y, { width: cols[3] });
+          doc.moveDown(0.5);
+        });
+
+        doc.moveDown(0.5);
+      }
+
+      renderHeader();
+      doc.fontSize(12).font('Helvetica-Bold').text('Subjects & Marks');
+      doc.moveDown(0.25);
+      renderSubjectsTable();
+
+      doc.fontSize(10).font('Helvetica-Bold').text(`Total Marks: ${rc.totalMarks ?? '-'}    Percentage: ${rc.percentage ?? '-'}%    Grade: ${rc.grade ?? '-'}`);
+      doc.moveDown(0.5);
+      if (rc.comments) doc.fontSize(10).font('Helvetica').text(`Comments: ${rc.comments}`);
+
+      doc.end();
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// Export per-student PDFs as a ZIP
+async function exportReportCardsZip(req, res, next) {
+  try {
+    const { studentId, term, year } = req.query;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let filter = {};
+    if (term) filter.term = term;
+    if (year) filter.year = parseInt(year, 10);
+    if (studentId) filter.student = studentId;
+    const studentIdsRaw = req.query.studentIds || req.query.studentIds;
+    if (studentIdsRaw) {
+      const ids = String(studentIdsRaw).split(',').map((s) => s.trim()).filter(Boolean).map((s) => new mongoose.Types.ObjectId(s));
+      if (ids.length) filter.student = { $in: ids };
+    }
+
+    if (userRole === 'Teacher') {
+      filter.createdBy = new mongoose.Types.ObjectId(userId);
+    } else if (userRole === 'Student') {
+      const student = await resolveStudentForUser(userId);
+      if (!student) return res.status(404).json({ error: 'Student record not found' });
+      if (studentId && String(student._id) !== String(studentId)) return res.status(403).json({ error: 'Forbidden' });
+      filter.student = student._id;
+      filter.status = 'published';
+    } else if (userRole === 'Parent') {
+      const children = await Student.find({ parents: userId }).select('_id').lean();
+      const childIds = children.map((c) => String(c._id));
+      if (studentId && !childIds.includes(String(studentId))) return res.status(403).json({ error: 'Forbidden' });
+      filter.student = studentId ? new mongoose.Types.ObjectId(studentId) : { $in: childIds };
+      filter.status = 'published';
+    } else if (!['Admin', 'Principal'].includes(userRole)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const reportCards = await ReportCard.find(filter)
+      .populate('student', 'firstName lastName studentId class section')
+      .populate('subjects.subject', 'name code')
+      .sort({ year: -1, term: -1 })
+      .lean();
+
+    if (!reportCards || reportCards.length === 0) {
+      return res.status(404).json({ error: 'No report cards found for the given filters' });
+    }
+
+    const entries = [];
+
+    for (const rc of reportCards) {
+      const buf = await generatePdfBuffer(rc);
+      const student = rc.student || {};
+      const filename = `${student.studentId || (student._id || 'student')}.pdf`;
+      entries.push({ name: filename, data: buf });
+    }
+
+    const zipBuffer = buildZipBuffer(entries);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="report-cards.zip"');
+    res.send(zipBuffer);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports.exportReportCardsZip = exportReportCardsZip;

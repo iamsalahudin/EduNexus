@@ -9,7 +9,7 @@ const CommentSchema = new mongoose.Schema({
 const ComplaintSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'ComplaintCategory', index: true },
+    category: { type: String, default: 'general', index: true },
     type: { type: String },
     priority: {
       type: String,

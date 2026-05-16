@@ -166,6 +166,12 @@ describe('Homework module', () => {
 
     homeworkId = createRes.body.homework._id;
 
+    // Publish the homework first
+    await request(app)
+      .patch(`/api/homeworks/${homeworkId}`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ status: 'published' });
+
     const uploadRes = await request(app)
       .post(`/api/homeworks/${homeworkId}/submission/files`)
       .set('Authorization', `Bearer ${studentToken}`)

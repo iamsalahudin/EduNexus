@@ -1,5 +1,8 @@
+const fs = require('fs/promises');
+const path = require('path');
 const mongoose = require('mongoose');
 const { Notification, NotificationRead, SchoolClass, Student, User } = require('../models');
+const { isCloudinaryConfigured, uploadBufferToCloudinary } = require('../services/cloudinaryService');
 
 function isPrincipal(user) {
   return String(user?.role || '') === 'Principal';
@@ -58,6 +61,48 @@ function uniqStrings(values) {
   return out;
 }
 
+async function normalizeAttachments(req) {
+  const existing = Array.isArray(req.body?.attachments)
+    ? req.body.attachments.filter(Boolean)
+    : typeof req.body?.attachments === 'string'
+      ? [req.body.attachments].filter(Boolean)
+      : [];
+
+  const files = Array.isArray(req.files) ? req.files : [];
+  if (!files.length) return uniqStrings(existing);
+
+  const uploaded = [];
+  for (const file of files) {
+    const uploadsDir = path.resolve(process.cwd(), 'uploads', 'notifications');
+    const safeName = String(file.originalname || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    if (isCloudinaryConfigured()) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const result = await uploadBufferToCloudinary({
+          buffer: file.buffer,
+          folder: 'notifications',
+          resourceType: 'auto',
+          originalFilename: file.originalname
+        });
+        uploaded.push(result.secureUrl);
+        continue;
+      } catch {
+        // Fall back to local storage if Cloudinary is misconfigured or unavailable.
+      }
+    }
+
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+    const relativePath = path.posix.join('uploads', 'notifications', filename);
+    const absolutePath = path.join(uploadsDir, filename);
+    await fs.writeFile(absolutePath, file.buffer);
+    uploaded.push(`/${relativePath}`);
+  }
+
+  return uniqStrings([...existing, ...uploaded]);
+}
+
 // Admin: create broadcast notifications
 async function createBroadcast(req, res, next) {
   try {
@@ -81,6 +126,8 @@ async function createBroadcast(req, res, next) {
       return res.status(403).json({ error: principalRestrictionError });
     }
 
+    const attachments = await normalizeAttachments(req);
+
     const doc = {
       kind: 'broadcast',
       scope,
@@ -88,7 +135,8 @@ async function createBroadcast(req, res, next) {
       title,
       body: body || '',
       createdBy: req.user.id,
-      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined
+      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
+      attachments
     };
 
     if (scope === 'role') {
@@ -207,6 +255,9 @@ async function updateBroadcast(req, res, next) {
     if (Object.prototype.hasOwnProperty.call(req.body || {}, 'expiresAt')) {
       updates.expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
     }
+    if (Array.isArray(req.files) && req.files.length > 0) {
+      updates.attachments = await normalizeAttachments(req);
+    }
 
     const updated = await Notification.findByIdAndUpdate(id, updates, { new: true }).lean();
     return res.json({ notification: updated });
@@ -219,11 +270,13 @@ async function updateBroadcast(req, res, next) {
 async function createRequest(req, res, next) {
   try {
     const { title, message, category } = req.body;
+    const attachments = await normalizeAttachments(req);
     const created = await Notification.create({
       kind: 'request',
       category: category || 'pending',
       title,
       body: '',
+      attachments,
       createdBy: req.user.id,
       requester: req.user.id,
       status: 'pending',
