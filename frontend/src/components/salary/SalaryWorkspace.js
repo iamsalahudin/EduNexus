@@ -55,7 +55,7 @@ function toCsv(rows) {
 }
 
 export default function SalaryWorkspace({
-  roleBase = '/admin',
+  roleBase = '',
   title = 'Salary',
   subtitle = 'Salary management',
   showStaffManagement = false,
@@ -66,6 +66,7 @@ export default function SalaryWorkspace({
   reportHref = '',
   personalOnly = false
 }) {
+  const resolvedRoleBase = roleBase || '/admin'
   const [summary, setSummary] = useState(null)
   const [records, setRecords] = useState([])
   const [staff, setStaff] = useState([])
@@ -123,24 +124,24 @@ export default function SalaryWorkspace({
     return (summary.monthlySeries || []).map((row) => ({ name: row.name, collected: Number(row.collected || 0), payable: Number(row.payable || 0) }))
   }, [summary])
 
-  const financeLinksEnabled = showFinanceRef && roleBase !== '/teacher'
+  const financeLinksEnabled = showFinanceRef && resolvedRoleBase !== '/teacher'
 
   const quickLinks = useMemo(() => {
     const links = [
-      { href: `${roleBase}/salary/records`, label: 'Records' }
+      { href: `${resolvedRoleBase}/salary/records`, label: 'Records' }
     ]
-    if (showStaffManagement) links.push({ href: `${roleBase}/salary/assignment`, label: 'Assignment' })
-    if (showStructureManagement) links.push({ href: `${roleBase}/salary/structure`, label: 'Structure' })
-    if (showGenerate) links.push({ href: `${roleBase}/salary/generate`, label: 'Generate' })
-    if (allowPayments) links.push({ href: `${roleBase}/salary/payments`, label: 'Payments' })
+    if (showStaffManagement) links.push({ href: `${resolvedRoleBase}/salary/assignment`, label: 'Assignment' })
+    if (showStructureManagement) links.push({ href: `${resolvedRoleBase}/salary/structure`, label: 'Structure' })
+    if (showGenerate) links.push({ href: `${resolvedRoleBase}/salary/generate`, label: 'Generate' })
+    if (allowPayments) links.push({ href: `${resolvedRoleBase}/salary/payments`, label: 'Payments' })
     if (reportHref) links.push({ href: reportHref, label: 'Reports' })
     if (financeLinksEnabled) {
-      if (roleBase === '/accountant') links.push({ href: '/accountant/finance/salary', label: 'Finance Salary View' })
-      else links.push({ href: `${roleBase}/finance/income`, label: 'Finance Income' })
+      if (resolvedRoleBase === '/accountant') links.push({ href: '/accountant/finance/salary', label: 'Finance Salary View' })
+      else links.push({ href: `${resolvedRoleBase}/finance/income`, label: 'Finance Income' })
     }
-    links.push({ href: `${roleBase}/salary`, label: 'Home' })
+    links.push({ href: `${resolvedRoleBase}/salary`, label: 'Home' })
     return links
-  }, [allowPayments, financeLinksEnabled, reportHref, roleBase, showGenerate, showStaffManagement, showStructureManagement])
+  }, [allowPayments, financeLinksEnabled, reportHref, resolvedRoleBase, showGenerate, showStaffManagement, showStructureManagement])
 
   function resetStaffForm() {
     setStaffForm({ name: '', employeeId: '', designation: '', department: '', staffType: 'teacher', monthlySalary: '', salaryStructureId: '', salaryOnly: false, advanceBalance: '', status: 'active', bankName: '', bankAccount: '', notes: '' })
@@ -323,15 +324,6 @@ export default function SalaryWorkspace({
         </Card>
       </div>
 
-      <Card>
-        <h3 className="font-medium">Quick Links</h3>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {quickLinks.map((link) => (
-            <ButtonLink key={link.href} href={link.href} variant="outline">{link.label}</ButtonLink>
-          ))}
-        </div>
-      </Card>
-
       {showStaffManagement ? (
         <Card>
           <h3 className="font-medium">Salary Staff Setup</h3>
@@ -492,9 +484,9 @@ export default function SalaryWorkspace({
           <h3 className="font-medium">Finance Reference</h3>
           <p className="mt-2 text-sm text-gray-600">Salary transactions are presented as operational credit/liability references without editing teacher payroll details.</p>
           <div className="mt-4 flex gap-3 flex-wrap">
-            <ButtonLink href="/admin/finance/income" variant="outline">Income Reference</ButtonLink>
-            <ButtonLink href="/admin/finance/reports" variant="outline">Finance Reports</ButtonLink>
-            <ButtonLink href="/admin/finance/categories" variant="outline">Finance Categories</ButtonLink>
+            <ButtonLink href={`${resolvedRoleBase}/finance/income`} variant="outline">Income Reference</ButtonLink>
+            <ButtonLink href={`${resolvedRoleBase}/finance/reports`} variant="outline">Finance Reports</ButtonLink>
+            <ButtonLink href={`${resolvedRoleBase}/finance/categories`} variant="outline">Finance Categories</ButtonLink>
           </div>
         </Card>
       ) : null}

@@ -103,6 +103,7 @@ export default function AddTeacherPage() {
       const { teacher } = await teacherService.createTeacher(payload, documents)
       setSuccess('Teacher created successfully. Welcome email sent.')
 
+      // Route to profile after creation so user can verify full record.
       setTimeout(() => {
         router.push(`/principal/teachers/profile/${teacher?._id}`)
       }, 600)

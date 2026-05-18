@@ -23,11 +23,13 @@ function normalizeSection(section) {
 }
 
 export default function AttendanceSetupManagerView({
-  roleBase = '/admin',
-  backHref = '/admin/attendance',
+  roleBase = '',
+  backHref = '',
   title = 'Attendance Setup',
   subtitle = 'Assign teachers to class and section pairs for attendance control.',
 }) {
+  const resolvedRoleBase = roleBase || '/admin'
+  const resolvedBackHref = backHref || `${resolvedRoleBase}/attendance`
   const [loading, setLoading] = useState(false)
   const [teachersLoading, setTeachersLoading] = useState(false)
   const [error, setError] = useState('')
@@ -267,7 +269,7 @@ export default function AttendanceSetupManagerView({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        right={<ButtonLink href={backHref} variant="secondary">Back</ButtonLink>}
+        right={<ButtonLink href={resolvedBackHref} variant="secondary">Back</ButtonLink>}
       />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}

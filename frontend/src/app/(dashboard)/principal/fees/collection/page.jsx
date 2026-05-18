@@ -1,10 +1,9 @@
 'use client'
-
 import { useEffect, useMemo, useState } from 'react'
 import { fetchFeeRecords, updateFeeStatus } from '@/services/feesService'
 import { Button, Card, Input, PageHeader, Select } from '@/components/ui'
 
-export default function PrincipalFeeCollectionPage() {
+export default function FeeCollectionPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState('')
@@ -58,25 +57,28 @@ export default function PrincipalFeeCollectionPage() {
     <div className="space-y-6">
       <PageHeader
         title="Fee Collection"
-        subtitle="Manage collection status, review records, and monitor overdue fee entries."
+        subtitle="Manage monthly fee payment status and quickly locate student fee entries."
       />
 
       <Card>
         {error ? <div className="mb-3 text-sm text-red-600">{error}</div> : null}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by roll, name, class" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by roll, name, class, section" />
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">All Status</option>
             <option value="paid">Paid</option>
             <option value="pending">Pending</option>
           </Select>
-          <div className="text-sm text-gray-600 flex items-center">Rows: {filteredRows.length}</div>
+          <div className="flex gap-2 items-center text-sm text-gray-600">
+            <span>Records:</span>
+            <span className="font-semibold text-gray-900">{filteredRows.length}</span>
+          </div>
         </div>
       </Card>
 
       <Card>
         {loading ? (
-          <div className="text-sm text-gray-500">Loading rows...</div>
+          <div className="text-sm text-gray-500">Loading fee collection rows...</div>
         ) : (
           <div className="overflow-auto">
             <table className="w-full text-sm">
@@ -127,6 +129,10 @@ export default function PrincipalFeeCollectionPage() {
           </div>
         )}
       </Card>
+
+      <div className="text-xs text-gray-500">
+        Collection updates are persisted to the backend fee records.
+      </div>
     </div>
   )
 }

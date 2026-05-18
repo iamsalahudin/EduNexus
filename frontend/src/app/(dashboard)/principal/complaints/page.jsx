@@ -4,7 +4,7 @@ export default function ComplaintsPage() {
   return (
     <ComplaintsWorkspace
       title="Complaints"
-      subtitle="Monitor complaints, assign responders, and close cases."
+      subtitle="Review, assign, and track complaints across all departments."
       allowAssign
       allowStatus
     />

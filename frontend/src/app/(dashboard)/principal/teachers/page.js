@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import ButtonLink from '@/components/ui/ButtonLink'
@@ -120,6 +120,12 @@ export default function Page() {
       <PageHeader
         title="Teachers"
         subtitle="Track teacher accounts, profiles, and recent onboarding activity."
+        right={(
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href="/principal/teachers/add" variant="primary">Add Teacher</ButtonLink>
+            <ButtonLink href="/principal/settings/profile" variant="outline">Profile Settings</ButtonLink>
+          </div>
+        )}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -177,7 +183,6 @@ export default function Page() {
                       <TableRow>
                         <TableHeader>Employee ID</TableHeader>
                         <TableHeader>Name</TableHeader>
-                        <TableHeader>Username</TableHeader>
                         <TableHeader>Designation</TableHeader>
                         <TableHeader>Status</TableHeader>
                         <TableHeader>Actions</TableHeader>
@@ -188,7 +193,6 @@ export default function Page() {
                         <TableRow key={row._id} className="hover:bg-gray-50">
                           <TableCell>{row.employeeId || '-'}</TableCell>
                           <TableCell>{row?.user?.name || '-'}</TableCell>
-                          <TableCell>{row?.user?.username || '-'}</TableCell>
                           <TableCell>{row.designation || '-'}</TableCell>
                           <TableCell>{row.status || '-'}</TableCell>
                           <TableCell>
@@ -282,5 +286,4 @@ export default function Page() {
     </div>
   )
 }
-
 

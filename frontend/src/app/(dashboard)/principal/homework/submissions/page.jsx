@@ -6,7 +6,7 @@ export default function HomeworkSubmissionsPage() {
   return (
     <HomeworkSubmissionsWorkspace
       title="Homework Submissions"
-      subtitle="Principal submission tracker for class sections."
+      subtitle="Review class-wise submissions and grading progress."
       roleBase="/principal"
       requireClassSection
     />

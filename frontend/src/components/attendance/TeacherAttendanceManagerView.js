@@ -51,13 +51,15 @@ function downloadBlob(blob, fileName) {
 }
 
 export default function TeacherAttendanceManagerView({
-  roleBase = '/admin',
-  backHref = '/admin/attendance',
+  roleBase = '',
+  backHref = '',
   detailHrefBuilder,
   title = 'Teacher Attendance Management',
   subtitle = 'Mark and correct teacher attendance records by day or teacher.',
   allowUpdateExisting = true,
 }) {
+  const resolvedRoleBase = roleBase || '/admin'
+  const resolvedBackHref = backHref || `${resolvedRoleBase}/attendance`
   const today = toInputDate(new Date())
   const weekAgo = toInputDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000))
 
@@ -252,7 +254,7 @@ export default function TeacherAttendanceManagerView({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        right={<ButtonLink href={backHref} variant="secondary">Back</ButtonLink>}
+        right={<ButtonLink href={resolvedBackHref} variant="secondary">Back</ButtonLink>}
       />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
@@ -323,7 +325,7 @@ export default function TeacherAttendanceManagerView({
                 {rows.map((row) => {
                   const detailHref = typeof detailHrefBuilder === 'function'
                     ? detailHrefBuilder(row.teacherId)
-                    : `${roleBase}/attendance/teachers/${row.teacherId}`
+                    : `${resolvedRoleBase}/attendance/teachers/${row.teacherId}`
 
                   return (
                     <tr key={row.key} className="border-b last:border-b-0 hover:bg-gray-50">

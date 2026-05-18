@@ -4,8 +4,8 @@ import useSWR from 'swr'
 import FeeReportHub from '@/components/fees/FeeReportHub'
 import { fetchFeesSummary } from '@/services/feesService'
 
-export default function PrincipalFeeReportPage() {
-  const { data, mutate } = useSWR('principal-fees-summary', fetchFeesSummary)
+export default function AdminFeeReportPage() {
+  const { data, mutate } = useSWR('admin-fees-summary', fetchFeesSummary)
 
   return (
     <FeeReportHub
