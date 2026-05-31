@@ -2,68 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================================
+   EduNexus design tokens — Teal + Zinc palette
+   Primary brand: teal-500 (#14B8A6)
+   Dark surfaces: zinc-950 / zinc-900 / zinc-800
+   All tokens are theme-aware (overridden inside `.dark`).
+   =========================================================== */
+
 :root {
-  --color-primary: #066FD1;
-  /* Use this when you want a subtle/"dim" primary tint (like Tailwind's primary/10-20) */
-  --color-primary-muted: rgba(6, 111, 209, 0.18);
-  --color-secondary: #2FB344;
-  --color-text-light: #E5E7EB;
-  --color-text-dark: #0a0c11;
-  --color-bg-light: #F9FAFB;
-  --color-bg-dark: #111827; /* dark grayish (tailwind gray-800) */
-  --color-cta: #D63939;
-  /* unified variables used at runtime */
-  --color-bg: var(--color-bg-light);
-  --color-text: var(--color-text-dark);
-  /* card and shadow variables */
-  --card-bg-light: #ffffff;
-  --card-bg-dark: #1F2937; /* slightly darker than page bg */
-  --card-bg: var(--card-bg-light);
-  --card-shadow-light: 0 1px 2px rgba(2,6,23,0.06), 0 2px 6px rgba(2,6,23,0.08);
-  --card-shadow-dark: 0 8px 24px rgba(2,6,23,0.6);
-  --card-shadow: var(--card-shadow-light);
-  /* nav hover */
-  --nav-hover-bg-light: #f3f4f6;
-  --nav-hover-bg-dark: rgba(255,255,255,0.04);
-  --nav-hover-bg: var(--nav-hover-bg-light);
-  --nav-hover-text: var(--color-text-dark);
+  /* Brand */
+  --color-primary: #14B8A6;
+  --color-primary-hover: #0D9488;
+  --color-primary-fg: #FFFFFF;
+  --color-primary-muted: rgba(20, 184, 166, 0.14);
+
+  --color-accent: #A78BFA;
+  --color-danger: #EF4444;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+
+  /* Light theme surfaces */
+  --color-bg: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-border: #E4E4E7;
+  --color-border-strong: #D4D4D8;
+
+  /* Light theme text */
+  --color-text: #18181B;
+  --color-text-muted: #52525B;
+  --color-text-subtle: #71717A;
+
+  /* Inputs (light) */
+  --input-bg: #FFFFFF;
+  --input-border: #E4E4E7;
+  --input-placeholder: #A1A1AA;
+
+  /* Card */
+  --card-bg: var(--color-surface);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* Nav hover */
+  --nav-hover-bg: rgba(20, 184, 166, 0.08);
+  --nav-hover-text: var(--color-primary);
+
+  /* Backwards-compat aliases (older code references these names) */
+  --color-secondary: var(--color-accent);
+  --color-cta: var(--color-danger);
+  --color-text-light: #FAFAFA;
+  --color-text-dark: #18181B;
+  --color-bg-light: var(--color-bg);
+  --color-bg-dark: #09090B;
+  --card-bg-light: #FFFFFF;
+  --card-bg-dark: #18181B;
+  --card-shadow-light: var(--card-shadow);
+  --card-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.45);
+  --nav-hover-bg-light: rgba(20, 184, 166, 0.08);
+  --nav-hover-bg-dark: rgba(20, 184, 166, 0.14);
 }
 
-/* Make the old Tailwind indigo primary follow the runtime primary color */
+.dark {
+  /* Dark surfaces (zinc-950 / zinc-900 / zinc-800) */
+  --color-bg: #09090B;
+  --color-surface: #18181B;
+  --color-surface-elevated: #27272A;
+  --color-border: #27272A;
+  --color-border-strong: #3F3F46;
 
+  /* Dark text */
+  --color-text: #FAFAFA;
+  --color-text-muted: #A1A1AA;
+  --color-text-subtle: #71717A;
+
+  /* Inputs (dark) */
+  --input-bg: #18181B;
+  --input-border: #27272A;
+  --input-placeholder: #52525B;
+
+  /* Card */
+  --card-bg: var(--color-surface);
+  --card-shadow: var(--card-shadow-dark);
+
+  /* Nav hover */
+  --nav-hover-bg: rgba(20, 184, 166, 0.12);
+  --nav-hover-text: var(--color-primary);
+}
+
+/* ===========================================================
+   Base
+   =========================================================== */
 @layer base {
-  input, select, textarea {
-    background-color: var(--input-bg);
-    border: 1px solid var(--input-border);
-    color: var(--color-text);
-    padding: 0.5rem 0.5rem;
-    border-radius: 0.375rem;
-  }
-
-  /* Select dropdown option theming (best-effort; browser support varies) */
-  select option,
-  select optgroup {
-    background-color: var(--card-bg);
-    color: var(--color-text);
-  }
-
-  select option:hover,
-  select option:focus {
-    background-color: var(--color-primary-muted);
-    color: var(--color-text);
-  }
-
-  select option:checked,
-  select option[selected] {
-    background-color: var(--color-primary);
-    color: var(--color-text);
-  }
-
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(14,165,164,0.08);
-  }
-
   html, body, #__next {
     height: 100%;
   }
@@ -71,28 +99,92 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text);
+    transition: background-color 200ms ease, color 200ms ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Form fields */
+  input, select, textarea {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--color-text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--input-placeholder);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+  }
+
+  select option,
+  select optgroup {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+  select option:checked,
+  select option[selected] {
+    background-color: var(--color-primary);
+    color: var(--color-primary-fg);
+  }
+
+  /* Headings inherit the primary text color (no need to hand-write text-gray-900) */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text);
+  }
+
+  /* Default scrollbar in dark mode */
+  .dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+  .dark ::-webkit-scrollbar-track { background: transparent; }
+  .dark ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 8px; }
+  .dark ::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
 }
 
+/* ===========================================================
+   Components
+   =========================================================== */
 @layer components {
-  /* Button utilities that follow theme */
-  .btn-primary { background-color: var(--color-primary); color: var(--color-text-light); }
-  .btn-primary:hover { opacity: 0.95; }
-  .btn-outline { border: 1px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-primary-fg);
+    transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+  }
+  .btn-primary:hover { background-color: var(--color-primary-hover); }
+  .btn-primary:active { transform: translateY(1px); }
 
-  /* Secondary button used widely across dashboards */
-  .btn-secondary { border: 1px solid var(--input-border); background: transparent; color: var(--color-text); }
-  .btn-secondary:hover { background-color: var(--color-primary) !important; color: var(--color-text-light) !important; }
+  .btn-outline {
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    background: transparent;
+  }
+  .btn-outline:hover { background-color: var(--color-primary-muted); }
+
+  .btn-secondary {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+  .btn-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
 
   .card {
     background-color: var(--card-bg);
     color: var(--color-text);
-    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
     box-shadow: var(--card-shadow);
     padding: 1rem;
   }
 
-  /* nav-item hover that respects theme variables */
   .nav-item {
     transition: background-color 150ms ease, color 150ms ease;
   }
@@ -102,75 +194,77 @@
   }
 }
 
+/* ===========================================================
+   Utilities — theme-aware helpers + legacy color override map
+   =========================================================== */
 @layer utilities {
-  .bg-indigo-600 { background-color: var(--color-primary) !important; color: #fff !important; }
-
-  /* direct theme helpers (use these to quickly verify variables are working) */
-  .bg-theme-primary { background-color: var(--color-primary) !important; }
-  .text-theme-primary { color: var(--color-primary) !important; }
-  .border-theme-primary { border-color: var(--color-primary) !important; }
-
-  /* hover utility that uses runtime theme color */
-  .hover-theme-primary:hover { background-color: var(--color-primary) !important; color: var(--color-text-light) !important; }
-
-  /* utilities for dim/muted primary tint */
+  /* Direct theme helpers */
+  .bg-theme-primary       { background-color: var(--color-primary) !important; color: var(--color-primary-fg) !important; }
+  .text-theme-primary     { color: var(--color-primary) !important; }
+  .border-theme-primary   { border-color: var(--color-primary) !important; }
   .bg-theme-primary-muted { background-color: var(--color-primary-muted) !important; }
-  .hover-theme-primary-muted:hover { background-color: var(--color-primary-muted) !important; }
+  .hover-theme-primary:hover { background-color: var(--color-primary) !important; color: var(--color-primary-fg) !important; }
 
-  /* Utility class used throughout pages/components */
+  /* Keep the existing utility shortcut so old code using indigo-600 maps to the new primary */
+  .bg-indigo-600 { background-color: var(--color-primary) !important; color: var(--color-primary-fg) !important; }
+
   .input { width: 100%; }
 
-  /* Ensure hard-coded light backgrounds respect dark theme by default */
-  .dark .bg-white {
-    background-color: var(--color-bg-dark) !important;
-  }
-  .dark .bg-gray-50 {
-    background-color: var(--color-bg-dark) !important;
-  }
+  /* -----------------------------------------------------------
+     LEGACY UTILITY OVERRIDES IN DARK MODE
+     Existing pages hand-write Tailwind utilities like `bg-white`,
+     `text-gray-700`, `border-gray-200`. In dark mode we remap these
+     so the whole app adapts without per-page changes.
+     ----------------------------------------------------------- */
 
-  /* make utility-bg elements inherit readable text color in dark */
-  .dark .bg-white, .dark .bg-gray-50 {
-    color: var(--color-text) !important;
-  }
+  /* Surfaces */
+  .dark .bg-white       { background-color: var(--color-surface) !important; color: var(--color-text) !important; }
+  .dark .bg-gray-50     { background-color: var(--color-bg) !important; color: var(--color-text) !important; }
+  .dark .bg-gray-100    { background-color: var(--color-surface) !important; color: var(--color-text) !important; }
+  .dark .bg-gray-200    { background-color: var(--color-surface-elevated) !important; }
+  .dark .bg-slate-50    { background-color: var(--color-bg) !important; }
+  .dark .bg-slate-100   { background-color: var(--color-surface) !important; }
 
-  /* hover utility overrides for Tailwind hover: classes */
-  .dark .hover\:bg-gray-50:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
-  .dark .hover\:bg-gray-100:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
-  .dark .hover\:bg-gray-200:hover { background-color: var(--nav-hover-bg) !important; color: var(--color-text) !important; }
+  /* Hovers */
+  .dark .hover\:bg-gray-50:hover  { background-color: var(--color-surface-elevated) !important; color: var(--color-text) !important; }
+  .dark .hover\:bg-gray-100:hover { background-color: var(--color-surface-elevated) !important; color: var(--color-text) !important; }
+  .dark .hover\:bg-gray-200:hover { background-color: var(--color-surface-elevated) !important; color: var(--color-text) !important; }
 
-  /* gray utility overrides used by components (skeletons, subtle bg) */
-  .dark .bg-gray-200 { background-color: rgba(255,255,255,0.04) !important; }
-  .dark .bg-gray-100 { background-color: rgba(255,255,255,0.03) !important; }
-  .dark .bg-gray-50 { background-color: var(--color-bg-dark) !important; }
+  /* Text */
+  .dark .text-gray-900 { color: var(--color-text) !important; }
+  .dark .text-gray-800 { color: var(--color-text) !important; }
+  .dark .text-gray-700 { color: var(--color-text) !important; }
+  .dark .text-gray-600 { color: var(--color-text-muted) !important; }
+  .dark .text-gray-500 { color: var(--color-text-muted) !important; }
+  .dark .text-gray-400 { color: var(--color-text-subtle) !important; }
+  .dark .text-gray-300 { color: var(--color-text-subtle) !important; }
+  .dark .text-black    { color: var(--color-text) !important; }
+  .dark .text-slate-900 { color: var(--color-text) !important; }
+  .dark .text-slate-700 { color: var(--color-text) !important; }
+  .dark .text-slate-500 { color: var(--color-text-muted) !important; }
+
+  /* Borders */
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-gray-300 { border-color: var(--color-border) !important; }
+  .dark .border-slate-200 { border-color: var(--color-border) !important; }
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+  .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-border) !important; }
+
+  /* Soft accent surfaces */
+  .dark .bg-indigo-50,
+  .dark .bg-teal-50,
+  .dark .bg-emerald-50  { background-color: var(--color-primary-muted) !important; color: var(--color-text) !important; }
+  .dark .bg-red-50      { background-color: rgba(239, 68, 68, 0.12) !important; color: #FECACA !important; }
+  .dark .bg-amber-50,
+  .dark .bg-yellow-50   { background-color: rgba(245, 158, 11, 0.12) !important; color: #FDE68A !important; }
+  .dark .bg-green-50    { background-color: rgba(34, 197, 94, 0.12) !important; color: #BBF7D0 !important; }
 }
 
-/* Inputs styling - light and dark aware */
-:root {
-  --input-bg-light: #f3f4f6;
-  --input-border-light: #e5e7eb;
-  --input-bg-dark: rgba(255,255,255,0.03);
-  --input-border-dark: rgba(255,255,255,0.12);
-  --input-bg: var(--input-bg-light);
-  --input-border: var(--input-border-light);
-}
-
-
-.dark {
-  --input-bg: var(--input-bg-dark);
-  --input-border: var(--input-border-dark);
-}
-
-/* dark-mode runtime overrides */
-.dark {
-  --card-bg: var(--card-bg-dark);
-  --card-shadow: var(--card-shadow-dark);
-  --nav-hover-bg: var(--nav-hover-bg-dark);
-  --nav-hover-text: var(--color-text-light);
-}
-
-/* Print styles for report cards and printable pages */
+/* ===========================================================
+   Print styles (unchanged — preserve A4 report card output)
+   =========================================================== */
 @media print {
-  /* Preserve exact colors in print where supported */
   html, body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -178,11 +272,7 @@
     background: #fff !important;
     color: #000 !important;
   }
-
-  /* Hide non-essential UI chrome */
   .no-print, header, nav, footer, .sidebar, .topbar, .page-actions { display: none !important; }
-
-  /* Report card container: A4 size with no margins for PDFs printed with browser printing */
   .report-card {
     width: 210mm;
     height: 297mm;
@@ -192,14 +282,8 @@
     color: #000 !important;
     page-break-after: always;
   }
-
-  /* Ensure table borders and text are legible when printed */
   table { border-collapse: collapse !important; }
   th, td { border: 1px solid #333 !important; padding: 4px !important; }
-
-  /* Remove interactive visuals that don't make sense on paper */
   a::after { content: '' !important; }
   button, input, select, textarea { display: none !important; }
 }
-
- 

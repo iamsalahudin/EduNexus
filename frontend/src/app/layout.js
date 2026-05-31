@@ -16,8 +16,11 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var s=localStorage.getItem('edunexus-theme-mode');var d=s?s==='dark':true;if(d)document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})()`}
+        </Script>
         <Script id="performance-marks-polyfill" strategy="beforeInteractive">
           {`(function(){try{var perf=window.performance;if(!perf)return;if(typeof perf.clearMarks!=='function'){perf.clearMarks=function(){}}if(typeof perf.clearMeasures!=='function'){perf.clearMeasures=function(){}}}catch(e){}})()`}
         </Script>

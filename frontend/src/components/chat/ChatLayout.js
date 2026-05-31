@@ -139,7 +139,7 @@ export default function ChatLayout({ mode = "full" }) {
       const list = prev[id] || [];
       return {
         ...prev,
-        [id]: [...list, { id: placeholderId, role: "assistant", text: "Thinking..." }],
+        [id]: [...list, { id: placeholderId, role: "assistant", text: "", loading: true }],
       };
     });
 
@@ -155,6 +155,7 @@ export default function ChatLayout({ mode = "full" }) {
           m.id === placeholderId
             ? {
                 ...m,
+                loading: false,
                 text: res.reply,
                 data: res.data,
                 chart: res.chart,
@@ -212,7 +213,7 @@ export default function ChatLayout({ mode = "full" }) {
     <div
       className={`w-full relative flex ${
         isFull ? "h-[calc(100dvh-104px)] flex-row" : "h-full flex-col"
-      } bg-white`}
+      } bg-white overflow-x-hidden`}
     >
       {/* Mobile conversations drawer (slides in) */}
       {isFull ? (
@@ -258,10 +259,10 @@ export default function ChatLayout({ mode = "full" }) {
       )}
 
       {/* CHAT COLUMN */}
-      <div className="relative flex-1 flex flex-col min-h-0">
+      <div className="relative flex-1 flex flex-col min-h-0 min-w-0">
         {/* MESSAGES */}
         <div
-          className="flex-1 px-3 overflow-y-auto pt-6
+          className="flex-1 px-3 overflow-y-auto overflow-x-hidden pt-6
           [&::-webkit-scrollbar]:w-2
        [&::-webkit-scrollbar-track]:bg-[var(--color-bg)]
       [&::-webkit-scrollbar-thumb]:bg-neutral-500

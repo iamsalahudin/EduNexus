@@ -6,19 +6,19 @@ import remarkGfm from "remark-gfm";
 
 const markdownComponents = {
   p: ({ children, ...props }) => (
-    <p {...props} className="whitespace-pre-wrap">
+    <p {...props} className="whitespace-pre-wrap break-words">
       {children}
     </p>
   ),
   li: ({ children, ...props }) => (
-    <li {...props} className="whitespace-pre-wrap">
+    <li {...props} className="whitespace-pre-wrap break-words">
       {children}
     </li>
   ),
   a: ({ children, ...props }) => (
     <a
       {...props}
-      className="underline underline-offset-2"
+      className="underline underline-offset-2 break-words"
       target="_blank"
       rel="noreferrer"
     >
@@ -44,7 +44,7 @@ const markdownComponents = {
     return <code {...props}>{children}</code>;
   },
   table: ({ children, ...props }) => (
-    <div className="my-3 overflow-auto rounded-lg border border-neutral-500">
+    <div className="my-3 max-w-full overflow-auto rounded-lg border border-neutral-500">
       <table
         {...props}
         className="min-w-full text-sm border-separate border-spacing-0"
@@ -78,7 +78,7 @@ const markdownComponents = {
 
 function TableRenderer({ columns = [], rows = [] }) {
   return (
-    <div className="mt-3 overflow-auto rounded-lg border border-neutral-500">
+    <div className="mt-3 max-w-full overflow-auto rounded-lg border border-neutral-500">
       <table className="min-w-full text-sm border-separate border-spacing-0">
         <thead className="bg-gray-100">
           <tr>
@@ -133,6 +133,19 @@ function BarChart({ labels = [], values = [] }) {
   );
 }
 
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-2" aria-label="Assistant is typing">
+      <span className="inline-flex items-center gap-1">
+        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+      </span>
+      <span className="text-xs text-gray-500">Responding</span>
+    </div>
+  );
+}
+
 export default function MessageList({ messages = [], onNavigate = () => {} }) {
   return (
     <div className="space-y-4">
@@ -150,30 +163,34 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
                 : "bg-[var(--card-bg)] text-[var(--color-text)]"
             }`}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {typeof m.text === "string" 
-                ? (() => {
-                    try {
-                      const parsed = JSON.parse(m.text);
-                      return parsed.reply || m.text;
-                    } catch {
-                      return m.text;
-                    }
-                  })()
-                : ""}
-            </ReactMarkdown>
+            {m.loading ? (
+              <TypingIndicator />
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {typeof m.text === "string"
+                  ? (() => {
+                      try {
+                        const parsed = JSON.parse(m.text);
+                        return parsed.reply || m.text;
+                      } catch {
+                        return m.text;
+                      }
+                    })()
+                  : ""}
+              </ReactMarkdown>
+            )}
 
             {/* structured table */}
-            {m.data?.type === "table" && <TableRenderer {...m.data} />}
+            {!m.loading && m.data?.type === "table" && <TableRenderer {...m.data} />}
 
             {/* chart */}
-            {m.chart?.type === "bar" && <BarChart {...m.chart} />}
+            {!m.loading && m.chart?.type === "bar" && <BarChart {...m.chart} />}
 
             {/* attachments */}
-            {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+            {!m.loading && Array.isArray(m.attachments) && m.attachments.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {m.attachments.map((att, i) => (
                   <a
@@ -193,7 +210,7 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
             )}
 
             {/* actions */}
-            {Array.isArray(m.actions) && m.actions.length > 0 && (
+            {!m.loading && Array.isArray(m.actions) && m.actions.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {m.actions.map((a, i) => {
                   if (a.type === "download") {
