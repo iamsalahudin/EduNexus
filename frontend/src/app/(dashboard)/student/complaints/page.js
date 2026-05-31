@@ -1,11 +1,5 @@
-import ComplaintsWorkspace from '@/components/complaints/ComplaintsWorkspace'
+import StudentComplaintsPage from './StudentComplaintsPage'
 
 export default function Page() {
-  return (
-    <ComplaintsWorkspace
-      title="My Complaints"
-      subtitle="Submit complaints and track updates from staff."
-      allowCreate
-    />
-  )
+  return <StudentComplaintsPage />
 }

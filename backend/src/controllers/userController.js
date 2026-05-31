@@ -3,6 +3,15 @@ const { sendWelcomeCredentialsEmail } = require('../services/mailService');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
 
 const EMAIL_ONBOARDING_ROLES = new Set(['Principal', 'HR', 'Finance', 'Reception']);
+const PRINCIPAL_VISIBLE_ROLES = ['Teacher', 'Student', 'Parent', 'HR', 'Finance', 'Reception'];
+
+function isPrincipalRequest(req) {
+  return String(req?.user?.role || '') === 'Principal';
+}
+
+function isPrincipalAllowedRole(role) {
+  return PRINCIPAL_VISIBLE_ROLES.includes(String(role || ''));
+}
 
 async function listUsers(req, res, next) {
   try {
@@ -11,6 +20,17 @@ async function listUsers(req, res, next) {
     const sortableFields = new Set(['createdAt', 'updatedAt', 'name', 'username', 'email', 'role']);
 
     if (role) filter.role = String(role);
+
+    if (isPrincipalRequest(req)) {
+      const requestedRole = String(role || '').trim();
+      if (requestedRole) {
+        if (!isPrincipalAllowedRole(requestedRole)) {
+          return res.json({ users: [] });
+        }
+      } else {
+        filter.role = { $in: PRINCIPAL_VISIBLE_ROLES };
+      }
+    }
 
     if (active !== undefined && active !== '') {
       if (String(active).toLowerCase() === 'true') filter.active = true;
@@ -107,6 +127,11 @@ async function getUser(req, res, next) {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) return res.status(404).json({ error: 'Not found' });
+
+    if (isPrincipalRequest(req) && !isPrincipalAllowedRole(user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     res.json({ user });
   } catch (err) {
     next(err);
@@ -116,6 +141,18 @@ async function getUser(req, res, next) {
 async function updateUser(req, res, next) {
   try {
     const updates = { ...(req.body || {}) };
+
+    if (isPrincipalRequest(req)) {
+      const target = await User.findById(req.params.id).select('role profile');
+      if (!target) return res.status(404).json({ error: 'Not found' });
+      if (!isPrincipalAllowedRole(target.role)) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      if (Object.prototype.hasOwnProperty.call(updates, 'role') && !['HR', 'Finance', 'Reception'].includes(String(updates.role || ''))) {
+        return res.status(403).json({ error: 'Principal can only assign HR, Finance, or Reception roles' });
+      }
+    }
 
     if (Object.prototype.hasOwnProperty.call(updates, 'password')) {
       delete updates.password;

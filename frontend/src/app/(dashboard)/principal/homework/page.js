@@ -1,9 +1,9 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, ButtonLink, Card, PageHeader, Select, Skeleton } from '@/components/ui'
 import classesService from '@/services/classesService'
 import homeworksService from '@/services/homeworksService'
+import { Button, ButtonLink, Card, PageHeader, Select, Skeleton } from '@/components/ui'
 
 function fmtDate(value) {
   if (!value) return '—'
@@ -74,18 +74,21 @@ export default function Page() {
     }
   }
 
-  const rows = useMemo(() => (Array.isArray(homeworks) ? homeworks : []), [homeworks])
+  const rows = useMemo(() => {
+    const list = Array.isArray(homeworks) ? [...homeworks] : []
+    return list
+  }, [homeworks])
 
   return (
     <div>
       <PageHeader
         title="Homework"
-        subtitle="Principal view (read-only). Filter by class and section."
-        right={(
-          <Button onClick={load} disabled={loading || bootLoading}>
+        subtitle="Admin view (read-only). Filter by class and section."
+        right={
+          <Button type="button" onClick={load} disabled={loading || bootLoading}>
             Refresh
           </Button>
-        )}
+        }
       />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}
@@ -103,7 +106,8 @@ export default function Page() {
                   .map((c) => (
                     <option key={c._id} value={c.name}>{c.name}</option>
                   ))}
-            </Select>
+              </Select>
+
             <Select
               label="Section"
               value={section}
@@ -117,18 +121,20 @@ export default function Page() {
                   <option key={s} value={s}>{s}</option>
                 ))}
             </Select>
+
             <Select label="Sort By" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                 <option value="dueDate">Due date</option>
                 <option value="postedDate">Posted date</option>
                 <option value="teacher">Teacher</option>
                 <option value="subject">Subject</option>
-            </Select>
+              </Select>
+
             <Select label="Order" value={order} onChange={(e) => setOrder(e.target.value)}>
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
-            </Select>
+              </Select>
             <div className="flex items-end">
-              <Button variant="primary" onClick={load} disabled={loading || !cls || !section}>
+              <Button type="button" variant="primary" onClick={load} disabled={loading || !cls || !section}>
                 {loading ? 'Loading…' : 'Apply'}
               </Button>
             </div>
@@ -164,7 +170,7 @@ export default function Page() {
                     <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(hw.dueDate)}</td>
                     <td className="py-2 pr-3 whitespace-nowrap">{Array.isArray(hw.submissions) ? hw.submissions.length : 0}</td>
                     <td className="py-2 pr-3 whitespace-nowrap">
-                      <ButtonLink size="sm" variant="outline" href={`/principal/homework/${hw._id}`}>
+                      <ButtonLink href={`/principal/homework/${hw._id}`} variant="outline" size="sm">
                         Open
                       </ButtonLink>
                     </td>

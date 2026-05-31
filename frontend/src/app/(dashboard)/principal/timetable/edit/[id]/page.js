@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from 'next/navigation'
 import TimetableGrid from "@/components/timetable/TimetableGrid";
-import { Button, PageHeader } from "@/components/ui";
+import { Button, PageHeader } from '@/components/ui'
 import classesService from '@/services/classesService'
 import subjectsService from '@/services/subjectsService'
 import teacherService from '@/services/teacher.service'
@@ -95,6 +95,8 @@ export default function EditTimetablePage({ params }) {
     setGrid(JSON.parse(JSON.stringify(updatedGrid)))
   };
 
+  const activeSubjectsByClass = useMemo(() => subjectsByClass, [subjectsByClass])
+
   const handleSave = async () => {
     if (!timetable) return
 
@@ -161,7 +163,7 @@ export default function EditTimetablePage({ params }) {
         config={timetable}
         teachers={teachers}
         rooms={rooms}
-        subjectsByClass={subjectsByClass}
+        subjectsByClass={activeSubjectsByClass}
         initialGrid={grid}
         onGridChange={handleGridChange}
       />

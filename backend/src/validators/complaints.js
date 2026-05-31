@@ -37,4 +37,15 @@ const changeStatusSchema = Joi.object({
   }).required()
 });
 
-module.exports = { submitComplaintSchema, addCommentSchema, assignComplaintSchema, changeStatusSchema };
+const editComplaintSchema = Joi.object({
+  body: Joi.object({
+    title: Joi.string().trim().max(160).optional(),
+    subject: Joi.string().trim().max(160).optional(),
+    description: Joi.string().trim().max(2000).optional(),
+    message: Joi.string().trim().max(2000).optional(),
+    category: Joi.string().valid('general', 'academic', 'discipline', 'behavior', 'transport', 'fees', 'other').optional(),
+    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional()
+  }).required()
+});
+
+module.exports = { submitComplaintSchema, addCommentSchema, assignComplaintSchema, changeStatusSchema, editComplaintSchema };

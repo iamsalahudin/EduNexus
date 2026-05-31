@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import ButtonLink from '@/components/ui/ButtonLink'
@@ -140,7 +140,7 @@ export default function Page() {
     <div className="space-y-6">
       <PageHeader
         title="Students"
-        subtitle="Manage student records and certificate workflows."
+        subtitle="Manage student records, class movement, and certificate workflows."
       />
 
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
@@ -158,7 +158,7 @@ export default function Page() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-medium">Student Search</h2>
-                <p className="text-sm text-gray-600 mt-1">Find students by ID, registration, name, contact, class, and section.</p>
+                <p className="text-sm text-gray-600 mt-1">Find students by ID, registration, roll, name, contact, class, and section.</p>
               </div>
               <Button type="button" onClick={() => loadDashboard(page, { silent: true })} disabled={bootstrapping || loading}>Refresh</Button>
             </div>
@@ -264,7 +264,8 @@ export default function Page() {
           <p className="text-sm text-gray-600 mt-1">Jump to student workflows.</p>
 
           <div className="mt-4 grid grid-cols-1 gap-2">
-            <ButtonLink href="/principal/students/admissions" variant="secondary" className="w-full">Student Admission</ButtonLink>
+            <ButtonLink href="/principal/students/admission" variant="secondary" className="w-full">Student Admission</ButtonLink>
+            <ButtonLink href="/principal/students/promotion" variant="secondary" className="w-full">Student Promotion</ButtonLink>
             <ButtonLink href="/principal/students/transfer-certificate" variant="secondary" className="w-full">Transfer Certificate</ButtonLink>
             <ButtonLink href="/principal/students/school-leaving-certificate" variant="secondary" className="w-full">School Leaving Certificate</ButtonLink>
           </div>
@@ -344,7 +345,7 @@ export default function Page() {
                                 variant="outline"
                                 onClick={() => downloadCertificateById(row._id, row.certificateNumber)}
                               >
-                                Download PDF
+                                PDF
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -361,5 +362,3 @@ export default function Page() {
     </div>
   )
 }
-
-

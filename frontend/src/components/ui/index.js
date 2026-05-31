@@ -11,6 +11,7 @@ export { default as AttendancePeriodSelector } from './AttendancePeriodSelector'
 export { default as Select } from './Select'
 export { default as Skeleton } from './Skeleton'
 export { default as StatCard } from './StatCard'
+export { default as StatusBadge } from './StatusBadge'
 export { default as Textarea } from './Textarea'
 export { default as ToggleBox } from './ToggleBox'
 export {

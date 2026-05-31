@@ -2,16 +2,16 @@
 
 import SalaryWorkspace from '@/components/salary/SalaryWorkspace'
 
-export default function SalaryPage() {
+export default function SalaryReportPage() {
   return (
     <SalaryWorkspace
       roleBase="/principal"
-      title="Salary Overview"
-      subtitle="View salary setup, records, reports, slips, and monthly generation without finance-only references."
-      showStaffManagement
-      showStructureManagement
-      showGenerate
-      allowPayments
+      title="Salary Reports"
+      subtitle="Review payroll activity, slips, paid history, and downloadable records."
+      showStaffManagement={false}
+      showStructureManagement={false}
+      showGenerate={false}
+      allowPayments={false}
       reportHref="/principal/salary/report"
     />
   )

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, PageHeader } from '@/components/ui'
 import SetupForm from '@/components/timetable/TimetableSetupForm'
 import TimetableGrid from '@/components/timetable/TimetableGrid'
 import classesService from '@/services/classesService'
@@ -10,6 +9,7 @@ import subjectsService from '@/services/subjectsService'
 import teacherService from '@/services/teacher.service'
 import timetableService from '@/services/timetableService'
 import { buildApiSlotsFromWeeklyGrid, parseAcademicYearToNumber } from '@/utils/timetableTransform'
+import { Button, PageHeader } from '@/components/ui'
 
 const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat']
 
@@ -85,6 +85,7 @@ export default function CreateTimetablePage() {
           })
         })
 
+        // Filter to only selected classes in config
         const filtered = {}
         ;(config?.classes || []).forEach((c) => {
           const classId = String(c?.id || c?.name || '')
@@ -166,10 +167,10 @@ export default function CreateTimetablePage() {
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setConfig(null)}>
+              <Button type="button" variant="outline" onClick={() => setConfig(null)}>
                 ← Back
               </Button>
-              <Button variant="primary" onClick={handleSaveTimetable} disabled={saving}>
+              <Button type="button" variant="primary" onClick={handleSaveTimetable} disabled={saving}>
                 {saving ? 'Saving...' : 'Save Timetable'}
               </Button>
             </div>

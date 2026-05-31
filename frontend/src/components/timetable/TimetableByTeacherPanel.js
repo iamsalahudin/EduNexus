@@ -38,7 +38,8 @@ function normalizeTeacherTimetable(rows, teacherId) {
   }
 }
 
-export default function TimetableByTeacherPanel({ roleBase = '/admin' }) {
+export default function TimetableByTeacherPanel({ roleBase = '' }) {
+  const resolvedRoleBase = roleBase || '/admin'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -135,7 +136,7 @@ export default function TimetableByTeacherPanel({ roleBase = '/admin' }) {
   }, [rows])
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 space-y-6" data-role-base={resolvedRoleBase}>
       <PageHeader
         title="Timetable — By Teacher"
         subtitle="Choose a teacher and view all assigned periods across level timetables."

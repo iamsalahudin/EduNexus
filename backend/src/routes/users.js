@@ -36,13 +36,17 @@ const userUpdateSchema = Joi.object({
   })
 });
 
-// Admin-only user management
-router.use(requireAuth, requireRole('Admin'));
-router.post('/', validate(userCreateSchema), userController.createUser);
+// Admin + Principal user management (principal is restricted in controller)
+router.use(requireAuth, requireRole('Admin', 'Principal'));
+
+// Admin-only write operations that can affect platform-wide access.
+router.post('/', requireRole('Admin'), validate(userCreateSchema), userController.createUser);
+router.patch('/:id/role', requireRole('Admin'), validate(Joi.object({ body: Joi.object({ role: Joi.string().valid(...ADMIN_MANAGED_ROLES).required() }) })), userController.changeRole);
+router.delete('/:id', requireRole('Admin'), userController.deleteUser);
+
+// Admin + Principal read/update operations (with principal restrictions in controller).
 router.get('/', userController.listUsers);
 router.get('/:id', userController.getUser);
 router.patch('/:id', validate(userUpdateSchema), userController.updateUser);
-router.patch('/:id/role', validate(Joi.object({ body: Joi.object({ role: Joi.string().valid(...ADMIN_MANAGED_ROLES).required() }) })), userController.changeRole);
-router.delete('/:id', userController.deleteUser);
 
 module.exports = router;

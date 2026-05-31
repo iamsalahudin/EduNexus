@@ -184,3 +184,19 @@ export async function fetchAttendanceReport({ reportType, classId, fromDate, toD
   })
   return res.data
 }
+
+// --- Attendance leave-requests (student/parent) ---
+export async function submitLeaveRequest({ fromDate, toDate, type = 'full-day', reason, childId } = {}) {
+  const res = await api.post('/attendance/leave-requests', { fromDate, toDate, type, reason, childId });
+  return res.data;
+}
+
+export async function fetchLeaveRequests({ studentId, status } = {}) {
+  const res = await api.get('/attendance/leave-requests', { params: { ...(studentId ? { studentId } : {}), ...(status ? { status } : {}) } });
+  return res.data;
+}
+
+export async function editLeaveRequest(id, payload) {
+  const res = await api.patch(`/attendance/leave-requests/${id}`, payload);
+  return res.data;
+}

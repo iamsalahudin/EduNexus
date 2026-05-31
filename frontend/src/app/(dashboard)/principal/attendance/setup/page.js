@@ -2,7 +2,7 @@
 
 import AttendanceSetupManagerView from '@/components/attendance/AttendanceSetupManagerView'
 
-export default function PrincipalAttendanceSetupPage() {
+export default function AttendanceSetupPage() {
   return (
     <AttendanceSetupManagerView
       roleBase="/principal"
@@ -12,3 +12,4 @@ export default function PrincipalAttendanceSetupPage() {
     />
   )
 }
+

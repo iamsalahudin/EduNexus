@@ -254,4 +254,45 @@ async function resetPassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, refresh, logout, changePassword, sendOtp, verifyOtp, resetPassword };
+async function updateProfile(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { name, email, phone } = req.body;
+
+    // Validate and update name
+    if (name) {
+      const trimmedName = String(name).trim();
+      if (trimmedName.length < 2) return res.status(400).json({ error: 'Name must be at least 2 characters' });
+      user.name = trimmedName;
+    }
+
+    // Validate and update email (must be unique)
+    if (email) {
+      const trimmedEmail = String(email).trim().toLowerCase();
+      const existing = await User.findOne({ email: trimmedEmail, _id: { $ne: userId } });
+      if (existing) return res.status(409).json({ error: 'Email already in use' });
+      user.email = trimmedEmail;
+    }
+
+    // Update profile phone if provided
+    if (phone) {
+      if (!user.profile) user.profile = {};
+      user.profile.phone = String(phone).trim();
+    }
+
+    await user.save();
+
+    const out = user.toObject();
+    delete out.password;
+    res.json({ user: out });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, refresh, logout, changePassword, sendOtp, verifyOtp, resetPassword, updateProfile };

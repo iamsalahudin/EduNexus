@@ -27,7 +27,8 @@ function entityText(value) {
   return trimText(value?.name || value?.label || value?.username || value?._id || value?.id) || '—'
 }
 
-export default function TimetableOverviewPanel({ roleBase = '/admin', canCreate = true }) {
+export default function TimetableOverviewPanel({ roleBase = '', canCreate = true }) {
+  const resolvedRoleBase = roleBase || '/admin'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [rows, setRows] = useState([])
@@ -84,7 +85,7 @@ export default function TimetableOverviewPanel({ roleBase = '/admin', canCreate 
       const res = await timetableService.createTimetable(newTimetable)
       // Reload and navigate to edit
       await load()
-      window.location.href = `${roleBase}/timetable/edit/${res?.timetable?._id}`
+      window.location.href = `${resolvedRoleBase}/timetable/edit/${res?.timetable?._id}`
     } catch (e) {
       alert(e?.response?.data?.error || 'Unable to duplicate timetable.')
     }
@@ -231,9 +232,9 @@ export default function TimetableOverviewPanel({ roleBase = '/admin', canCreate 
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        {canCreate ? <ButtonLink href={`${roleBase}/timetable/create`} variant="primary">+ Create Timetable</ButtonLink> : null}
-        <ButtonLink href={`${roleBase}/timetable/by-class`} variant="outline">By Class</ButtonLink>
-        <ButtonLink href={`${roleBase}/timetable/by-teacher`} variant="outline">By Teacher</ButtonLink>
+        {canCreate ? <ButtonLink href={`${resolvedRoleBase}/timetable/create`} variant="primary">+ Create Timetable</ButtonLink> : null}
+        <ButtonLink href={`${resolvedRoleBase}/timetable/by-class`} variant="outline">By Class</ButtonLink>
+        <ButtonLink href={`${resolvedRoleBase}/timetable/by-teacher`} variant="outline">By Teacher</ButtonLink>
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -294,7 +295,7 @@ export default function TimetableOverviewPanel({ roleBase = '/admin', canCreate 
                         <Button onClick={() => exportRowPDF(row)} variant="outline" size="sm">Export PDF</Button>
                         {!isArchived && (
                           <>
-                            <ButtonLink href={`${roleBase}/timetable/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
+                            <ButtonLink href={`${resolvedRoleBase}/timetable/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
                             <Button onClick={() => handleClone(row)} variant="outline" size="sm">Duplicate</Button>
                             <Button onClick={() => handleArchive(row._id)} variant="outline" size="sm" className="text-amber-600">Archive</Button>
                           </>

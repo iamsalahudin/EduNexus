@@ -298,4 +298,44 @@ async function changeStatus(req, res, next) {
   }
 }
 
-module.exports = { submitComplaint, addComment, getComplaints, getComplaint, assignComplaint, changeStatus };
+// Edit complaint (students can only edit their own open complaints)
+async function editComplaint(req, res, next) {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ error: 'Not found' });
+
+    const uid = String(req.user.id || req.user._id || '');
+    const creatorId = String(complaint?.createdBy?._id || complaint?.createdBy || '');
+
+    // Only the creator can edit, and only if status is 'open'
+    if (uid !== creatorId) {
+      return res.status(403).json({ error: 'Forbidden: only complaint creator can edit' });
+    }
+
+    if (complaint.status !== 'open') {
+      return res.status(400).json({ error: 'Can only edit complaints with status "open"' });
+    }
+
+    const { title, description, category, priority } = normalizeComplaintInput(req.body);
+
+    if (title) complaint.title = title;
+    if (description) complaint.description = description;
+    if (category) complaint.category = category;
+    if (priority) complaint.priority = priority;
+
+    await complaint.save();
+
+    const populated = await Complaint.findById(complaint._id)
+      .populate('createdBy', 'name username email role')
+      .populate('assignedTo', 'name username email role')
+      .populate('relatedToStudent', 'studentId class section')
+      .populate('comments.author', 'name username email role')
+      .lean();
+
+    res.json({ complaint: populated });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { submitComplaint, addComment, getComplaints, getComplaint, assignComplaint, changeStatus, editComplaint };

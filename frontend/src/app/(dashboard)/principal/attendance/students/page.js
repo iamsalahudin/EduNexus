@@ -2,11 +2,11 @@
 
 import StudentAttendanceUpdateManagerView from '@/components/attendance/StudentAttendanceUpdateManagerView'
 
-export default function PrincipalStudentAttendancePage() {
+export default function AdminStudentAttendancePage() {
   return (
     <StudentAttendanceUpdateManagerView
       roleBase="/principal"
-      title="Students Attendance"
+      title="Student Attendance"
       subtitle="Update existing student attendance records by class and date."
     />
   )

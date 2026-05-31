@@ -21,10 +21,11 @@ const STATUSES = [
 ]
 
 export default function StudentAttendanceUpdateManagerView({
-  roleBase = '/admin',
+  roleBase = '',
   title = 'Student Attendance',
   subtitle = 'Update existing attendance records by class and date.',
 }) {
+  const resolvedRoleBase = roleBase || '/admin'
   const [date, setDate] = useState(toInputDate(new Date()))
   const [classId, setClassId] = useState('')
   const [section, setSection] = useState('')
@@ -134,7 +135,7 @@ export default function StudentAttendanceUpdateManagerView({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        right={<ButtonLink href={`${roleBase}/attendance`} variant="secondary">Back</ButtonLink>}
+        right={<ButtonLink href={`${resolvedRoleBase}/attendance`} variant="secondary">Back</ButtonLink>}
       />
 
       <Card className="mt-6">
@@ -195,7 +196,7 @@ export default function StudentAttendanceUpdateManagerView({
                     <tr key={row.recordId} className="border-b last:border-b-0">
                       <td className="py-2 pr-3">
                         {studentId ? (
-                          <ButtonLink href={`${roleBase}/attendance/students/${studentId}`} variant="outline" size="sm">
+                          <ButtonLink href={`${resolvedRoleBase}/attendance/students/${studentId}`} variant="outline" size="sm">
                             {studentName}
                           </ButtonLink>
                         ) : (
