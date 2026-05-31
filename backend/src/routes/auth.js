@@ -6,7 +6,7 @@ const authController = require('../controllers/authController');
 const { requireAuth } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
 const logger = require('../utils/logger');
-const { registerSchema, loginSchema, refreshSchema, logoutSchema, changePasswordSchema, sendOtpSchema, verifyOtpSchema, resetPasswordSchema } = require('../validators/auth');
+const { registerSchema, loginSchema, refreshSchema, logoutSchema, changePasswordSchema, sendOtpSchema, verifyOtpSchema, resetPasswordSchema, updateProfileSchema } = require('../validators/auth');
 
 const authLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000,
@@ -37,5 +37,7 @@ router.post('/reset-password', authLimiter, validate(resetPasswordSchema), authC
 router.get('/me', requireAuth, (req, res) => {
 	res.json({ user: req.user });
 });
+// Update profile (students can update name, email, phone)
+router.patch('/profile', requireAuth, validate(updateProfileSchema), authController.updateProfile);
 
 module.exports = router;

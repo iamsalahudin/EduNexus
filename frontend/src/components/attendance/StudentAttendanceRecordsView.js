@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton } from '@/components/ui'
-import { fetchStudentAttendance, exportStudentAttendance } from '@/services/attendanceService'
+import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton, Input, Select, Textarea } from '@/components/ui'
+import { fetchStudentAttendance, exportStudentAttendance, submitLeaveRequest, fetchLeaveRequests, editLeaveRequest } from '@/services/attendanceService'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -65,6 +65,15 @@ export default function StudentAttendanceRecordsView({
   const [error, setError] = useState(null)
   const [records, setRecords] = useState([])
   const [exporting, setExporting] = useState(false)
+  const [leaveLoading, setLeaveLoading] = useState(false)
+  const [leaveError, setLeaveError] = useState(null)
+  const [leaveRequests, setLeaveRequests] = useState([])
+
+  // leave form
+  const [leaveFrom, setLeaveFrom] = useState(toInputDate(today))
+  const [leaveTo, setLeaveTo] = useState(toInputDate(today))
+  const [leaveType, setLeaveType] = useState('full-day')
+  const [leaveReason, setLeaveReason] = useState('')
   const [activeRange, setActiveRange] = useState({ fromDate: '', toDate: '' })
 
   async function load() {
@@ -115,8 +124,45 @@ export default function StudentAttendanceRecordsView({
     }
   }
 
+  async function loadLeaveRequests() {
+    setLeaveLoading(true)
+    setLeaveError(null)
+    try {
+      const res = await fetchLeaveRequests({ studentId: studentId || undefined })
+      setLeaveRequests(res.requests || [])
+    } catch (e) {
+      setLeaveError(e?.response?.data?.error || e.message || 'Failed to load leave requests')
+    } finally {
+      setLeaveLoading(false)
+    }
+  }
+
+  async function handleSubmitLeave(e) {
+    e.preventDefault()
+    setLeaveError(null)
+    try {
+      await submitLeaveRequest({ fromDate: leaveFrom, toDate: leaveTo, type: leaveType, reason: leaveReason })
+      setLeaveReason('')
+      await load()
+      await loadLeaveRequests()
+    } catch (err) {
+      setLeaveError(err?.response?.data?.error || err.message || 'Failed to submit')
+    }
+  }
+
+  async function handleCancelLeave(id) {
+    try {
+      await editLeaveRequest(id, { status: 'cancelled' })
+      await loadLeaveRequests()
+      await load()
+    } catch (err) {
+      setLeaveError(err?.response?.data?.error || err.message || 'Failed to cancel')
+    }
+  }
+
   useEffect(() => {
     load()
+    loadLeaveRequests()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, studentId, mode, month, year, fromDate, toDate])
 
@@ -174,6 +220,70 @@ export default function StudentAttendanceRecordsView({
         />
 
         {error ? <div className="text-sm text-red-600">{error}</div> : null}
+
+        <Card>
+          <h3 className="font-medium">Leave Request</h3>
+          <form className="mt-3 space-y-3" onSubmit={handleSubmitLeave}>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">From</label>
+                <Input type="date" value={leaveFrom} onChange={(e) => setLeaveFrom(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">To</label>
+                <Input type="date" value={leaveTo} onChange={(e) => setLeaveTo(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <Select value={leaveType} onChange={(e) => setLeaveType(e.target.value)} className="mt-2">
+                <option value="full-day">Full day</option>
+                <option value="half-day">Half day</option>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reason</label>
+              <Textarea value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} className="mt-2" />
+            </div>
+            {leaveError ? <div className="text-sm text-red-600">{leaveError}</div> : null}
+            <div className="flex gap-2">
+              <Button type="submit" variant="primary">Submit Request</Button>
+              <Button type="button" variant="secondary" onClick={() => { setLeaveReason(''); setLeaveFrom(toInputDate(today)); setLeaveTo(toInputDate(today)); }}>Reset</Button>
+            </div>
+          </form>
+        </Card>
+
+        <Card>
+          <h3 className="font-medium">My Leave Requests</h3>
+          <div className="mt-3">
+            {leaveLoading ? <Skeleton className="h-24" /> : leaveRequests.length === 0 ? <div className="text-sm text-gray-600">No leave requests.</div> : (
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left border-b">
+                    <th className="py-2 pr-3">From</th>
+                    <th className="py-2 pr-3">To</th>
+                    <th className="py-2 pr-3">Type</th>
+                    <th className="py-2 pr-3">Status</th>
+                    <th className="py-2 pr-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaveRequests.map((r) => (
+                    <tr key={r._id} className="border-b last:border-b-0">
+                      <td className="py-2 pr-3">{String(r.fromDate || '').slice(0, 10)}</td>
+                      <td className="py-2 pr-3">{String(r.toDate || '').slice(0, 10)}</td>
+                      <td className="py-2 pr-3">{r.type}</td>
+                      <td className="py-2 pr-3">{r.status}</td>
+                      <td className="py-2 pr-3">
+                        {r.status === 'pending' ? <Button variant="secondary" onClick={() => handleCancelLeave(r._id)}>Cancel</Button> : null}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </Card>
 
         <Card>
           <h3 className="font-medium">Records</h3>

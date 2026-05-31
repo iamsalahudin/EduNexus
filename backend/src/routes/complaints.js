@@ -3,7 +3,7 @@ const router = express.Router();
 const complaintController = require('../controllers/complaintController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
-const { submitComplaintSchema, addCommentSchema, assignComplaintSchema, changeStatusSchema } = require('../validators/complaints');
+const { submitComplaintSchema, addCommentSchema, assignComplaintSchema, changeStatusSchema, editComplaintSchema } = require('../validators/complaints');
 
 // Submit complaint (any authenticated user)
 router.post('/', requireAuth, validate(submitComplaintSchema), complaintController.submitComplaint);
@@ -17,5 +17,7 @@ router.post('/:id/comments', requireAuth, requireRole('Admin', 'Principal', 'Tea
 router.patch('/:id/assign', requireAuth, requireRole('Admin', 'Principal'), validate(assignComplaintSchema), complaintController.assignComplaint);
 // Change status (assigned user or admin)
 router.patch('/:id/status', requireAuth, requireRole('Admin', 'Principal', 'Teacher', 'HR', 'Reception', 'Finance', 'Warden'), validate(changeStatusSchema), complaintController.changeStatus);
+// Edit complaint (creator/student can edit open complaints)
+router.patch('/:id', requireAuth, validate(editComplaintSchema), complaintController.editComplaint);
 
 module.exports = router;

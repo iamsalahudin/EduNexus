@@ -5,6 +5,7 @@ const Parent = require('./parent');
 const Subject = require('./subject');
 const Attendance = require('./attendance');
 const StaffAttendance = require('./staffAttendance');
+const AttendanceLeaveRequest = require('./attendanceLeaveRequest');
 const SchoolClass = require('./schoolClass');
 const ReportCard = require('./reportCard');
 const ExamConfig = require('./examConfig');
@@ -70,6 +71,7 @@ module.exports = {
 	Subject,
 	Attendance,
 	StaffAttendance,
+	AttendanceLeaveRequest,
 	SchoolClass,
 	ReportCard,
 	ExamConfig,

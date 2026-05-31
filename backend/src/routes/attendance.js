@@ -3,7 +3,7 @@ const router = express.Router();
 const attendanceController = require('../controllers/attendanceController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
-const { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, attendanceAssignmentSchema } = require('../validators/attendance');
+const { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, attendanceAssignmentSchema, createLeaveRequestSchema, editLeaveRequestSchema, getLeaveRequestsSchema } = require('../validators/attendance');
 
 // All routes require auth
 router.use(requireAuth);
@@ -32,5 +32,10 @@ router.delete('/setup/assignments/:id', requireRole('Admin', 'Principal'), atten
 
 // Delete attendance: admin only
 router.delete('/:id', requireRole('Admin'), attendanceController.deleteAttendance);
+
+// Leave requests
+router.post('/leave-requests', validate(createLeaveRequestSchema), attendanceController.createLeaveRequest);
+router.get('/leave-requests', validate(getLeaveRequestsSchema), attendanceController.getLeaveRequests);
+router.patch('/leave-requests/:id', validate(editLeaveRequestSchema), attendanceController.editLeaveRequest);
 
 module.exports = router;

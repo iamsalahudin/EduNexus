@@ -16,6 +16,16 @@ const complaintService = {
     return data
   },
 
+  submitComplaint: async (payload = {}) => {
+    const { data } = await api.post('/complaints', payload)
+    return data?.complaint || data
+  },
+
+  editComplaint: async (id, payload = {}) => {
+    const { data } = await api.patch(`/complaints/${id}`, payload)
+    return data?.complaint || data
+  },
+
   addComment: async (id, message) => {
     const { data } = await api.post(`/complaints/${id}/comments`, { message })
     return data
@@ -29,7 +39,7 @@ const complaintService = {
   changeStatus: async (id, status) => {
     const { data } = await api.patch(`/complaints/${id}/status`, { status })
     return data
-  }
+  },
 }
 
 export default complaintService

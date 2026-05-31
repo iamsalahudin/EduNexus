@@ -52,4 +52,32 @@ const attendanceAssignmentSchema = Joi.object({
   })
 });
 
-module.exports = { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, attendanceAssignmentSchema };
+const createLeaveRequestSchema = Joi.object({
+  body: Joi.object({
+    fromDate: Joi.date().required(),
+    toDate: Joi.date().optional(),
+    type: Joi.string().valid('full-day', 'half-day').default('full-day'),
+    reason: Joi.string().max(1000).allow('').required(),
+    childId: Joi.string().optional()
+  })
+});
+
+const editLeaveRequestSchema = Joi.object({
+  body: Joi.object({
+    fromDate: Joi.date(),
+    toDate: Joi.date(),
+    type: Joi.string().valid('full-day', 'half-day'),
+    reason: Joi.string().max(1000).allow(''),
+    status: Joi.string().valid('pending', 'approved', 'rejected', 'cancelled'),
+    approverRemarks: Joi.string().max(1000).allow('')
+  })
+});
+
+const getLeaveRequestsSchema = Joi.object({
+  query: Joi.object({
+    studentId: Joi.string(),
+    status: Joi.string().valid('pending', 'approved', 'rejected', 'cancelled')
+  })
+});
+
+module.exports = { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, attendanceAssignmentSchema, createLeaveRequestSchema, editLeaveRequestSchema, getLeaveRequestsSchema };

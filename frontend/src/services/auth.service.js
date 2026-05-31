@@ -48,6 +48,14 @@ export const authService = {
   changePassword: async (payload) => {
     const { data } = await api.post('/auth/change-password', payload)
     return data
+  },
+
+  /**
+   * Update user profile (name, email, phone)
+   */
+  updateProfile: async (payload) => {
+    const { data } = await api.patch('/auth/profile', payload)
+    return data?.user
   }
 }
 

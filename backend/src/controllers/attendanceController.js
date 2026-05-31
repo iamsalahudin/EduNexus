@@ -1,4 +1,4 @@
-const { Attendance, Student, Timetable, AttendanceAssignment, User } = require('../models');
+const { Attendance, Student, Timetable, AttendanceAssignment, User, AttendanceLeaveRequest } = require('../models');
 const mongoose = require('mongoose');
 const { arrayToCSV, setCSVHeaders } = require('../utils/csvExport');
 
@@ -799,6 +799,134 @@ async function exportAttendance(req, res, next) {
   }
 }
 
+// Leave request APIs
+async function createLeaveRequest(req, res, next) {
+  try {
+    const { fromDate, toDate, type, reason, childId } = req.body;
+    let student = null;
+
+    if (req.user.role === 'Student') {
+      student = await resolveStudentForUser(req.user);
+      if (!student) return res.status(404).json({ error: 'Student record not found' });
+    } else if (req.user.role === 'Parent') {
+      const requested = String(childId || '').trim();
+      if (!requested) return res.status(400).json({ error: 'childId is required for parents' });
+      const children = await Student.find({ parents: req.user.id }).select('_id');
+      const childIds = children.map((c) => String(c._id));
+      if (!childIds.includes(requested)) return res.status(403).json({ error: 'Selected child is not linked to this parent' });
+      student = await Student.findById(requested);
+      if (!student) return res.status(404).json({ error: 'Student record not found' });
+    } else {
+      return res.status(403).json({ error: 'Only students or parents may submit leave requests' });
+    }
+
+    const from = normalizeDay(fromDate);
+    if (!from) return res.status(400).json({ error: 'Invalid fromDate' });
+    const to = normalizeDay(toDate || fromDate) || from;
+
+    const reqDoc = new AttendanceLeaveRequest({
+      student: student._id,
+      user: req.user.id,
+      fromDate: from,
+      toDate: to,
+      type: type || 'full-day',
+      reason: reason || ''
+    });
+    await reqDoc.save();
+    res.status(201).json({ request: reqDoc });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getLeaveRequests(req, res, next) {
+  try {
+    const userRole = req.user.role;
+    const { studentId, status } = req.query;
+    const filter = {};
+
+    if (status) filter.status = status;
+
+    if (userRole === 'Student') {
+      const student = await resolveStudentForUser(req.user);
+      if (!student) return res.status(404).json({ error: 'Student record not found' });
+      filter.student = student._id;
+    } else if (userRole === 'Parent') {
+      const children = await Student.find({ parents: req.user.id }).select('_id');
+      const childIds = children.map((c) => String(c._id));
+      if (!childIds.length) return res.json({ requests: [] });
+      if (studentId) {
+        if (!childIds.includes(String(studentId))) return res.status(403).json({ error: 'Selected child is not linked to this parent' });
+        filter.student = new mongoose.Types.ObjectId(studentId);
+      } else {
+        filter.student = { $in: childIds.map((id) => new mongoose.Types.ObjectId(id)) };
+      }
+    } else if (['Teacher', 'Admin', 'Principal'].includes(userRole)) {
+      if (studentId) filter.student = new mongoose.Types.ObjectId(studentId);
+    } else {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    const requests = await AttendanceLeaveRequest.find(filter).populate('student', 'firstName lastName studentId class section').sort({ createdAt: -1 }).lean();
+    res.json({ requests });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function editLeaveRequest(req, res, next) {
+  try {
+    const id = String(req.params.id || '').trim();
+    if (!id) return res.status(400).json({ error: 'Invalid id' });
+    const rec = await AttendanceLeaveRequest.findById(id);
+    if (!rec) return res.status(404).json({ error: 'Leave request not found' });
+
+    const userRole = req.user.role;
+
+    if (userRole === 'Student' || userRole === 'Parent') {
+      // owner may edit/cancel only when pending
+      const student = await resolveStudentForUser(req.user);
+      const ownerId = student ? String(student._id) : null;
+      if (userRole === 'Parent') {
+        // parent must be linked
+        const children = await Student.find({ parents: req.user.id }).select('_id');
+        const childIds = children.map((c) => String(c._id));
+        if (!childIds.includes(String(rec.student))) return res.status(403).json({ error: 'Not allowed' });
+      } else if (ownerId && ownerId !== String(rec.student)) {
+        return res.status(403).json({ error: 'Not allowed' });
+      }
+
+      if (String(rec.status) !== 'pending') return res.status(400).json({ error: 'Only pending requests can be edited or cancelled' });
+
+      const { fromDate, toDate, type, reason, status } = req.body;
+      if (fromDate) rec.fromDate = normalizeDay(fromDate) || rec.fromDate;
+      if (toDate) rec.toDate = normalizeDay(toDate) || rec.toDate;
+      if (type) rec.type = type;
+      if (reason !== undefined) rec.reason = reason;
+      // allow cancelling by owner
+      if (status && status === 'cancelled') rec.status = 'cancelled';
+      await rec.save();
+      return res.json({ request: rec });
+    }
+
+    if (['Teacher', 'Admin', 'Principal'].includes(userRole)) {
+      // approver actions: change status and add remarks
+      const { status, approverRemarks } = req.body;
+      if (status && ['approved', 'rejected'].includes(status)) {
+        rec.status = status;
+        rec.approver = req.user.id;
+      }
+      if (approverRemarks !== undefined) rec.approverRemarks = approverRemarks;
+      await rec.save();
+      return res.json({ request: rec });
+    }
+
+    return res.status(403).json({ error: 'Insufficient permissions' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listAttendanceAssignments,
   saveAttendanceAssignment,
@@ -810,4 +938,8 @@ module.exports = {
   updateAttendance,
   deleteAttendance,
   exportAttendance
+  ,
+  createLeaveRequest,
+  getLeaveRequests,
+  editLeaveRequest
 };
