@@ -21,7 +21,7 @@ async function seed() {
     await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('Connected to DB for seeding');
 
-    const roles = ['Admin','Principal','Finance','HR','Reception','Teacher','Student','Parent'];
+    const roles = ['Admin','Principal','Accountant','HR','Reception','Teacher','Student','Parent'];
     for (const r of roles) {
       const exists = await Role.findOne({ name: r });
       if (!exists) {
@@ -37,7 +37,7 @@ async function seed() {
       { name: 'Student', role: 'Student', username: 'student', email: 'student@edu.com', password: 'student@123' },
       { name: 'Parent', role: 'Parent', username: 'parent', email: 'parent@edu.com', password: 'parent@123' },
       { name: 'HR', role: 'HR', username: 'hr', email: 'hr@edu.com', password: 'hr@123' },
-      { name: 'Finance', role: 'Finance', username: 'finance', email: 'finance@edu.com', password: 'finance@123' },
+      { name: 'Accountant', role: 'Accountant', username: 'finance', email: 'finance@edu.com', password: 'finance@123' },
       { name: 'Reception', role: 'Reception', username: 'reception', email: 'reception@edu.com', password: 'reception@123' },
     ];
 

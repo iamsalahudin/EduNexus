@@ -27,7 +27,7 @@ beforeAll(async () => {
   adminUser = await User.create({ name: 'Admin', username: 'salary_admin', email: 'salary_admin@test.com', password: 'hashedpassword', role: 'Admin' })
   principalUser = await User.create({ name: 'Principal', username: 'salary_principal', email: 'salary_principal@test.com', password: 'hashedpassword', role: 'Principal' })
   hrUser = await User.create({ name: 'HR', username: 'salary_hr', email: 'salary_hr@test.com', password: 'hashedpassword', role: 'HR' })
-  financeUser = await User.create({ name: 'Finance', username: 'salary_finance', email: 'salary_finance@test.com', password: 'hashedpassword', role: 'Finance' })
+  financeUser = await User.create({ name: 'Accountant', username: 'salary_finance', email: 'salary_finance@test.com', password: 'hashedpassword', role: 'Accountant' })
   teacherUser = await User.create({ name: 'Teacher', username: 'salary_teacher', email: 'salary_teacher@test.com', password: 'hashedpassword', role: 'Teacher' })
   receptionistUser = await User.create({ name: 'Reception', username: 'salary_reception', email: 'salary_reception@test.com', password: 'hashedpassword', role: 'Reception' })
 
@@ -51,7 +51,7 @@ beforeAll(async () => {
   adminToken = jwt.sign({ sub: adminUser._id.toString(), role: 'Admin' }, secret)
   principalToken = jwt.sign({ sub: principalUser._id.toString(), role: 'Principal' }, secret)
   hrToken = jwt.sign({ sub: hrUser._id.toString(), role: 'HR' }, secret)
-  financeToken = jwt.sign({ sub: financeUser._id.toString(), role: 'Finance' }, secret)
+  financeToken = jwt.sign({ sub: financeUser._id.toString(), role: 'Accountant' }, secret)
   teacherToken = jwt.sign({ sub: teacherUser._id.toString(), role: 'Teacher' }, secret)
   receptionistToken = jwt.sign({ sub: receptionistUser._id.toString(), role: 'Reception' }, secret)
 })

@@ -212,12 +212,14 @@ export default function TeacherAttendanceManagerView({
       if (row.recordId && allowUpdateExisting) {
         await updateStaffAttendance(row.recordId, { status: row.status, remarks: row.remarks })
       } else {
-        await markStaffAttendance({
+        const res = await markStaffAttendance({
           userId: row.teacherId,
           date: row.date,
           status: row.status,
           remarks: row.remarks,
         })
+        const invalidCount = Array.isArray(res?.invalid) ? res.invalid.length : 0
+        if (invalidCount > 0) setError(`${invalidCount} entries were invalid and were not saved.`)
       }
       setSuccess(`Attendance saved for ${row.teacherName} on ${row.date}`)
       await load()

@@ -2,6 +2,14 @@ const { Attendance, Student, Timetable, AttendanceAssignment, User, AttendanceLe
 const mongoose = require('mongoose');
 const { arrayToCSV, setCSVHeaders } = require('../utils/csvExport');
 
+function sendSuccess(res, data = {}, message = '') {
+  // If data is an object with known payload keys, merge them at top-level
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return res.json(Object.assign({ success: true, message }, data));
+  }
+  return res.json({ success: true, message, data });
+}
+
 function normalizeDay(value) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return null;
@@ -155,7 +163,7 @@ async function listAttendanceAssignments(req, res, next) {
       .sort({ className: 1, section: 1 })
       .lean();
 
-    res.json({ assignments });
+    return sendSuccess(res, { assignments });
   } catch (err) {
     next(err);
   }
@@ -210,7 +218,7 @@ async function saveAttendanceAssignment(req, res, next) {
     await assignment.save();
 
     await assignment.populate('teacher', 'name email role');
-    res.json({ assignment });
+    return sendSuccess(res, { assignment });
   } catch (err) {
     if (err?.code === 11000) {
       return res.status(409).json({ error: 'This class and section are already assigned to a teacher' });
@@ -225,7 +233,7 @@ async function deleteAttendanceAssignment(req, res, next) {
     if (!deleted) {
       return res.status(404).json({ error: 'Assignment not found' });
     }
-    res.json({ ok: true });
+    return sendSuccess(res, { ok: true });
   } catch (err) {
     next(err);
   }
@@ -295,7 +303,7 @@ async function markAttendance(req, res, next) {
       return res.status(403).json({ error: 'Some students are not allowed for this teacher', invalid });
     }
 
-    res.status(201).json({ records: attendanceRecords, invalid });
+    return res.status(201).json({ success: true, records: attendanceRecords, invalid });
   } catch (err) {
     next(err);
   }
@@ -367,7 +375,7 @@ async function getAttendance(req, res, next) {
       } else {
         filter.student = { $in: childIds.map((id) => new mongoose.Types.ObjectId(id)) };
       }
-    } else if (userRole === 'Reception') {
+    } else if (userRole === 'Receptionist') {
       if (classId) filter.class = classId;
     } else if (['Admin', 'Principal', 'HR'].includes(userRole)) {
       if (classId) filter.class = classId;
@@ -380,7 +388,7 @@ async function getAttendance(req, res, next) {
       .sort({ date: -1 })
       .limit(500);
 
-    res.json({ records });
+    return sendSuccess(res, { records });
   } catch (err) {
     next(err);
   }
@@ -393,7 +401,7 @@ async function getAttendanceSummary(req, res, next) {
     let { fromDate, toDate, period, year, month } = req.query;
     const userRole = req.user.role;
 
-    if (!['Admin', 'Principal', 'HR', 'Teacher', 'Reception', 'Student', 'Parent'].includes(userRole)) {
+    if (!['Admin', 'Principal', 'HR', 'Teacher', 'Receptionist', 'Student', 'Parent'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
@@ -513,7 +521,7 @@ async function getAttendanceSummary(req, res, next) {
       ? Number(((totals.presentDays / totals.totalDays) * 100).toFixed(2))
       : 0;
 
-    res.json({ summary, totals });
+    return sendSuccess(res, { summary, totals });
   } catch (err) {
     next(err);
   }
@@ -706,7 +714,7 @@ async function exportAttendance(req, res, next) {
     let { fromDate, toDate, period, year, month } = req.query;
     const userRole = req.user.role;
 
-    if (!['Admin', 'Principal', 'HR', 'Teacher', 'Reception', 'Student', 'Parent'].includes(userRole)) {
+    if (!['Admin', 'Principal', 'HR', 'Teacher', 'Receptionist', 'Student', 'Parent'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
@@ -793,7 +801,7 @@ async function exportAttendance(req, res, next) {
       return res.send(csv);
     }
 
-    res.json({ records });
+    return sendSuccess(res, { records });
   } catch (err) {
     next(err);
   }

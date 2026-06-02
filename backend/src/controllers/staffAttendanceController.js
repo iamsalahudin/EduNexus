@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const { StaffAttendance, User } = require('../models');
 const { arrayToCSV, setCSVHeaders } = require('../utils/csvExport');
 
+function sendSuccess(res, data = {}, message = '') {
+  return res.json({ success: true, message, data });
+}
+
 function normalizeDay(value) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return null;
@@ -53,7 +57,7 @@ async function markStaffAttendance(req, res, next) {
     const normalizedDate = normalizeDay(date);
     if (!normalizedDate) return res.status(400).json({ error: 'Invalid date' });
 
-    const canMarkOthers = ['Admin', 'Principal', 'Reception'].includes(req.user.role);
+    const canMarkOthers = ['Admin', 'Principal', 'Receptionist'].includes(req.user.role);
     const targetUserId = canMarkOthers && userId ? userId : req.user.id;
 
     if (!canMarkOthers && userId && userId.toString() !== req.user.id.toString()) {
@@ -117,14 +121,14 @@ async function getStaffAttendance(req, res, next) {
       }
     }
 
-    if (['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+    if (['Admin', 'HR', 'Principal', 'Receptionist'].includes(userRole)) {
       if (Array.isArray(roleUserIds)) {
         filter.user = { $in: roleUserIds.map((id) => new mongoose.Types.ObjectId(id)) };
       }
       if (userId) filter.user = new mongoose.Types.ObjectId(userId);
 
       if (Array.isArray(roleUserIds) && userId && !roleUserIds.includes(String(userId))) {
-        return res.json({ records: [] });
+        return sendSuccess(res, { records: [] });
       }
     } else {
       // Teacher/staff self only
@@ -136,8 +140,7 @@ async function getStaffAttendance(req, res, next) {
       .populate('markedBy', 'name email')
       .sort({ date: -1 })
       .limit(500);
-
-    res.json({ records });
+    return sendSuccess(res, { records });
   } catch (err) {
     next(err);
   }
@@ -172,7 +175,7 @@ async function getStaffAttendanceSummary(req, res, next) {
       }
     }
 
-    if (['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+    if (['Admin', 'HR', 'Principal', 'Receptionist'].includes(userRole)) {
       if (Array.isArray(roleUserIds)) {
         match.user = { $in: roleUserIds.map((id) => new mongoose.Types.ObjectId(id)) };
       }
@@ -248,7 +251,7 @@ async function getStaffAttendanceSummary(req, res, next) {
       ]);
     }
 
-    res.json({ summary, perUser });
+    return sendSuccess(res, { summary, perUser });
   } catch (err) {
     next(err);
   }
@@ -296,7 +299,7 @@ async function exportStaffAttendance(req, res, next) {
     let { fromDate, toDate, period, year, month } = req.query;
     const userRole = req.user.role;
 
-    if (!['Admin', 'HR', 'Principal', 'Reception'].includes(userRole)) {
+    if (!['Admin', 'HR', 'Principal', 'Receptionist'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions for export' });
     }
 
@@ -362,8 +365,7 @@ async function exportStaffAttendance(req, res, next) {
       setCSVHeaders(res, filename);
       return res.send(csv);
     }
-
-    res.json({ records });
+    return sendSuccess(res, { records });
   } catch (err) {
     next(err);
   }

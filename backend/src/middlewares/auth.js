@@ -10,15 +10,15 @@ function normalizeRole(role) {
   // Common alias/misspelling seen in seeded DBs
   const lower = raw.toLowerCase();
   if (lower === 'principle') return 'Principal';
-  if (lower === 'receptionist') return 'Reception';
-  if (lower === 'accountant') return 'Finance';
+  if (lower === 'reception' || lower === 'receptionist') return 'Receptionist';
+  if (lower === 'accountant') return 'Accountant';
 
   const canonical = [
     'Admin',
     'Principal',
-    'Finance',
+    'Accountant',
     'HR',
-    'Reception',
+    'Receptionist',
     'Teacher',
     'Student',
     'Parent'

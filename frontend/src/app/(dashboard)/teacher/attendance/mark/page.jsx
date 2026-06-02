@@ -146,7 +146,7 @@ export default function MarkAttendancePage() {
     setError('')
     setSuccess('')
     try {
-      await markStudentAttendance({
+      const res = await markStudentAttendance({
         date,
         entries: rows.map((row) => ({
           studentId: row.studentId,
@@ -154,7 +154,14 @@ export default function MarkAttendancePage() {
           remarks: row.remarks,
         })),
       })
-      setSuccess(`Attendance saved for ${rows.length} students on ${date}.`)
+
+      const invalidCount = Array.isArray(res?.invalid) ? res.invalid.length : 0
+      if (invalidCount > 0) {
+        setError(`${invalidCount} entries were invalid and were not saved.`)
+      } else {
+        setSuccess(`Attendance saved for ${rows.length} students on ${date}.`)
+      }
+
       await loadStudentsAndAttendance()
     } catch (e) {
       setError(e?.response?.data?.error || e.message || 'Failed to save attendance.')

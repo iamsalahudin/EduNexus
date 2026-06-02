@@ -3,7 +3,7 @@ const POLICY_VERSION = '2026-04-15-v1';
 const CANONICAL_ROLES = [
   'Admin',
   'Principal',
-  'Finance',
+  'Accountant',
   'HR',
   'Reception',
   'Teacher',
@@ -14,7 +14,7 @@ const CANONICAL_ROLES = [
 const ROLE_ALIASES = {
   principle: 'Principal',
   receptionist: 'Reception',
-  accountant: 'Finance',
+  accountant: 'Accountant',
 };
 
 const MODULES = [
@@ -152,8 +152,8 @@ const PRINCIPAL_MODULES = enforceAdminOnlyPost(
   })
 );
 
-const FINANCE_MODULES = enforceAdminOnlyPost(
-  'Finance',
+const ACCOUNTANT_MODULES = enforceAdminOnlyPost(
+  'Accountant',
   applyModuleOverrides(createEmptyModules(), {
     fees: createModule('managed-operations', { GET: true, PATCH: true }, 'Can read and update fee records.'),
     salary: createModule('managed-operations', { GET: true, PATCH: true }, 'Can access salary summaries and operational updates.'),
@@ -253,7 +253,7 @@ const PARENT_MODULES = enforceAdminOnlyPost(
 const ROLE_MODULES = {
   Admin: ADMIN_MODULES,
   Principal: PRINCIPAL_MODULES,
-  Finance: FINANCE_MODULES,
+  Accountant: ACCOUNTANT_MODULES,
   HR: HR_MODULES,
   Reception: RECEPTION_MODULES,
   Teacher: TEACHER_MODULES,

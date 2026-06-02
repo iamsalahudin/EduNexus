@@ -309,7 +309,7 @@ export default function NotificationsManagementWorkspace({
     return Array.from(set)
   }
 
-  const allRoles = ['Admin', 'Principal', 'Finance', 'HR', 'Reception', 'Teacher', 'Student', 'Parent']
+  const allRoles = ['Admin', 'Principal', 'Accountant', 'HR', 'Reception', 'Teacher', 'Student', 'Parent']
 
   return (
     <div>

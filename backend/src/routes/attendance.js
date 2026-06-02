@@ -15,11 +15,11 @@ router.post('/', requireRole('Teacher'), validate(markAttendanceSchema), attenda
 router.get('/', validate(getAttendanceSchema), attendanceController.getAttendance);
 
 // Export attendance with role-scoped data
-router.get('/export', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Reception', 'Student', 'Parent'), attendanceController.exportAttendance);
+router.get('/export', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist', 'Student', 'Parent'), attendanceController.exportAttendance);
 
 // Summary/statistics with role-scoped data
-router.get('/summary', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Reception', 'Student', 'Parent'), attendanceController.getAttendanceSummary);
-router.get('/reports', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Reception'), attendanceController.getAttendanceReport);
+router.get('/summary', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist', 'Student', 'Parent'), attendanceController.getAttendanceSummary);
+router.get('/reports', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist'), attendanceController.getAttendanceReport);
 
 // Update attendance: teacher scoped + admin/principal
 router.patch('/:id', requireRole('Teacher', 'Admin', 'Principal'), validate(updateAttendanceSchema), attendanceController.updateAttendance);
