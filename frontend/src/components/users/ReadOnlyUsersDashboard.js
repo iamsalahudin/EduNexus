@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui'
 
-const ROLE_OPTIONS = ['', 'Principal', 'Finance', 'HR', 'Reception', 'Teacher', 'Student', 'Parent']
+const ROLE_OPTIONS = ['', 'Principal', 'Accountant', 'HR', 'Reception', 'Teacher', 'Student', 'Parent']
 
 export default function ReadOnlyUsersDashboard({ title, subtitle }) {
   const [loading, setLoading] = useState(true)

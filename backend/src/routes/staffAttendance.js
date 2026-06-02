@@ -15,7 +15,7 @@ router.use(requireAuth);
 // Mark daily attendance (admin/principal/reception)
 router.post(
   '/',
-  requireRole('Admin', 'Principal', 'Reception'),
+  requireRole('Admin', 'Principal', 'Receptionist'),
   validate(markStaffAttendanceSchema),
   staffAttendanceController.markStaffAttendance
 );
@@ -23,7 +23,7 @@ router.post(
 // View: admin/hr/principal can view all; others self-only
 router.get(
   '/',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Reception'),
+  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Receptionist'),
   validate(getStaffAttendanceSchema),
   staffAttendanceController.getStaffAttendance
 );
@@ -31,13 +31,13 @@ router.get(
 // Export: admin/hr/principal only
 router.get(
   '/export',
-  requireRole('Admin', 'HR', 'Principal', 'Reception'),
+  requireRole('Admin', 'HR', 'Principal', 'Receptionist'),
   staffAttendanceController.exportStaffAttendance
 );
 
 router.get(
   '/summary',
-  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Reception'),
+  requireRole('Teacher', 'Admin', 'HR', 'Principal', 'Receptionist'),
   staffAttendanceController.getStaffAttendanceSummary
 );
 
