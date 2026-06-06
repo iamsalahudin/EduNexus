@@ -301,11 +301,6 @@ export default function ChatLayout({ mode = "full" }) {
             >
               <MessageInput onSend={sendMessage} />
             </div>
-            <div className="flex justify-center items-center text-[color:var(--color-primary)] text-sm py-2">
-              <Link href={`/${thispath.split("/")[1]}/chat`}>
-                Full Page View
-              </Link>
-            </div>
           </>
         )}
       </div>
