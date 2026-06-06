@@ -3,6 +3,8 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Copy, Check } from "lucide-react";
+import { useState } from "react";
 
 const markdownComponents = {
   p: ({ children, ...props }) => (
@@ -147,6 +149,20 @@ function TypingIndicator() {
 }
 
 export default function MessageList({ messages = [], onNavigate = () => {} }) {
+  const [copiedId, setCopiedId] = useState(null);
+  const handleCopy = async (id, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+
+      setTimeout(() => {
+        setCopiedId(null);
+      }, 1500);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {messages.map((m, idx) => (
@@ -157,15 +173,17 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
           }`}
         >
           <div
-            className={`max-w-[85%] text-sm rounded-xl p-5 ${
-              m.role === "user"
-                ? "bg-[var(--color-primary)] text-white"
-                : "bg-[var(--card-bg)] text-[var(--color-text)]"
+            className={`flex items-end ${
+              m.role === "user" ? "flex-row-reverse" : "flex-row"
             }`}
           >
-            {m.loading ? (
-              <TypingIndicator />
-            ) : (
+            <div
+              className={`max-w-[95%] text-sm rounded-xl mb-5 px-5 py-3 ${
+                m.role === "user"
+                  ? "bg-[var(--color-primary)] opacity-80 text-white rounded-br-none"
+                  : "bg-slate-500/10 text-[var(--color-text)] rounded-bl-none"
+              }`}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={markdownComponents}
@@ -181,65 +199,81 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
                     })()
                   : ""}
               </ReactMarkdown>
-            )}
 
-            {/* structured table */}
-            {!m.loading && m.data?.type === "table" && <TableRenderer {...m.data} />}
+              {/* structured table */}
+              {m.data?.type === "table" && <TableRenderer {...m.data} />}
 
-            {/* chart */}
-            {!m.loading && m.chart?.type === "bar" && <BarChart {...m.chart} />}
+              {/* chart */}
+              {m.chart?.type === "bar" && <BarChart {...m.chart} />}
 
-            {/* attachments */}
-            {!m.loading && Array.isArray(m.attachments) && m.attachments.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {m.attachments.map((att, i) => (
-                  <a
-                    key={i}
-                    href={att.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={att.name}
-                    className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <span aria-hidden>📎</span>
-                    <span className="truncate max-w-[180px]">{att.name || 'Download file'}</span>
-                    {att.size ? <span className="text-xs text-gray-500">{Math.ceil(att.size / 1024)} KB</span> : null}
-                  </a>
-                ))}
-              </div>
-            )}
+              {/* attachments */}
+              {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {m.attachments.map((att, i) => (
+                    <a
+                      key={i}
+                      href={att.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      download={att.name}
+                      className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <span aria-hidden>📎</span>
+                      <span className="truncate max-w-[180px]">
+                        {att.name || "Download file"}
+                      </span>
+                      {att.size ? (
+                        <span className="text-xs text-gray-500">
+                          {Math.ceil(att.size / 1024)} KB
+                        </span>
+                      ) : null}
+                    </a>
+                  ))}
+                </div>
+              )}
 
-            {/* actions */}
-            {!m.loading && Array.isArray(m.actions) && m.actions.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {m.actions.map((a, i) => {
-                  if (a.type === "download") {
-                    return (
-                      <a
-                        key={i}
-                        href={a.url}
-                        download
-                        className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
-                      >
-                        📥 {a.label}
-                      </a>
-                    );
-                  }
-                  if (a.type === "navigate") {
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => onNavigate(a.path)}
-                        className="px-3 py-1.5 text-sm rounded-md bg-indigo-600 text-white"
-                      >
-                        ➡️ {a.label}
-                      </button>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            )}
+              {/* actions */}
+              {Array.isArray(m.actions) && m.actions.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {m.actions.map((a, i) => {
+                    if (a.type === "download") {
+                      return (
+                        <a
+                          key={i}
+                          href={a.url}
+                          download
+                          className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
+                        >
+                          📥 {a.label}
+                        </a>
+                      );
+                    }
+                    if (a.type === "navigate") {
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => onNavigate(a.path)}
+                          className="px-3 py-1.5 text-sm rounded-md bg-indigo-600 text-white"
+                        >
+                          ➡️ {a.label}
+                        </button>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              )}
+            </div>
+            <button
+              className="text-gray-700 rounded-md"
+              onClick={() => handleCopy(m.id ?? idx, m.text)}
+            >
+              {copiedId === (m.id ?? idx) ? (
+                <Check className="w-4 h-4 opacity-40" />
+              ) : (
+                <Copy className="w-4 h-4 opacity-40" />
+              )}
+            </button>
           </div>
         </div>
       ))}
