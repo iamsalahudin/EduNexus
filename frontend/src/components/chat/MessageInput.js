@@ -27,7 +27,7 @@ export default function MessageInput({ onSend }) {
               submit();
             }
           }}
-          placeholder="Ask about attendance, marks, reports..."
+          placeholder="Ask EduAgent..."
           className="flex-1 resize-none h-12 border rounded-md p-2 focus:outline-none focus:ring focus:ring-indigo-200"
         />
         <button
