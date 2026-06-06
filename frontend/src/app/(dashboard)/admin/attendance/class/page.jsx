@@ -136,19 +136,19 @@ export default function ClassAttendancePage() {
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 mb-4">
-                  <div className="bg-blue-50 p-2 rounded text-center">
+                  <div className="bg-blue-500/20 p-2 rounded text-center">
                     <div className="text-sm font-semibold text-blue-700">{stat.total}</div>
                     <div className="text-xs text-gray-600">Total</div>
                   </div>
-                  <div className="bg-green-50 p-2 rounded text-center">
+                  <div className="bg-green-500/20 p-2 rounded text-center">
                     <div className="text-sm font-semibold text-green-700">{stat.present}</div>
                     <div className="text-xs text-gray-600">Present</div>
                   </div>
-                  <div className="bg-red-50 p-2 rounded text-center">
+                  <div className="bg-red-500/20  p-2 rounded text-center">
                     <div className="text-sm font-semibold text-red-700">{stat.absent}</div>
                     <div className="text-xs text-gray-600">Absent</div>
                   </div>
-                  <div className="bg-amber-50 p-2 rounded text-center">
+                  <div className="bg-amber-500/20 p-2 rounded text-center">
                     <div className="text-sm font-semibold text-amber-700">{stat.late}</div>
                     <div className="text-xs text-gray-600">Late</div>
                   </div>
@@ -163,10 +163,6 @@ export default function ClassAttendancePage() {
                   </div>
                   <span className="text-xs font-semibold">{stat.percentage}%</span>
                 </div>
-
-                <Button variant="outline" className="w-full text-sm">
-                  View Details
-                </Button>
               </Card>
             )
           })}

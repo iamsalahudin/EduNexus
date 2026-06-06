@@ -1,7 +1,8 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton } from '@/components/ui'
+import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
+import StatusBadge from '@/components/ui/StatusBadge'
 import { fetchStaffAttendance, exportStaffAttendance } from '@/services/attendanceService'
 
 function toInputDate(d) {
@@ -168,26 +169,28 @@ export default function StaffAttendanceRecordsView({
             ) : records.length === 0 ? (
               <div className="text-sm text-gray-600">No records found.</div>
             ) : (
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2 pr-3">Date</th>
-                    <th className="py-2 pr-3">User</th>
-                    <th className="py-2 pr-3">Role</th>
-                    <th className="py-2 pr-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r) => (
-                    <tr key={r._id} className="border-b last:border-b-0">
-                      <td className="py-2 pr-3">{String(r.date).slice(0, 10)}</td>
-                      <td className="py-2 pr-3">{r.user?.name || '-'}</td>
-                      <td className="py-2 pr-3">{r.user?.role || '-'}</td>
-                      <td className="py-2 pr-3">{r.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <Table>
+                <TableRoot className="min-w-full text-sm">
+                  <TableHead>
+                    <TableRow className="text-left border-b">
+                      <TableHeader>Date</TableHeader>
+                      <TableHeader>User</TableHeader>
+                      <TableHeader>Role</TableHeader>
+                      <TableHeader>Status</TableHeader>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {records.map((r) => (
+                      <TableRow key={r._id}>
+                        <TableCell>{String(r.date).slice(0, 10)}</TableCell>
+                        <TableCell>{r.user?.name || '-'}</TableCell>
+                        <TableCell>{r.user?.role || '-'}</TableCell>
+                        <TableCell><StatusBadge status={r.status} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </TableRoot>
+              </Table>
             )}
           </div>
         </Card>

@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import classesService from '@/services/classesService'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Textarea, ToggleBox } from '@/components/ui'
+import { ButtonLink, PageHeader } from '@/components/ui'
+import ClassMasterTable from '@/components/classes/ClassMasterTable'
+import ClassEditCard from '@/components/classes/ClassEditCard'
 
 function parseSections(text) {
   const raw = String(text || '')
@@ -144,130 +146,34 @@ export default function Page() {
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left: Master Table */}
-        <Card className="lg:col-span-2 ">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="font-medium">Class Master</h2>
-              <p className="text-sm text-gray-600 mt-1">Click Edit to update a class on the right.</p>
-            </div>
-            <Button type="button" onClick={loadClasses}>
-              Refresh
-            </Button>
-          </div>
+        <ClassMasterTable
+          loading={loading}
+          classes={classes}
+          selectedId={selected?._id}
+          onEdit={startEdit}
+          onDelete={deleteClass}
+          onRefresh={loadClasses}
+        />
 
-          {loading ? (
-            <div className="mt-4"><Skeleton className="h-24" /></div>
-          ) : (
-            <div className="mt-4 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-600">
-                    <th className="py-2 pr-3">Name</th>
-                    <th className="py-2 pr-3">Level</th>
-                    <th className="py-2 pr-3">Sections</th>
-                    <th className="py-2 pr-3">Active</th>
-                    <th className="py-2 pr-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classes.map((c) => (
-                    <tr
-                      key={c._id}
-                      className={`border-t ${selected?._id === c._id ? 'bg-blue-50' : ''}`}
-                    >
-                      <td className="py-2 pr-3 whitespace-nowrap">{c.name}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">
-                        {c.level || <span className="text-gray-500">(none)</span>}
-                      </td>
-                      <td className="py-2 pr-3">
-                        {Array.isArray(c.sections) && c.sections.length > 0
-                          ? c.sections.join(', ')
-                          : <span className="text-gray-500">(none)</span>}
-                      </td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{String(c.active ?? true)}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => startEdit(c)}>
-                          Edit
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" onClick={() => deleteClass(c)}>
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {classes.length === 0 ? (
-                <div className="text-sm text-gray-600 mt-3">No classes found.</div>
-              ) : null}
-            </div>
-          )}
-        </Card>
-
-        {/* Right: Edit Panel */}
-        <Card>
-          <h2 className="font-medium">Edit Class</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {selected
-              ? `Editing: ${selected.name}`
-              : 'Select a class from the table to edit it here.'}
-          </p>
-
-          {selected ? (
-            <form className="mt-4 space-y-3" onSubmit={saveEdit}>
-              <Input
-                placeholder="Name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-              />
-
-              <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)}>
-                <option value="">Level (optional)</option>
-                {levelOptions.map((level) => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </Select>
-
-              <div className="flex items-center gap-4 text-sm">
-                <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>
-                  Active
-                </ToggleBox>
-                <ToggleBox
-                  active={editNoSections}
-                  onToggle={(next) => {
-                    setEditNoSections(next)
-                    if (next) setEditSectionsText('')
-                  }}
-                >
-                  No sections
-                </ToggleBox>
-              </div>
-
-              <Textarea
-                textareaClassName="min-h-[96px]"
-                placeholder={'Sections (one per line)\nBoys\nGirls'}
-                value={editSectionsText}
-                onChange={(e) => setEditSectionsText(e.target.value)}
-                disabled={editNoSections}
-              />
-
-              <div className="flex gap-2">
-                <Button variant="primary" type="submit">
-                  Save
-                </Button>
-                <Button type="button" onClick={() => setSelected(null)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="mt-4 flex items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-lg">
-              <p className="text-sm text-gray-400">No class selected</p>
-            </div>
-          )}
-        </Card>
+        <ClassEditCard
+          selected={selected}
+          levelOptions={levelOptions}
+          editName={editName}
+          editLevel={editLevel}
+          editActive={editActive}
+          editNoSections={editNoSections}
+          editSectionsText={editSectionsText}
+          onChangeName={setEditName}
+          onChangeLevel={setEditLevel}
+          onToggleActive={(next) => setEditActive(next)}
+          onToggleNoSections={(next) => {
+            setEditNoSections(next)
+            if (next) setEditSectionsText('')
+          }}
+          onChangeSectionsText={setEditSectionsText}
+          onSubmit={saveEdit}
+          onCancel={() => setSelected(null)}
+        />
       </div>
     </div>
   )

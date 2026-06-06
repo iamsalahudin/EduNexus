@@ -2,9 +2,12 @@
 
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Button, ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
+import { ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
+import AttendanceHistoryTable from '@/components/attendance/AttendanceHistoryTable'
+import AttendanceRateCard from '@/components/attendance/AttendanceRateCard'
+import AttendanceStatsGrid from '@/components/attendance/AttendanceStatsGrid'
 import { fetchStudentAttendance } from '@/services/attendanceService'
-import { api } from '@/services/api'
+import studentsService from '@/services/studentsService'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -30,10 +33,10 @@ export default function StudentAttendanceDetailPage() {
       setError(null)
       try {
         const [studentRes, attendanceRes] = await Promise.all([
-          api.get(`/students/${studentId}`),
+          studentsService.getStudentById(studentId),
           fetchStudentAttendance({ studentId, fromDate: ninetyDaysAgo, toDate: today })
         ])
-        setStudent(studentRes.data.student || studentRes.data)
+        setStudent(studentRes?.student || studentRes)
         setRecords(attendanceRes.records || [])
       } catch (e) {
         setError(e?.response?.data?.error || e.message || 'Failed to load student details')
@@ -104,94 +107,81 @@ export default function StudentAttendanceDetailPage() {
       </Card>
 
       {/* ATTENDANCE STATISTICS */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="bg-blue-50 border border-blue-200">
-          <div className="text-sm text-blue-600 font-medium">Total Days</div>
-          <div className="mt-2 text-2xl font-bold text-blue-700">{stats.total}</div>
-        </Card>
-        <Card className="bg-green-50 border border-green-200">
-          <div className="text-sm text-green-600 font-medium">Present</div>
-          <div className="mt-2 text-2xl font-bold text-green-700">{stats.present}</div>
-        </Card>
-        <Card className="bg-red-50 border border-red-200">
-          <div className="text-sm text-red-600 font-medium">Absent</div>
-          <div className="mt-2 text-2xl font-bold text-red-700">{stats.absent}</div>
-        </Card>
-        <Card className="bg-amber-50 border border-amber-200">
-          <div className="text-sm text-amber-600 font-medium">Late</div>
-          <div className="mt-2 text-2xl font-bold text-amber-700">{stats.late}</div>
-        </Card>
-        <Card className="bg-purple-50 border border-purple-200">
-          <div className="text-sm text-purple-600 font-medium">Attendance %</div>
-          <div className="mt-2 text-2xl font-bold text-purple-700">{stats.percentage}%</div>
-        </Card>
-      </div>
+      <AttendanceStatsGrid
+        columns={5}
+        className="mt-6"
+        items={[
+          {
+            label: 'Total Days',
+            value: stats.total,
+            className: 'bg-blue-50 border border-blue-200',
+            labelClassName: 'text-blue-600 font-medium',
+            valueClassName: 'text-blue-700',
+          },
+          {
+            label: 'Present',
+            value: stats.present,
+            className: 'bg-green-50 border border-green-200',
+            labelClassName: 'text-green-600 font-medium',
+            valueClassName: 'text-green-700',
+          },
+          {
+            label: 'Absent',
+            value: stats.absent,
+            className: 'bg-red-50 border border-red-200',
+            labelClassName: 'text-red-600 font-medium',
+            valueClassName: 'text-red-700',
+          },
+          {
+            label: 'Late',
+            value: stats.late,
+            className: 'bg-amber-50 border border-amber-200',
+            labelClassName: 'text-amber-600 font-medium',
+            valueClassName: 'text-amber-700',
+          },
+          {
+            label: 'Attendance %',
+            value: `${stats.percentage}%`,
+            className: 'bg-purple-50 border border-purple-200',
+            labelClassName: 'text-purple-600 font-medium',
+            valueClassName: 'text-purple-700',
+          },
+        ]}
+      />
 
       {/* ATTENDANCE RATE PROGRESS */}
-      <Card className="mt-6">
-        <h3 className="font-semibold mb-4">Attendance Rate</h3>
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex-1 bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-blue-600 h-4 rounded-full"
-                  style={{ width: `${stats.percentage}%` }}
-                />
-              </div>
-              <span className="text-lg font-bold text-blue-600">{stats.percentage}%</span>
-            </div>
-            <p className="text-xs text-gray-500">
-              {stats.present} present out of {stats.total} days in last 90 days
-            </p>
-          </div>
-        </div>
-      </Card>
+      <AttendanceRateCard
+        percentage={stats.percentage}
+        summary={`${stats.present} present out of ${stats.total} days in last 90 days`}
+      />
 
       {/* ATTENDANCE History */}
-      <Card className="mt-6">
-        <h3 className="font-semibold mb-4">Attendance History (Last 90 Days)</h3>
-        <div className="overflow-auto">
-          {records.length === 0 ? (
-            <p className="text-sm text-gray-600 py-4">No attendance records found.</p>
-          ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b bg-gray-50">
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Class</th>
-                  <th className="py-3 px-4 font-semibold">Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map((record) => (
-                  <tr key={record._id} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="py-3 px-4">{String(record.date).slice(0, 10)}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
-                          record.status === 'present'
-                            ? 'bg-green-100 text-green-700'
-                            : record.status === 'absent'
-                            ? 'bg-red-100 text-red-700'
-                            : record.status === 'late'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-purple-100 text-purple-700'
-                        }`}
-                      >
-                        {record.status?.charAt(0).toUpperCase() + record.status?.slice(1)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">{record.class?.name || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600">{record.remarks || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </Card>
+      <AttendanceHistoryTable
+        title="Attendance History (Last 90 Days)"
+        rows={records}
+        columns={[
+          {
+            key: 'date',
+            label: 'Date',
+            render: (record) => String(record.date).slice(0, 10),
+          },
+          {
+            key: 'status',
+            label: 'Status',
+            type: 'status',
+          },
+          {
+            key: 'class',
+            label: 'Class',
+            render: (record) => record.class?.name || '-',
+          },
+          {
+            key: 'remarks',
+            label: 'Remarks',
+            render: (record) => record.remarks || '-',
+          },
+        ]}
+      />
     </div>
   )
 }

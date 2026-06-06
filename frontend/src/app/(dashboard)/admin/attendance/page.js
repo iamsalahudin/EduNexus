@@ -1,8 +1,9 @@
 ﻿"use client"
 
 import { useEffect, useState } from 'react'
-import { ButtonLink, Card, PageHeader, Skeleton, StatCard } from '@/components/ui'
+import { Card, PageHeader, Skeleton, StatCard } from '@/components/ui'
 import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
+import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
 
 export default function AttendanceHome() {
   const [studentStats, setStudentStats] = useState(null)
@@ -304,71 +305,59 @@ export default function AttendanceHome() {
 
       {/* NAVIGATION CARDS */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Daily Attendance</h4>
-            <span className="text-2xl">📅</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">Mark and view student attendance for a specific date.</p>
-          <ButtonLink href="/admin/attendance/daily" variant="primary" className="w-full">
-            View Daily
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Daily Attendance"
+          description="Mark and view student attendance for a specific date."
+          href="/admin/attendance/daily"
+          buttonLabel="View Daily"
+          icon="📅"
+          iconClassName="bg-blue-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Class-wise Attendance</h4>
-            <span className="text-2xl">📊</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">View attendance statistics by class and section.</p>
-          <ButtonLink href="/admin/attendance/class" variant="primary" className="w-full">
-            View Classes
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Class-wise Attendance"
+          description="View attendance statistics by class and section."
+          href="/admin/attendance/class"
+          buttonLabel="View Classes"
+          icon="📊"
+          iconClassName="bg-emerald-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Teacher Attendance</h4>
-            <span className="text-2xl">👥</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">Mark and update teacher attendance by day-wise or teacher-wise selection.</p>
-          <ButtonLink href="/admin/attendance/teachers" variant="primary" className="w-full">
-            Manage Teachers
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Teacher Attendance"
+          description="Mark and update teacher attendance by day-wise or teacher-wise selection."
+          href="/admin/attendance/teachers"
+          buttonLabel="Manage Teachers"
+          icon="👥"
+          iconClassName="bg-amber-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Reports</h4>
-            <span className="text-2xl">📈</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">Open student and teacher attendance reports.</p>
-          <ButtonLink href="/admin/attendance/teachers/reports" variant="primary" className="w-full">
-            Open Reports
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Reports"
+          description="Open student and teacher attendance reports."
+          href="/admin/attendance/teachers/reports"
+          buttonLabel="Open Reports"
+          icon="📈"
+          iconClassName="bg-indigo-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Quick Mark</h4>
-            <span className="text-2xl">✓</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">Update student attendance from daily class sections.</p>
-          <ButtonLink href="/admin/attendance/daily" variant="primary" className="w-full">
-            Mark Now
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Quick Mark"
+          description="Update student attendance from daily class sections."
+          href="/admin/attendance/daily"
+          buttonLabel="Mark Now"
+          icon="✓"
+          iconClassName="bg-green-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold">Setup</h4>
-            <span className="text-2xl">⚙️</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">Configure teachers, sections, and attendance rules.</p>
-          <ButtonLink href="/admin/attendance/setup" variant="primary" className="w-full">
-            Configure
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Setup"
+          description="Configure teachers, sections, and attendance rules."
+          href="/admin/attendance/setup"
+          buttonLabel="Configure"
+          icon="⚙️"
+          iconClassName="bg-gray-100"
+        />
       </div>
     </div>
   )

@@ -1,7 +1,8 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton, Input, Select, Textarea } from '@/components/ui'
+import { AttendanceKpiGrid, AttendancePeriodSelector, Button, Card, Skeleton, Input, Select, Textarea, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
+import StatusBadge from '@/components/ui/StatusBadge'
 import { fetchStudentAttendance, exportStudentAttendance, submitLeaveRequest, fetchLeaveRequests, editLeaveRequest } from '@/services/attendanceService'
 
 function toInputDate(d) {
@@ -257,30 +258,32 @@ export default function StudentAttendanceRecordsView({
           <h3 className="font-medium">My Leave Requests</h3>
           <div className="mt-3">
             {leaveLoading ? <Skeleton className="h-24" /> : leaveRequests.length === 0 ? <div className="text-sm text-gray-600">No leave requests.</div> : (
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2 pr-3">From</th>
-                    <th className="py-2 pr-3">To</th>
-                    <th className="py-2 pr-3">Type</th>
-                    <th className="py-2 pr-3">Status</th>
-                    <th className="py-2 pr-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaveRequests.map((r) => (
-                    <tr key={r._id} className="border-b last:border-b-0">
-                      <td className="py-2 pr-3">{String(r.fromDate || '').slice(0, 10)}</td>
-                      <td className="py-2 pr-3">{String(r.toDate || '').slice(0, 10)}</td>
-                      <td className="py-2 pr-3">{r.type}</td>
-                      <td className="py-2 pr-3">{r.status}</td>
-                      <td className="py-2 pr-3">
-                        {r.status === 'pending' ? <Button variant="secondary" onClick={() => handleCancelLeave(r._id)}>Cancel</Button> : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <Table>
+                <TableRoot className="min-w-full text-sm">
+                  <TableHead>
+                    <TableRow className="text-left border-b">
+                      <TableHeader>From</TableHeader>
+                      <TableHeader>To</TableHeader>
+                      <TableHeader>Type</TableHeader>
+                      <TableHeader>Status</TableHeader>
+                      <TableHeader>Actions</TableHeader>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {leaveRequests.map((r) => (
+                      <TableRow key={r._id}>
+                        <TableCell>{String(r.fromDate || '').slice(0, 10)}</TableCell>
+                        <TableCell>{String(r.toDate || '').slice(0, 10)}</TableCell>
+                        <TableCell>{r.type}</TableCell>
+                        <TableCell><StatusBadge status={r.status} /></TableCell>
+                        <TableCell>
+                          {r.status === 'pending' ? <Button variant="secondary" onClick={() => handleCancelLeave(r._id)}>Cancel</Button> : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </TableRoot>
+              </Table>
             )}
           </div>
         </Card>
@@ -293,28 +296,30 @@ export default function StudentAttendanceRecordsView({
             ) : records.length === 0 ? (
               <div className="text-sm text-gray-600">No records found.</div>
             ) : (
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2 pr-3">Date</th>
-                    <th className="py-2 pr-3">Student</th>
-                    <th className="py-2 pr-3">Class</th>
-                    <th className="py-2 pr-3">Status</th>
-                    <th className="py-2 pr-3">Marked By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r) => (
-                    <tr key={r._id} className="border-b last:border-b-0">
-                      <td className="py-2 pr-3">{String(r.date).slice(0, 10)}</td>
-                      <td className="py-2 pr-3">{r.student?.firstName} {r.student?.lastName}</td>
-                      <td className="py-2 pr-3">{r.class}{r.section ? `-${r.section}` : ''}</td>
-                      <td className="py-2 pr-3">{r.status}</td>
-                      <td className="py-2 pr-3">{r.teacher?.name || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <Table>
+                <TableRoot className="min-w-full text-sm">
+                  <TableHead>
+                    <TableRow className="text-left border-b">
+                      <TableHeader>Date</TableHeader>
+                      <TableHeader>Student</TableHeader>
+                      <TableHeader>Class</TableHeader>
+                      <TableHeader>Status</TableHeader>
+                      <TableHeader>Marked By</TableHeader>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {records.map((r) => (
+                      <TableRow key={r._id}>
+                        <TableCell>{String(r.date).slice(0, 10)}</TableCell>
+                        <TableCell>{r.student?.firstName} {r.student?.lastName}</TableCell>
+                        <TableCell>{r.class}{r.section ? `-${r.section}` : ''}</TableCell>
+                        <TableCell><StatusBadge status={r.status} /></TableCell>
+                        <TableCell>{r.teacher?.name || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </TableRoot>
+              </Table>
             )}
           </div>
         </Card>

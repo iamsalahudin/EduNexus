@@ -1,7 +1,8 @@
 ﻿"use client"
 
-import { ButtonLink, Card, PageHeader } from '@/components/ui'
+import { Card, PageHeader } from '@/components/ui'
 import StaffAttendanceRecordsView from '@/components/attendance/StaffAttendanceRecordsView'
+import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
 
 export default function TeacherAttendanceDashboard() {
   return (
@@ -12,35 +13,23 @@ export default function TeacherAttendanceDashboard() {
       />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Mark Class Attendance</h3>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">📝</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Quick access to mark attendance for your assigned class. View and update daily records.
-          </p>
-          <ButtonLink href="/teacher/attendance/mark" variant="primary" className="w-full">
-            Mark Attendance Now
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Mark Class Attendance"
+          description="Quick access to mark attendance for your assigned class. View and update daily records."
+          href="/teacher/attendance/mark"
+          buttonLabel="Mark Attendance Now"
+          icon="📝"
+          iconClassName="bg-blue-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">My Attendance</h3>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">✓</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Mark your own daily attendance including present, absent, late, and leave status.
-          </p>
-          <ButtonLink href="/teacher/attendance/my" variant="primary" className="w-full">
-            Open My Attendance
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="My Attendance"
+          description="Mark your own daily attendance including present, absent, late, and leave status."
+          href="/teacher/attendance/my"
+          buttonLabel="Open My Attendance"
+          icon="✓"
+          iconClassName="bg-green-100"
+        />
       </div>
 
       <Card className="mt-6">
