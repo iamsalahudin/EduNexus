@@ -205,8 +205,12 @@ export default function StudentAttendanceRecordsView({
 
           {showClassFilter ? (
             <div className="mt-4 max-w-xs">
-              <label className="text-sm font-medium">Class (optional)</label>
-              <input className="input mt-2" value={classId} onChange={(e) => setClassId(e.target.value)} placeholder="e.g. 10" />
+              <Input
+                label="Class (optional)"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+                placeholder="e.g. 10"
+              />
             </div>
           ) : null}
         </Card>

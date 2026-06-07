@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import timetableService from '@/services/timetableService'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
+import AttendanceStatsGrid from '@/components/attendance/AttendanceStatsGrid'
 import { ATTENDANCE_STATUS_OPTIONS } from '@/utils/constants'
 
 function toInputDate(d) {
@@ -195,13 +196,17 @@ export default function MarkAttendancePage() {
         </div>
       </Card>
 
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card><div className="text-xs text-gray-500">Total</div><div className="text-xl font-semibold mt-1">{summary.total}</div></Card>
-        <Card><div className="text-xs text-gray-500">Present</div><div className="text-xl font-semibold mt-1 text-green-700">{summary.present}</div></Card>
-        <Card><div className="text-xs text-gray-500">Absent</div><div className="text-xl font-semibold mt-1 text-red-700">{summary.absent}</div></Card>
-        <Card><div className="text-xs text-gray-500">Late</div><div className="text-xl font-semibold mt-1 text-amber-700">{summary.late}</div></Card>
-        <Card><div className="text-xs text-gray-500">Excused</div><div className="text-xl font-semibold mt-1 text-purple-700">{summary.excused}</div></Card>
-      </div>
+      <AttendanceStatsGrid
+        columns={5}
+        className="mt-6"
+        items={[
+          { label: 'Total', value: summary.total },
+          { label: 'Present', value: summary.present, valueClassName: 'text-green-700' },
+          { label: 'Absent', value: summary.absent, valueClassName: 'text-red-700' },
+          { label: 'Late', value: summary.late, valueClassName: 'text-amber-700' },
+          { label: 'Excused', value: summary.excused, valueClassName: 'text-purple-700' },
+        ]}
+      />
 
       <Card className="mt-6">
         <h3 className="font-semibold mb-4">Students</h3>
@@ -213,40 +218,42 @@ export default function MarkAttendancePage() {
           ) : rows.length === 0 ? (
             <div className="text-sm text-gray-600 py-4">No students found for your assigned class and section.</div>
           ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b bg-gray-50">
-                  <th className="py-3 px-4 font-semibold">Student</th>
-                  <th className="py-3 px-4 font-semibold">Student ID</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.studentId} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="py-2 px-4">{row.studentName}</td>
-                    <td className="py-2 px-4">{row.studentCode}</td>
-                    <td className="py-2 px-4 min-w-[160px]">
-                      <Select
-                        value={row.status}
-                        onChange={(e) => updateRow(row.studentId, { status: e.target.value })}
-                        options={STATUS_OPTIONS}
-                        disabled={saving}
-                      />
-                    </td>
-                    <td className="py-2 px-4 min-w-[220px]">
-                      <Input
-                        value={row.remarks}
-                        onChange={(e) => updateRow(row.studentId, { remarks: e.target.value })}
-                        placeholder="Optional"
-                        disabled={saving}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table>
+              <TableRoot className="min-w-full text-sm">
+                <TableHead>
+                  <TableRow className="text-left border-b bg-gray-50">
+                    <TableHeader>Student</TableHeader>
+                    <TableHeader>Student ID</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                    <TableHeader>Remarks</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row) => (
+                    <TableRow key={row.studentId}>
+                      <TableCell>{row.studentName}</TableCell>
+                      <TableCell>{row.studentCode}</TableCell>
+                      <TableCell className="min-w-[160px]">
+                        <Select
+                          value={row.status}
+                          onChange={(e) => updateRow(row.studentId, { status: e.target.value })}
+                          options={ATTENDANCE_STATUS_OPTIONS}
+                          disabled={saving}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
+                        <Input
+                          value={row.remarks}
+                          onChange={(e) => updateRow(row.studentId, { remarks: e.target.value })}
+                          placeholder="Optional"
+                          disabled={saving}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </TableRoot>
+            </Table>
           )}
         </div>
       </Card>

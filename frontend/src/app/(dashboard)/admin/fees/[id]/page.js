@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { fetchFeeDetails, updateFeeStatus } from '@/services/feesService'
-import { Button, Card, PageHeader } from '@/components/ui'
+import { Button, Card, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from '@/components/ui'
 
 export default function FeeDetails(){
   const params = useParams()
@@ -64,30 +64,32 @@ export default function FeeDetails(){
 
       <Card className="mt-6">
         <h3 className="font-medium">Last Transactions</h3>
-        <div className="overflow-x-auto mt-3">
-          <table className="w-full text-left table-auto">
-            <thead>
-              <tr>
-                <th className="px-3 py-2">Voucher Date</th>
-                <th className="px-3 py-2">Voucher No</th>
-                <th className="px-3 py-2">Due Date</th>
-                <th className="px-3 py-2">Fee Type</th>
-                <th className="px-3 py-2">Total Fee</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Payment Date</th>
-              </tr>
-            </thead>
-            <tbody>
-                {data.transactions.map((t,idx)=> (
-                  <tr key={idx} className="border-t">
-                    <td className="px-3 py-2">{t.voucherDate}</td>
-                    <td className="px-3 py-2">{t.voucherNo}</td>
-                    <td className="px-3 py-2">{t.dueDate}</td>
-                    <td className="px-3 py-2">{t.feeType}</td>
-                    <td className="px-3 py-2">{t.totalFee}</td>
-                    <td className="px-3 py-2">{t.status}</td>
-                    <td className="px-3 py-2">{t.paymentDate || '-'}</td>
-                    <td className="px-3 py-2">
+        <div className="mt-3">
+          <Table>
+            <TableRoot>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Voucher Date</TableHeader>
+                  <TableHeader>Voucher No</TableHeader>
+                  <TableHeader>Due Date</TableHeader>
+                  <TableHeader>Fee Type</TableHeader>
+                  <TableHeader>Total Fee</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <TableHeader>Payment Date</TableHeader>
+                  <TableHeader></TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.transactions.map((t, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{t.voucherDate}</TableCell>
+                    <TableCell>{t.voucherNo}</TableCell>
+                    <TableCell>{t.dueDate}</TableCell>
+                    <TableCell>{t.feeType}</TableCell>
+                    <TableCell>{t.totalFee}</TableCell>
+                    <TableCell>{t.status}</TableCell>
+                    <TableCell>{t.paymentDate || '-'}</TableCell>
+                    <TableCell>
                       {t.status !== 'Paid' ? (
                         <Button
                           type="button"
@@ -100,21 +102,22 @@ export default function FeeDetails(){
                           Mark Paid
                         </Button>
                       ) : (
-                        <span className="text-sm" style={{color: 'var(--color-cta)'}}>Paid</span>
+                        <span className="text-sm" style={{ color: 'var(--color-cta)' }}>Paid</span>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-            </tbody>
-          </table>
+              </TableBody>
+            </TableRoot>
+          </Table>
         </div>
-          <div className="mt-3 flex gap-2">
-            <Button type="button" onClick={() => router.push('/admin/fees/voucher')}>Open Voucher Settings</Button>
-            <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(window.location.href)}>
-              Copy Link
-            </Button>
-          </div>
-        </Card>
+        <div className="mt-3 flex gap-2">
+          <Button type="button" onClick={() => router.push('/admin/fees/voucher')}>Open Voucher Settings</Button>
+          <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(window.location.href)}>
+            Copy Link
+          </Button>
+        </div>
+      </Card>
     </div>
   )
 }

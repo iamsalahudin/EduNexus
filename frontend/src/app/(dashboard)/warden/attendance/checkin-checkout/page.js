@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
+import StatusBadge from '@/components/ui/StatusBadge'
 
 function toInputDateTime(d) {
   const dt = d ? new Date(d) : new Date()
@@ -162,60 +163,58 @@ export default function HostelCheckInOutPage() {
           ) : filtered.length === 0 ? (
             <div className="text-sm text-gray-600">No records found.</div>
           ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b bg-gray-50">
-                  <th className="py-2 px-3">Name</th>
-                  <th className="py-2 px-3">Roll No</th>
-                  <th className="py-2 px-3">Room</th>
-                  <th className="py-2 px-3">Check-In</th>
-                  <th className="py-2 px-3">Check-Out</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r) => (
-                  <tr key={r._id} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="py-2 px-3">{r.hosteller.name}</td>
-                    <td className="py-2 px-3">{r.hosteller.rollNo}</td>
-                    <td className="py-2 px-3">{r.hosteller.room}</td>
-                    <td className="py-2 px-3">{r.checkInTime || '-'}</td>
-                    <td className="py-2 px-3">{r.checkOutTime || '-'}</td>
-                    <td className="py-2 px-3">
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        r.status === 'checked-in' ? 'bg-green-100 text-green-800' :
-                        r.status === 'checked-out' ? 'bg-gray-100 text-gray-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 flex gap-2">
-                      {!r.checkInTime ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleCheckIn(r.hosteller)}
-                          disabled={actionLoading}
-                        >
-                          Check In
-                        </Button>
-                      ) : !r.checkOutTime ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleCheckOut(r.hosteller)}
-                          disabled={actionLoading}
-                        >
-                          Check Out
-                        </Button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table>
+              <TableRoot className="min-w-full text-sm">
+                <TableHead>
+                  <TableRow className="text-left border-b bg-gray-50">
+                    <TableHeader>Name</TableHeader>
+                    <TableHeader>Roll No</TableHeader>
+                    <TableHeader>Room</TableHeader>
+                    <TableHeader>Check-In</TableHeader>
+                    <TableHeader>Check-Out</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                    <TableHeader>Actions</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filtered.map((r) => (
+                    <TableRow key={r._id}>
+                      <TableCell>{r.hosteller.name}</TableCell>
+                      <TableCell>{r.hosteller.rollNo}</TableCell>
+                      <TableCell>{r.hosteller.room}</TableCell>
+                      <TableCell>{r.checkInTime || '-'}</TableCell>
+                      <TableCell>{r.checkOutTime || '-'}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={r.status} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {!r.checkInTime ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleCheckIn(r.hosteller)}
+                              disabled={actionLoading}
+                            >
+                              Check In
+                            </Button>
+                          ) : !r.checkOutTime ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleCheckOut(r.hosteller)}
+                              disabled={actionLoading}
+                            >
+                              Check Out
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </TableRoot>
+            </Table>
           )}
         </div>
       </Card>

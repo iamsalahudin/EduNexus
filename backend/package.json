@@ -8,6 +8,7 @@
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seedAdmin.js",
     "seed:demo": "node src/scripts/seedDemoData.js",
+    "seed:attendance": "node src/scripts/seedStudentAttendance.js",
     "cleanup:generated-data": "node src/scripts/cleanupGeneratedData.js",
     "cleanup:timetable-data": "node src/scripts/cleanupTimetableData.js",
     "backfill:usernames": "node src/scripts/backfillUsernames.js",

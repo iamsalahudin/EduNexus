@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
 
@@ -174,34 +174,36 @@ export default function StudentAttendancePage() {
           ) : rows.length === 0 ? (
             <div className="text-sm text-gray-600">No students found for this class/section.</div>
           ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b">
-                  <th className="py-2 pr-3">Student</th>
-                  <th className="py-2 pr-3">ID</th>
-                  <th className="py-2 pr-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.student._id} className="border-b last:border-b-0">
-                    <td className="py-2 pr-3">
-                      {r.student.firstName} {r.student.lastName}
-                    </td>
-                    <td className="py-2 pr-3">{r.student.studentId}</td>
-                    <td className="py-2 pr-3">
-                      <Select value={r.status} onChange={(e) => setStatus(r.student._id, e.target.value)}>
-                        {STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table>
+              <TableRoot className="min-w-full text-sm">
+                <TableHead>
+                  <TableRow className="text-left border-b">
+                    <TableHeader>Student</TableHeader>
+                    <TableHeader>ID</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((r) => (
+                    <TableRow key={r.student._id}>
+                      <TableCell>
+                        {r.student.firstName} {r.student.lastName}
+                      </TableCell>
+                      <TableCell>{r.student.studentId}</TableCell>
+                      <TableCell>
+                        <Select value={r.status} onChange={(e) => setStatus(r.student._id, e.target.value)}>
+                          {STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </TableRoot>
+            </Table>
           )}
         </div>
       </Card>

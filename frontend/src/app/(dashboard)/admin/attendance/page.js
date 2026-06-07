@@ -14,12 +14,13 @@ export default function AttendanceHome() {
   useEffect(() => {
     let mounted = true
     async function load() {
+      const today = new Date().toISOString().slice(0, 10)
       setLoading(true)
       setError(null)
       try {
         const [s1, s2] = await Promise.all([
-          fetchStudentAttendanceSummary(),
-          fetchStaffAttendanceSummary()
+          fetchStudentAttendanceSummary({ fromDate: today, toDate: today }),
+          fetchStaffAttendanceSummary({ fromDate: today, toDate: today })
         ])
         if (!mounted) return
         // Convert summary data to aggregated stats

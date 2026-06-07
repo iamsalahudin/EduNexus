@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Input, PageHeader, Select, Textarea } from '@/components/ui'
+import { Button, Card, Input, PageHeader, Select, Textarea, Table, TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from '@/components/ui'
 import {
   createFinanceCategory,
   deleteFinanceCategory,
@@ -158,42 +158,48 @@ export default function FinanceCategoriesPage() {
 
       <Card>
         <h3 className="font-semibold text-gray-900">Category List</h3>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="py-2 pr-3">Name</th>
-                <th className="py-2 pr-3">Type</th>
-                <th className="py-2 pr-3">Description</th>
-                <th className="py-2 pr-3">Linked Entries</th>
-                <th className="py-2 pr-3">Status</th>
-                <th className="py-2 pr-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan="6" className="py-4 text-center text-gray-500">Loading...</td></tr>
-              ) : visibleRows.length ? (
-                visibleRows.map((row) => (
-                  <tr key={row.id} className="border-b align-top">
-                    <td className="py-3 pr-3 font-medium">{row.name}</td>
-                    <td className="py-3 pr-3 capitalize">{row.type}</td>
-                    <td className="py-3 pr-3">{row.description || '-'}</td>
-                    <td className="py-3 pr-3">{row.linkedCount || 0}</td>
-                    <td className="py-3 pr-3">{row.active ? 'Active' : 'Inactive'}</td>
-                    <td className="py-3 pr-3">
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => startEdit(row)}>Edit</Button>
-                        <Button type="button" variant="outline" size="sm" onClick={() => removeCategory(row.id)}>Delete</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="6" className="py-4 text-center text-gray-500">No categories found.</td></tr>
-              )}
-            </tbody>
-          </table>
+        <div className="mt-4">
+          <Table>
+            <TableRoot>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Name</TableHeader>
+                  <TableHeader>Type</TableHeader>
+                  <TableHeader>Description</TableHeader>
+                  <TableHeader>Linked Entries</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <TableHeader>Actions</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-4 text-center text-gray-500">Loading...</TableCell>
+                  </TableRow>
+                ) : visibleRows.length ? (
+                  visibleRows.map((row) => (
+                    <TableRow key={row.id} className="align-top">
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="capitalize">{row.type}</TableCell>
+                      <TableCell>{row.description || '-'}</TableCell>
+                      <TableCell>{row.linkedCount || 0}</TableCell>
+                      <TableCell>{row.active ? 'Active' : 'Inactive'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => startEdit(row)}>Edit</Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeCategory(row.id)}>Delete</Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-4 text-center text-gray-500">No categories found.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </TableRoot>
+          </Table>
         </div>
       </Card>
 
