@@ -1,10 +1,10 @@
 /*
   Demo seed script:
-  - Ensures demo users exist (uses existing seedAdmin behavior)
-  - Creates demo Student records
-  - Links demo Student login (user.profile.studentRef)
-  - Assigns demo Teacher class/section (user.profile.class/section)
-  - Inserts a few student/staff attendance records
+  - Ensures a class catalog exists
+  - Creates 2 students for each class in an available section
+  - Creates 1 teacher for each class
+  - Links parent/teacher/student user profiles to the generated records
+  - Seeds default subjects for each class
 
   Usage:
     npm run seed:demo
@@ -13,112 +13,307 @@
 const mongoose = require('mongoose');
 const config = require('../config');
 
-const { User, Student, Attendance, StaffAttendance, SchoolClass } = require('../models');
-const { ensureDefaultSubjectsForClass } = require('../controllers/subjectsController');
+const {
+  Parent,
+  SchoolClass,
+  Student,
+  Teacher,
+  User,
+} = require('../models');
+const { DEFAULT_SUBJECTS, ensureDefaultSubjectsForClass } = require('../controllers/subjectsController');
 
 const FALLBACK_URI = 'mongodb+srv://hussain:aws%401317@cluster0.nuopsgu.mongodb.net/edu';
+const DEFAULT_PASSWORD = 'Demo@12345';
 
-function normalizeDay(value) {
-  const d = new Date(value);
-  d.setHours(0, 0, 0, 0);
-  return d;
+function slugify(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function pickSection(classDoc) {
+  const sections = Array.isArray(classDoc?.sections)
+    ? classDoc.sections.map((section) => String(section || '').trim()).filter(Boolean)
+    : [];
+
+  return sections[0] || 'A';
+}
+
+function buildPhone(index, offset = 0) {
+  const normalized = 1000000000 + (index * 10) + offset;
+  return `03${String(normalized).slice(1)}`;
+}
+
+function buildDob(classIndex, studentIndex) {
+  return new Date(2010 + Math.floor(classIndex / 2), studentIndex, 10 + studentIndex);
 }
 
 async function ensureUser({ name, username, email, password, role, profile }) {
   const normalizedEmail = String(email).toLowerCase();
-  const normalizedUsername = String(username || '').toLowerCase().trim();
+  const normalizedUsername = String(username || '').trim().toLowerCase();
   let user = await User.findOne({ email: normalizedEmail });
+
+  if (!user && normalizedUsername) {
+    user = await User.findOne({ username: normalizedUsername });
+  }
+
   if (!user) {
-    user = await User.create({ name, username: normalizedUsername, email: normalizedEmail, password, role, profile: profile || {} });
+    user = await User.create({
+      name,
+      username: normalizedUsername,
+      email: normalizedEmail,
+      password,
+      role,
+      active: true,
+      profile: profile || {},
+    });
     return { user, created: true };
+  }
+
+  let changed = false;
+  if (!user.name && name) {
+    user.name = name;
+    changed = true;
   }
   if (!user.username && normalizedUsername) {
     user.username = normalizedUsername;
+    changed = true;
   }
   if (profile && typeof profile === 'object') {
     user.profile = { ...(user.profile || {}), ...profile };
+    changed = true;
   }
-  await user.save();
+  if (changed) {
+    await user.save();
+  }
   return { user, created: false };
-}
-
-async function ensureStudent({ userId, studentId, registrationNumber, cls, section, contact, parentIds = [] }) {
-  let student = await Student.findOne({ studentId });
-  if (!student) {
-    student = await Student.create({
-      user: userId,
-      studentId,
-      registrationNumber,
-      class: String(cls),
-      section: section || '',
-      contact: String(contact || '00000000000'),
-      parents: parentIds
-    });
-    return { student, created: true };
-  }
-
-  if (userId) student.user = userId;
-  if (!student.registrationNumber) student.registrationNumber = registrationNumber;
-  if (!student.contact) student.contact = String(contact || '00000000000');
-  student.class = String(cls);
-  student.section = section || '';
-
-  // merge parents
-  const existing = new Set((student.parents || []).map((p) => p.toString()));
-  for (const pid of parentIds) existing.add(pid.toString());
-  student.parents = Array.from(existing);
-  await student.save();
-  return { student, created: false };
-}
-
-async function upsertStudentAttendance({ student, teacherUser, date, status }) {
-  const day = normalizeDay(date);
-  await Attendance.findOneAndUpdate(
-    { student: student._id, date: day },
-    {
-      student: student._id,
-      date: day,
-      status,
-      teacher: teacherUser._id,
-      class: student.class,
-      section: student.section,
-      remarks: ''
-    },
-    { upsert: true, new: true }
-  );
-}
-
-async function upsertStaffAttendance({ user, markedBy, date, status }) {
-  const day = normalizeDay(date);
-  await StaffAttendance.findOneAndUpdate(
-    { user: user._id, date: day },
-    { user: user._id, date: day, status, remarks: '', markedBy: markedBy._id },
-    { upsert: true, new: true }
-  );
 }
 
 async function ensureSchoolClass({ name, sections }) {
   const clsName = String(name || '').trim();
   if (!clsName) return null;
 
+  const normalizedSections = Array.isArray(sections)
+    ? sections.map((section) => String(section || '').trim()).filter(Boolean)
+    : [];
+
   const existing = await SchoolClass.findOne({ name: clsName });
   if (existing) {
-    if (Array.isArray(sections)) {
-      const merged = new Map();
-      for (const s of (existing.sections || [])) merged.set(String(s || '').trim().toLowerCase(), String(s || '').trim());
-      for (const s of sections) merged.set(String(s || '').trim().toLowerCase(), String(s || '').trim());
-      existing.sections = Array.from(merged.values()).filter(Boolean);
+    const merged = new Map();
+    for (const section of existing.sections || []) {
+      const normalized = String(section || '').trim();
+      if (normalized) merged.set(normalized.toLowerCase(), normalized);
+    }
+    for (const section of normalizedSections) {
+      merged.set(section.toLowerCase(), section);
+    }
+
+    const nextSections = Array.from(merged.values());
+    if (nextSections.length > 0) {
+      existing.sections = nextSections;
       await existing.save();
     }
     return existing;
   }
 
-  const created = await SchoolClass.create({
+  return SchoolClass.create({
     name: clsName,
-    sections: Array.isArray(sections) ? sections.map((s) => String(s || '').trim()).filter(Boolean) : ['Boys', 'Girls'],
-    active: true
+    sections: normalizedSections.length > 0 ? normalizedSections : ['A', 'B'],
+    active: true,
+    tutionFee: 5000,
+    admissionFee: 1500,
+    registrationFee: 500,
+    stationeryFee: 750,
+    annualFee: 2500,
   });
-  return created;
+}
+
+async function ensureSeedClasses() {
+  let classes = await SchoolClass.find({ active: true }).sort({ name: 1 }).lean();
+
+  if (classes.length === 0) {
+    const fallback = Array.from({ length: 10 }, (_, index) => ({
+      name: String(index + 1),
+      sections: ['A', 'B'],
+      active: true,
+      tutionFee: 5000 + (index * 250),
+      admissionFee: 1500,
+      registrationFee: 500,
+      stationeryFee: 750,
+      annualFee: 2500,
+    }));
+
+    await SchoolClass.insertMany(fallback, { ordered: false });
+    classes = await SchoolClass.find({ active: true }).sort({ name: 1 }).lean();
+    return classes;
+  }
+
+  const ensured = [];
+  for (const classDoc of classes) {
+    const saved = await ensureSchoolClass({
+      name: classDoc.name,
+      sections: Array.isArray(classDoc.sections) && classDoc.sections.length > 0
+        ? classDoc.sections
+        : ['A', 'B'],
+    });
+    ensured.push(saved.toObject ? saved.toObject() : saved);
+  }
+
+  return ensured;
+}
+
+async function ensureParentForClass(classDoc, classIndex, section) {
+  const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
+  const email = `parent-${classSlug}@edu.com`;
+  const username = `parent-${classSlug}`;
+  const name = `Parent ${classDoc.name}`;
+  const phone = buildPhone(classIndex, 50);
+
+  const { user } = await ensureUser({
+    name,
+    username,
+    email,
+    password: DEFAULT_PASSWORD,
+    role: 'Parent',
+    profile: { class: classDoc.name, section },
+  });
+
+  let parent = await Parent.findOne({ user: user._id });
+  if (!parent) {
+    parent = await Parent.create({
+      user: user._id,
+      name,
+      email,
+      phone,
+      relation: 'Father',
+      occupation: 'Business',
+      address: `${classDoc.name} Family Address`,
+    });
+  } else {
+    parent.name = name;
+    parent.email = email;
+    parent.phone = phone;
+    parent.relation = parent.relation || 'Father';
+    parent.occupation = parent.occupation || 'Business';
+    parent.address = parent.address || `${classDoc.name} Family Address`;
+    await parent.save();
+  }
+
+  return { user, parent };
+}
+
+async function ensureTeacherForClass(classDoc, classIndex, section) {
+  const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
+  const username = `teacher-${classSlug}`;
+  const email = `teacher-${classSlug}@edu.com`;
+  const teacherName = `Teacher ${classDoc.name}`;
+  const subjects = DEFAULT_SUBJECTS.slice();
+  const classLabel = `${classDoc.name}-${section}`;
+
+  const { user } = await ensureUser({
+    name: teacherName,
+    username,
+    email,
+    password: DEFAULT_PASSWORD,
+    role: 'Teacher',
+    profile: {
+      class: classDoc.name,
+      section,
+    },
+  });
+
+  let teacher = await Teacher.findOne({ user: user._id });
+  const teacherData = {
+    user: user._id,
+    employeeId: `EMP-${String(classIndex + 1).padStart(3, '0')}`,
+    designation: 'Class Teacher',
+    department: 'Academics',
+    subjects,
+    classesAssigned: [classLabel],
+    qualification: 'M.A. / B.Ed.',
+    certifications: ['Classroom Management', 'Child Psychology'],
+    joiningDate: new Date(2020 + (classIndex % 4), classIndex % 12, 1 + classIndex),
+    experienceYears: 3 + (classIndex % 8),
+    salary: 55000 + (classIndex * 1500),
+    contactNumber: buildPhone(classIndex, 1),
+    address: `${classDoc.name} Staff Quarter`,
+    emergencyContact: {
+      name: `${teacherName} Emergency`,
+      phone: buildPhone(classIndex, 2),
+    },
+    status: 'Working',
+    notes: `Seeded teacher for ${classDoc.name}`,
+  };
+
+  if (!teacher) {
+    teacher = await Teacher.create(teacherData);
+    return { user, teacher, created: true };
+  }
+
+  Object.assign(teacher, teacherData);
+  await teacher.save();
+  return { user, teacher, created: false };
+}
+
+async function ensureStudentForClass(classDoc, classIndex, studentIndex, section, parentUser) {
+  const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
+  const slot = studentIndex + 1;
+  const username = `student-${classSlug}-${slot}`;
+  const email = `student-${classSlug}-${slot}@edu.com`;
+  const studentName = `Student ${classDoc.name} ${slot}`;
+  const studentId = `STD-${String(classIndex + 1).padStart(2, '0')}-${String(slot).padStart(2, '0')}`;
+  const registrationNumber = `REG-${String(classIndex + 1).padStart(2, '0')}-${String(slot).padStart(2, '0')}`;
+
+  const { user } = await ensureUser({
+    name: studentName,
+    username,
+    email,
+    password: DEFAULT_PASSWORD,
+    role: 'Student',
+    profile: {
+      class: classDoc.name,
+      section,
+      parentRef: parentUser._id,
+    },
+  });
+
+  let student = await Student.findOne({ studentId });
+  const studentData = {
+    user: user._id,
+    studentId,
+    registrationNumber,
+    rollNumber: `${String(classIndex + 1).padStart(2, '0')}-${section}-${slot}`,
+    class: String(classDoc.name),
+    section,
+    dob: buildDob(classIndex, studentIndex),
+    parents: [parentUser._id],
+    contact: buildPhone(classIndex, slot + 10),
+    address: `${classDoc.name} Student Residence ${slot}`,
+    enrollDate: new Date(2024, classIndex % 12, slot + 1),
+    profilePicture: '',
+    documents: [],
+    tutionFeeConcession: 0,
+    lastFeePaid: false,
+    lastFeePaidAmount: 0,
+    availTransport: false,
+    balance: 0,
+    bloodGroup: slot % 2 === 0 ? 'A+' : 'B+',
+    gender: slot % 2 === 0 ? 'Female' : 'Male',
+    healthConditions: 'None',
+    status: 'incampus',
+    notes: `Seeded student for ${classDoc.name}`,
+  };
+
+  if (!student) {
+    student = await Student.create(studentData);
+    return { user, student, created: true };
+  }
+
+  Object.assign(student, studentData);
+  await student.save();
+  return { user, student, created: false };
 }
 
 async function seedDemo() {
@@ -131,76 +326,45 @@ async function seedDemo() {
   await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   console.log('Connected to DB for demo seeding');
 
-  // Ensure demo users exist (same emails as login page quick-fill)
-  const admin = (await ensureUser({ name: 'Admin', username: 'admin', role: 'Admin', email: 'admin@edu.com', password: 'admin@123' })).user;
-  const parent = (await ensureUser({ name: 'Parent', username: 'parent', role: 'Parent', email: 'parent@edu.com', password: 'parent@123' })).user;
-  const teacher = (await ensureUser({
-    name: 'Teacher',
-    username: 'teacher',
-    role: 'Teacher',
-    email: 'teacher@edu.com',
-    password: 'teacher@123',
-    profile: { class: '10', section: 'A' }
-  })).user;
-  const studentLogin = (await ensureUser({ name: 'Student', username: 'student', role: 'Student', email: 'student@edu.com', password: 'student@123' })).user;
+  const classes = await ensureSeedClasses();
+  const summary = [];
 
-  // Ensure demo class exists in master data (needed for Subjects + dropdowns)
-  await ensureSchoolClass({ name: '10', sections: ['A'] });
+  for (let classIndex = 0; classIndex < classes.length; classIndex += 1) {
+    const classDoc = classes[classIndex];
+    const section = pickSection(classDoc);
 
-  // Ensure default subjects exist for demo class (best-effort)
-  try {
-    await ensureDefaultSubjectsForClass('10');
-  } catch (e) {
-    // ignore
-  }
+    await ensureDefaultSubjectsForClass(classDoc.name);
 
-  // Create a small class roster
-  const roster = [];
-  for (let i = 1; i <= 5; i += 1) {
-    const sid = `S-10A-${String(i).padStart(3, '0')}`;
-    const registrationNumber = `REG-10A-${String(i).padStart(3, '0')}`;
+    const { user: parentUser } = await ensureParentForClass(classDoc, classIndex, section);
+    const { teacher } = await ensureTeacherForClass(classDoc, classIndex, section);
 
-    const loginUser = i === 1
-      ? studentLogin
-      : (await ensureUser({
-        name: `Student${i}`,
-        username: `student${i}`,
-        role: 'Student',
-        email: `student${i}@edu.com`,
-        password: `student${i}@123`
-      })).user;
-
-    const { student } = await ensureStudent({
-      userId: loginUser._id,
-      studentId: sid,
-      registrationNumber,
-      cls: '10',
-      section: 'A',
-      contact: `03000000${String(i).padStart(3, '0')}`,
-      parentIds: i === 1 ? [parent._id] : []
-    });
-    roster.push(student);
-  }
-
-  // Link demo student login to the first student record
-  studentLogin.profile = { ...(studentLogin.profile || {}), studentRef: roster[0]._id };
-  await studentLogin.save();
-
-  // Insert a few days of attendance
-  const days = [0, 1, 2].map((d) => new Date(Date.now() - d * 24 * 60 * 60 * 1000));
-
-  for (const day of days) {
-    // staff attendance for teacher
-    await upsertStaffAttendance({ user: teacher, markedBy: teacher, date: day, status: 'present' });
-
-    // student attendance
-    for (const s of roster) {
-      const status = s.studentId.endsWith('001') && day.getDate() % 2 === 0 ? 'absent' : 'present';
-      await upsertStudentAttendance({ student: s, teacherUser: teacher, date: day, status });
+    const seededStudents = [];
+    for (let studentIndex = 0; studentIndex < 2; studentIndex += 1) {
+      const { student } = await ensureStudentForClass(
+        classDoc,
+        classIndex,
+        studentIndex,
+        section,
+        parentUser,
+      );
+      seededStudents.push({
+        studentId: student.studentId,
+        registrationNumber: student.registrationNumber,
+        class: student.class,
+        section: student.section,
+      });
     }
+
+    summary.push({
+      class: classDoc.name,
+      section,
+      teacher: teacher.employeeId,
+      students: seededStudents.map((student) => student.studentId).join(', '),
+    });
   }
 
-  console.log('Demo seeding complete');
+  console.log(`Seeded ${classes.length} classes with 1 teacher and 2 students each.`);
+  console.table(summary);
   await mongoose.disconnect();
   process.exit(0);
 }
