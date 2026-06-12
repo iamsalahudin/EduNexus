@@ -248,7 +248,7 @@ export default function DailyStudentAttendancePage() {
                             value={attendanceStatus}
                             onChange={(e) => handleStatusChange(student._id, recordId, e.target.value)}
                             disabled={updating}
-                            options={STATUSES}
+                            options={ATTENDANCE_STATUS_OPTIONS}
                             className={`py-1 px-2 text-sm rounded ${
                               attendanceStatus === 'present' ? 'bg-green-100 text-green-700' :
                               attendanceStatus === 'absent' ? 'bg-red-100 text-red-700' :

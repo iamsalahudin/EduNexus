@@ -231,7 +231,7 @@ export default function MarkAttendancePage() {
                       <Select
                         value={row.status}
                         onChange={(e) => updateRow(row.studentId, { status: e.target.value })}
-                        options={STATUS_OPTIONS}
+                        options={ATTENDANCE_STATUS_OPTIONS}
                         disabled={saving}
                       />
                     </td>
