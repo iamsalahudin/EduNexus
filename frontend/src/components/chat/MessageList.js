@@ -139,9 +139,18 @@ function TypingIndicator() {
   return (
     <div className="flex items-center gap-2" aria-label="Assistant is typing">
       <span className="inline-flex items-center gap-1">
-        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-        <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+        <span
+          className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: "0ms" }}
+        />
+        <span
+          className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: "150ms" }}
+        />
+        <span
+          className="h-2 w-2 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: "300ms" }}
+        />
       </span>
       <span className="text-xs text-gray-500">Responding</span>
     </div>
@@ -172,109 +181,113 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
             m.role === "user" ? "justify-end" : "justify-start"
           }`}
         >
-          <div
-            className={`flex items-end ${
-              m.role === "user" ? "flex-row-reverse" : "flex-row"
-            }`}
-          >
+          {m.string === "" ? (
+            <TypingIndicator />
+          ) : (
             <div
-              className={`max-w-[95%] text-sm rounded-xl mb-5 px-5 py-3 ${
-                m.role === "user"
-                  ? "bg-[var(--color-primary)] opacity-80 text-white rounded-br-none"
-                  : "bg-slate-500/10 text-[var(--color-text)] rounded-bl-none"
+              className={`flex items-end ${
+                m.role === "user" ? "flex-row-reverse" : "flex-row"
               }`}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
+              <div
+                className={`max-w-[85%] text-sm rounded-xl mb-5 px-5 py-3 ${
+                  m.role === "user"
+                    ? "bg-[var(--color-primary)] opacity-80 text-white rounded-br-none"
+                    : "bg-slate-500/10 text-[var(--color-text)] rounded-bl-none"
+                }`}
               >
-                {typeof m.text === "string"
-                  ? (() => {
-                      try {
-                        const parsed = JSON.parse(m.text);
-                        return parsed.reply || m.text;
-                      } catch {
-                        return m.text;
-                      }
-                    })()
-                  : ""}
-              </ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={markdownComponents}
+                >
+                  {typeof m.text === "string"
+                    ? (() => {
+                        try {
+                          const parsed = JSON.parse(m.text);
+                          return parsed.reply || m.text;
+                        } catch {
+                          return m.text;
+                        }
+                      })()
+                    : ""}
+                </ReactMarkdown>
 
-              {/* structured table */}
-              {m.data?.type === "table" && <TableRenderer {...m.data} />}
+                {/* structured table */}
+                {m.data?.type === "table" && <TableRenderer {...m.data} />}
 
-              {/* chart */}
-              {m.chart?.type === "bar" && <BarChart {...m.chart} />}
+                {/* chart */}
+                {m.chart?.type === "bar" && <BarChart {...m.chart} />}
 
-              {/* attachments */}
-              {Array.isArray(m.attachments) && m.attachments.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {m.attachments.map((att, i) => (
-                    <a
-                      key={i}
-                      href={att.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      download={att.name}
-                      className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <span aria-hidden>📎</span>
-                      <span className="truncate max-w-[180px]">
-                        {att.name || "Download file"}
-                      </span>
-                      {att.size ? (
-                        <span className="text-xs text-gray-500">
-                          {Math.ceil(att.size / 1024)} KB
+                {/* attachments */}
+                {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {m.attachments.map((att, i) => (
+                      <a
+                        key={i}
+                        href={att.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        download={att.name}
+                        className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <span aria-hidden>📎</span>
+                        <span className="truncate max-w-[180px]">
+                          {att.name || "Download file"}
                         </span>
-                      ) : null}
-                    </a>
-                  ))}
-                </div>
-              )}
+                        {att.size ? (
+                          <span className="text-xs text-gray-500">
+                            {Math.ceil(att.size / 1024)} KB
+                          </span>
+                        ) : null}
+                      </a>
+                    ))}
+                  </div>
+                )}
 
-              {/* actions */}
-              {Array.isArray(m.actions) && m.actions.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {m.actions.map((a, i) => {
-                    if (a.type === "download") {
-                      return (
-                        <a
-                          key={i}
-                          href={a.url}
-                          download
-                          className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
-                        >
-                          📥 {a.label}
-                        </a>
-                      );
-                    }
-                    if (a.type === "navigate") {
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => onNavigate(a.path)}
-                          className="px-3 py-1.5 text-sm rounded-md bg-indigo-600 text-white"
-                        >
-                          ➡️ {a.label}
-                        </button>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              )}
+                {/* actions */}
+                {Array.isArray(m.actions) && m.actions.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {m.actions.map((a, i) => {
+                      if (a.type === "download") {
+                        return (
+                          <a
+                            key={i}
+                            href={a.url}
+                            download
+                            className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
+                          >
+                            📥 {a.label}
+                          </a>
+                        );
+                      }
+                      if (a.type === "navigate") {
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => onNavigate(a.path)}
+                            className="px-3 py-1.5 text-sm rounded-md bg-indigo-600 text-white"
+                          >
+                            ➡️ {a.label}
+                          </button>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                )}
+              </div>
+              <button
+                className="text-gray-700 rounded-md"
+                onClick={() => handleCopy(m.id ?? idx, m.text)}
+              >
+                {copiedId === (m.id ?? idx) ? (
+                  <Check className="w-4 h-4 opacity-40" />
+                ) : (
+                  <Copy className="w-4 h-4 opacity-40" />
+                )}
+              </button>
             </div>
-            <button
-              className="text-gray-700 rounded-md"
-              onClick={() => handleCopy(m.id ?? idx, m.text)}
-            >
-              {copiedId === (m.id ?? idx) ? (
-                <Check className="w-4 h-4 opacity-40" />
-              ) : (
-                <Copy className="w-4 h-4 opacity-40" />
-              )}
-            </button>
-          </div>
+          )}
         </div>
       ))}
     </div>
