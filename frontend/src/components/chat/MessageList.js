@@ -211,6 +211,7 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={markdownComponents}
+                  urlTransform={(url) => url}
                 >
                   {typeof m.text === "string"
                     ? (() => {
