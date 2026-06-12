@@ -6,11 +6,6 @@ const complaintCategoryService = {
     return data
   },
 
-  getCategory: async (id) => {
-    const { data } = await api.get(`/complaint-categories/${id}`)
-    return data
-  },
-
   createCategory: async (payload) => {
     const { data } = await api.post('/complaint-categories', payload)
     return data

@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "check:integrity": "node ../scripts/check-integrity.js",
+    "predev": "node ../scripts/check-integrity.js",
     "dev": "next dev",
+    "prebuild": "node ../scripts/check-integrity.js",
     "build": "next build",
+    "prestart": "node ../scripts/check-integrity.js",
     "start": "next start"
   },
   "dependencies": {

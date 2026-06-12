@@ -1,13 +1,13 @@
-import axios from 'axios';
+import { api } from './api';
 
-const API_BASE = '/api/grade-scales';
+const API_BASE = '/grade-scales';
 
 /**
  * List all grade scales
  */
 export async function listGradeScales(params = {}) {
   try {
-    const response = await axios.get(API_BASE, { params });
+    const response = await api.get(API_BASE, { params });
     return response.data;
   } catch (error) {
     console.error('Error listing grade scales:', error);
@@ -20,7 +20,7 @@ export async function listGradeScales(params = {}) {
  */
 export async function getGradeScale(id) {
   try {
-    const response = await axios.get(`${API_BASE}/${id}`);
+    const response = await api.get(`${API_BASE}/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching grade scale:', error);
@@ -34,7 +34,7 @@ export async function getGradeScale(id) {
  */
 export async function createGradeScale(payload) {
   try {
-    const response = await axios.post(API_BASE, payload);
+    const response = await api.post(API_BASE, payload);
     return response.data;
   } catch (error) {
     console.error('Error creating grade scale:', error);
@@ -47,7 +47,7 @@ export async function createGradeScale(payload) {
  */
 export async function updateGradeScale(id, payload) {
   try {
-    const response = await axios.patch(`${API_BASE}/${id}`, payload);
+    const response = await api.patch(`${API_BASE}/${id}`, payload);
     return response.data;
   } catch (error) {
     console.error('Error updating grade scale:', error);
@@ -60,7 +60,7 @@ export async function updateGradeScale(id, payload) {
  */
 export async function deleteGradeScale(id) {
   try {
-    const response = await axios.delete(`${API_BASE}/${id}`);
+    const response = await api.delete(`${API_BASE}/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting grade scale:', error);
@@ -74,7 +74,7 @@ export async function deleteGradeScale(id) {
  */
 export async function resolveGradeScaleForClass(className) {
   try {
-    const response = await axios.get(`${API_BASE}/resolve/for-class`, {
+    const response = await api.get(`${API_BASE}/resolve/for-class`, {
       params: { className }
     });
     return response.data;

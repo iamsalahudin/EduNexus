@@ -1,13 +1,13 @@
-import axios from 'axios';
+import { api } from './api';
 
-const API_BASE = '/api/marksheets';
+const API_BASE = '/marksheets';
 
 /**
  * List marksheets for an exam or class
  */
 export async function listMarksheets(params = {}) {
   try {
-    const response = await axios.get(API_BASE, { params });
+    const response = await api.get(API_BASE, { params });
     return response.data;
   } catch (error) {
     console.error('Error listing marksheets:', error);
@@ -20,7 +20,7 @@ export async function listMarksheets(params = {}) {
  */
 export async function getMarksheetDetail(marksheetId) {
   try {
-    const response = await axios.get(`${API_BASE}/${marksheetId}`);
+    const response = await api.get(`${API_BASE}/${marksheetId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching marksheet:', error);
@@ -35,7 +35,7 @@ export async function getMarksheetDetail(marksheetId) {
  */
 export async function updateStudentMarks(marksheetId, payload) {
   try {
-    const response = await axios.patch(`${API_BASE}/${marksheetId}/student-marks`, payload);
+    const response = await api.patch(`${API_BASE}/${marksheetId}/student-marks`, payload);
     return response.data;
   } catch (error) {
     console.error('Error updating student marks:', error);
@@ -50,7 +50,7 @@ export async function updateStudentMarks(marksheetId, payload) {
  */
 export async function updateGRMarks(marksheetId, payload) {
   try {
-    const response = await axios.patch(`${API_BASE}/${marksheetId}/gr-marks`, payload);
+    const response = await api.patch(`${API_BASE}/${marksheetId}/gr-marks`, payload);
     return response.data;
   } catch (error) {
     console.error('Error updating GR marks:', error);
@@ -65,7 +65,7 @@ export async function updateGRMarks(marksheetId, payload) {
  */
 export async function updateTeacherComments(marksheetId, payload) {
   try {
-    const response = await axios.patch(`${API_BASE}/${marksheetId}/teacher-comments`, payload);
+    const response = await api.patch(`${API_BASE}/${marksheetId}/teacher-comments`, payload);
     return response.data;
   } catch (error) {
     console.error('Error updating teacher comments:', error);
@@ -78,7 +78,7 @@ export async function updateTeacherComments(marksheetId, payload) {
  */
 export async function lockMarksheet(marksheetId) {
   try {
-    const response = await axios.post(`${API_BASE}/${marksheetId}/lock`);
+    const response = await api.post(`${API_BASE}/${marksheetId}/lock`);
     return response.data;
   } catch (error) {
     console.error('Error locking marksheet:', error);
@@ -91,7 +91,7 @@ export async function lockMarksheet(marksheetId) {
  */
 export async function unlockMarksheet(marksheetId) {
   try {
-    const response = await axios.post(`${API_BASE}/${marksheetId}/unlock`);
+    const response = await api.post(`${API_BASE}/${marksheetId}/unlock`);
     return response.data;
   } catch (error) {
     console.error('Error unlocking marksheet:', error);
@@ -104,7 +104,7 @@ export async function unlockMarksheet(marksheetId) {
  */
 export async function publishMarksheet(marksheetId) {
   try {
-    const response = await axios.post(`${API_BASE}/${marksheetId}/publish`);
+    const response = await api.post(`${API_BASE}/${marksheetId}/publish`);
     return response.data;
   } catch (error) {
     console.error('Error publishing marksheet:', error);
@@ -114,7 +114,7 @@ export async function publishMarksheet(marksheetId) {
 
 export async function exportMarksheetCsv(marksheetId) {
   try {
-    const response = await axios.get(`${API_BASE}/${marksheetId}/export/csv`, {
+    const response = await api.get(`${API_BASE}/${marksheetId}/export/csv`, {
       responseType: 'blob'
     });
     return response.data;
@@ -126,7 +126,7 @@ export async function exportMarksheetCsv(marksheetId) {
 
 export async function exportMarksheetPdf(marksheetId) {
   try {
-    const response = await axios.get(`${API_BASE}/${marksheetId}/export/pdf`, {
+    const response = await api.get(`${API_BASE}/${marksheetId}/export/pdf`, {
       responseType: 'blob'
     });
     return response.data;
@@ -141,7 +141,7 @@ export async function importMarksheetCsv(marksheetId, file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await axios.post(`${API_BASE}/${marksheetId}/import/csv`, formData, {
+    const response = await api.post(`${API_BASE}/${marksheetId}/import/csv`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;

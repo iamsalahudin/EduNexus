@@ -5,10 +5,6 @@ const notificationService = {
     return notificationsService.inbox(params)
   },
 
-  getNotification: async (id) => {
-    return notificationsService.getRequest(id)
-  },
-
   markAsRead: async (id) => {
     return notificationsService.markRead(id)
   },

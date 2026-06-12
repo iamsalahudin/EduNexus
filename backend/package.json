@@ -4,7 +4,10 @@
   "description": "EduNexus backend (Express + MongoDB)",
   "main": "src/index.js",
   "scripts": {
+    "check:integrity": "node ../scripts/check-integrity.js",
+    "prestart": "node ../scripts/check-integrity.js",
     "start": "node src/index.js",
+    "predev": "node ../scripts/check-integrity.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seedAdmin.js",
     "seed:demo": "node src/scripts/seedDemoData.js",

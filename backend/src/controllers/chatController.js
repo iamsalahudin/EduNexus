@@ -76,6 +76,15 @@ async function ensureSession({ userId, sessionId, role }) {
  * n8n webhook must return: { reply: string, data?: object, actions?: array }
  */
 exports.sendMessage = async (req, res) => {
+  const abortController = new AbortController();
+  let requestAborted = false;
+  const markAborted = () => {
+    requestAborted = true;
+    abortController.abort();
+  };
+  req.on('aborted', markAborted);
+  req.on('close', markAborted);
+
   try {
     const { message, sessionId } = req.body;
     const user = req.user; // From auth middleware
@@ -124,6 +133,7 @@ exports.sendMessage = async (req, res) => {
       const cachedRedis = await redisCache.get(cacheKey);
       if (cachedRedis) {
         logger.info('[CHAT] cache hit (redis)');
+        if (requestAborted || res.headersSent) return;
         const attachments = await persistAttachments(cachedRedis.attachments || [], session, user.id);
         const cachedResponse = { ...cachedRedis, attachments };
         await ChatMessage.create({
@@ -147,6 +157,7 @@ exports.sendMessage = async (req, res) => {
       const cached = cache.get(cacheKey);
       if (cached) {
         logger.info('[CHAT] cache hit (memory)');
+        if (requestAborted || res.headersSent) return;
         const attachments = await persistAttachments(cached.attachments || [], session, user.id);
         const cachedResponse = { ...cached, attachments };
         await ChatMessage.create({
@@ -173,7 +184,8 @@ exports.sendMessage = async (req, res) => {
     const ready = await waitForQueueReady();
     if (!ready || !isQueueReady()) {
       logger.warn('[CHAT] Queue not ready, falling back to direct processing');
-      const directResult = await processChat(n8nPayload);
+      const directResult = await processChat(n8nPayload, { signal: abortController.signal });
+      if (requestAborted || res.headersSent) return;
       const attachments = await persistAttachments(directResult.attachments || [], session, user.id);
       const responsePayload = { ...directResult, attachments };
       await ChatMessage.create({
@@ -206,7 +218,8 @@ exports.sendMessage = async (req, res) => {
       job = await addChatJob(n8nPayload);
     } catch (queueErr) {
       logger.error('[CHAT] Queue enqueue failed, falling back to direct processing:', queueErr.message);
-      const directResult = await processChat(n8nPayload);
+      const directResult = await processChat(n8nPayload, { signal: abortController.signal });
+      if (requestAborted || res.headersSent) return;
       const attachments = await persistAttachments(directResult.attachments || [], session, user.id);
       const responsePayload = { ...directResult, attachments };
       await ChatMessage.create({
@@ -234,11 +247,21 @@ exports.sendMessage = async (req, res) => {
 
     // Wait for job result with timeout guard
     const jobTimeout = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '35000', 10) + 5000;
+    const abortPromise = new Promise((_, reject) => {
+      if (abortController.signal.aborted) {
+        return reject(Object.assign(new Error('Chat request aborted'), { code: 'ERR_CANCELED' }));
+      }
+      abortController.signal.addEventListener('abort', () => {
+        reject(Object.assign(new Error('Chat request aborted'), { code: 'ERR_CANCELED' }));
+      }, { once: true });
+    });
     const result = await Promise.race([
       job.finished(),
+      abortPromise,
       new Promise((_, reject) => setTimeout(() => reject(new Error('Chat job timed out')), jobTimeout)),
     ]);
 
+    if (requestAborted || res.headersSent) return;
     const attachments = await persistAttachments(result.attachments || [], session, user.id);
     const responsePayload = { ...result, attachments };
 
@@ -268,6 +291,10 @@ exports.sendMessage = async (req, res) => {
     res.json(responsePayload);
 
   } catch (error) {
+    if (error?.code === 'ERR_CANCELED') {
+      logger.warn('[CHAT] request canceled by client');
+      return;
+    }
     logger.error('[CHAT ERROR]', error.message);
     
     // Log full error details for debugging

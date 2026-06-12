@@ -11,21 +11,6 @@ const staffAttendanceService = {
     return data
   },
 
-  getRecord: async (id) => {
-    const { data } = await api.get(`/staff-attendance/${id}`)
-    return data
-  },
-
-  markPunchIn: async (staffId) => {
-    const { data } = await api.post('/staff-attendance/punch-in', { staffId })
-    return data
-  },
-
-  markPunchOut: async (staffId) => {
-    const { data } = await api.post('/staff-attendance/punch-out', { staffId })
-    return data
-  },
-
   createRecord: async (payload = {}) => {
     const { data } = await api.post('/staff-attendance', payload)
     return data

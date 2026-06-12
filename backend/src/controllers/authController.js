@@ -4,6 +4,15 @@ const { signAccessToken, createRefreshToken } = require('../utils/jwt');
 const config = require('../config');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
 const mailService = require('../services/mailService');
+const bcrypt = require('bcryptjs');
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isBcryptHash(value) {
+  return typeof value === 'string' && /^\$2[aby]?\$/.test(value);
+}
 
 async function register(req, res, next) {
   try {
@@ -49,8 +58,11 @@ async function login(req, res, next) {
   try {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
-    const normalizedUsername = String(username).trim().toLowerCase();
-    const user = await User.findOne({ username: normalizedUsername });
+    const loginIdentifier = String(username).trim();
+    const loginPattern = new RegExp(`^${escapeRegExp(loginIdentifier)}$`, 'i');
+    const user = await User.findOne({
+      $or: [{ username: loginPattern }, { email: loginPattern }]
+    });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     // check account lock
@@ -58,7 +70,17 @@ async function login(req, res, next) {
       return res.status(423).json({ error: 'Account locked due to multiple failed login attempts' });
     }
 
-    const match = await user.comparePassword(password);
+    let match = false;
+    if (isBcryptHash(user.password)) {
+      match = await bcrypt.compare(password, user.password);
+    } else if (typeof user.password === 'string') {
+      match = user.password === password;
+      if (match) {
+        user.password = password;
+        user.markModified('password');
+        await user.save();
+      }
+    }
     if (!match) {
       await user.incLoginAttempts();
       return res.status(401).json({ error: 'Invalid credentials' });

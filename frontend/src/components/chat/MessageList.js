@@ -17,16 +17,28 @@ const markdownComponents = {
       {children}
     </li>
   ),
-  a: ({ children, ...props }) => (
-    <a
-      {...props}
-      className="underline underline-offset-2 break-words"
-      target="_blank"
-      rel="noreferrer"
-    >
-      {children}
-    </a>
-  ),
+  a: ({ children, href, ...props }) => {
+    const isData = typeof href === 'string' && href.startsWith('data:');
+    // Pull a filename out of the link text so the browser saves it with a sensible name.
+    let downloadName = '';
+    const text = Array.isArray(children)
+      ? children.map((c) => (typeof c === 'string' ? c : '')).join('')
+      : (typeof children === 'string' ? children : '');
+    const match = text.match(/[A-Za-z0-9._-]+\.(csv|json|pdf|html|xlsx|xls|docx|doc|txt)\b/i);
+    if (match) downloadName = match[0];
+    return (
+      <a
+        {...props}
+        href={href}
+        className="underline underline-offset-2 break-words"
+        target={isData ? undefined : '_blank'}
+        rel="noreferrer"
+        download={isData ? (downloadName || '') : undefined}
+      >
+        {children}
+      </a>
+    );
+  },
   pre: ({ children, ...props }) => (
     <pre
       {...props}

@@ -131,7 +131,7 @@ const ADMIN_MODULES = applyModuleOverrides(createEmptyModules(), {
 const PRINCIPAL_MODULES = enforceAdminOnlyPost(
   'Principal',
   applyModuleOverrides(createEmptyModules(), {
-    attendance: createModule('managed-operations', { GET: true, PATCH: true }, 'Can review and correct attendance.'),
+    attendance: createModule('managed-operations', { GET: true, PATCH: true }, 'Can review, mark, and correct attendance.'),
     marksheets: createModule('managed-operations', { GET: true, PATCH: true, PUT: true, DELETE: true }, 'Can review and govern marksheets.'),
     exams: createModule('managed-operations', { GET: true, PATCH: true, PUT: true, DELETE: true }, 'Can review and govern exams.'),
     reportCards: createModule('managed-operations', { GET: true, PATCH: true, DELETE: true }, 'Can approve/reject and audit report cards.'),
