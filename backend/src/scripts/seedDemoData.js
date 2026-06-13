@@ -25,6 +25,85 @@ const { DEFAULT_SUBJECTS, ensureDefaultSubjectsForClass } = require('../controll
 const FALLBACK_URI = 'mongodb+srv://hussain:aws%401317@cluster0.nuopsgu.mongodb.net/edu';
 const DEFAULT_PASSWORD = 'Demo@12345';
 
+const MALE_NAMES = [
+  'Ali',
+  'Ahmad',
+  'Hassan',
+  'Hussain',
+  'Usman',
+  'Bilal',
+  'Hamza',
+  'Awais',
+  'Saad',
+  'Zain',
+  'Abdullah',
+  'Talha',
+  'Umar',
+  'Yasir',
+  'Fahad',
+  'Muhammad',
+  'Imran',
+  'Asad',
+  'Danish',
+  'Shahzaib',
+];
+
+const FEMALE_NAMES = [
+  'Ayesha',
+  'Fatima',
+  'Zainab',
+  'Maryam',
+  'Iqra',
+  'Sana',
+  'Laiba',
+  'Hira',
+  'Maham',
+  'Areeba',
+  'Noor',
+  'Amna',
+  'Eman',
+  'Komal',
+  'Rabia',
+];
+
+const LAST_NAMES = [
+  'Ahmad',
+  'Khan',
+  'Malik',
+  'Butt',
+  'Sheikh',
+  'Rana',
+  'Qureshi',
+  'Farooq',
+  'Hashmi',
+  'Ansari',
+  'Chaudhry',
+  'Nawaz',
+];
+
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generatePersonName(isFemale = false) {
+  const firstName = isFemale
+    ? randomItem(FEMALE_NAMES)
+    : randomItem(MALE_NAMES);
+
+  const lastName = randomItem(LAST_NAMES);
+
+  return `${firstName} ${lastName}`;
+}
+
+function createEmail(name, suffix = '') {
+  const slug = slugify(name);
+  return `${slug}${suffix}@edu.com`;
+}
+
+function createUsername(name, suffix = '') {
+  return `${slugify(name)}${suffix}`;
+}
+
 function slugify(value) {
   return String(value || '')
     .trim()
@@ -166,9 +245,17 @@ async function ensureSeedClasses() {
 
 async function ensureParentForClass(classDoc, classIndex, section) {
   const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
-  const email = `parent-${classSlug}@edu.com`;
-  const username = `parent-${classSlug}`;
-  const name = `Parent ${classDoc.name}`;
+  const name = generatePersonName(false);
+
+  const username = createUsername(
+    name,
+    `-parent-${classIndex + 1}`
+  );
+
+  const email = createEmail(
+    name,
+    `-parent-${classIndex + 1}`
+  );
   const phone = buildPhone(classIndex, 50);
 
   const { user } = await ensureUser({
@@ -206,9 +293,17 @@ async function ensureParentForClass(classDoc, classIndex, section) {
 
 async function ensureTeacherForClass(classDoc, classIndex, section) {
   const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
-  const username = `teacher-${classSlug}`;
-  const email = `teacher-${classSlug}@edu.com`;
-  const teacherName = `Teacher ${classDoc.name}`;
+  const teacherName = generatePersonName(false);
+
+  const username = createUsername(
+    teacherName,
+    `-teacher-${classIndex + 1}`
+  );
+
+  const email = createEmail(
+    teacherName,
+    `-teacher-${classIndex + 1}`
+  );
   const subjects = DEFAULT_SUBJECTS.slice();
   const classLabel = `${classDoc.name}-${section}`;
 
@@ -260,9 +355,19 @@ async function ensureTeacherForClass(classDoc, classIndex, section) {
 async function ensureStudentForClass(classDoc, classIndex, studentIndex, section, parentUser) {
   const classSlug = slugify(classDoc.name) || `class-${classIndex + 1}`;
   const slot = studentIndex + 1;
-  const username = `student-${classSlug}-${slot}`;
-  const email = `student-${classSlug}-${slot}@edu.com`;
-  const studentName = `Student ${classDoc.name} ${slot}`;
+  const isFemale = Math.random() > 0.5;
+
+  const studentName = generatePersonName(isFemale);
+
+  const username = createUsername(
+    studentName,
+    `-student-${classIndex + 1}-${slot}`
+  );
+
+  const email = createEmail(
+    studentName,
+    `-student-${classIndex + 1}-${slot}`
+  );
   const studentId = `STD-${String(classIndex + 1).padStart(2, '0')}-${String(slot).padStart(2, '0')}`;
   const registrationNumber = `REG-${String(classIndex + 1).padStart(2, '0')}-${String(slot).padStart(2, '0')}`;
 
@@ -300,7 +405,7 @@ async function ensureStudentForClass(classDoc, classIndex, studentIndex, section
     availTransport: false,
     balance: 0,
     bloodGroup: slot % 2 === 0 ? 'A+' : 'B+',
-    gender: slot % 2 === 0 ? 'Female' : 'Male',
+    gender: isFemale ? 'Female' : 'Male',
     healthConditions: 'None',
     status: 'incampus',
     notes: `Seeded student for ${classDoc.name}`,
