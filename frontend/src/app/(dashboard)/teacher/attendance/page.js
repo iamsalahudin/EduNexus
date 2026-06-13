@@ -1,8 +1,8 @@
-﻿"use client"
+﻿"use client";
 
-import { Card, PageHeader } from '@/components/ui'
-import StaffAttendanceRecordsView from '@/components/attendance/StaffAttendanceRecordsView'
-import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
+import { Card, PageHeader } from "@/components/ui";
+import StaffAttendanceRecordsView from "@/components/attendance/StaffAttendanceRecordsView";
+import AttendanceActionCard from "@/components/attendance/AttendanceActionCard";
 
 export default function TeacherAttendanceDashboard() {
   return (
@@ -30,16 +30,16 @@ export default function TeacherAttendanceDashboard() {
           icon="✓"
           iconClassName="bg-green-100"
         />
-      </div>
 
-      <Card className="mt-6">
-        <h3 className="font-semibold mb-4">My Attendance Records</h3>
-        <StaffAttendanceRecordsView
-          title="My Attendance"
-          description="Auto-loaded teacher attendance with monthly, yearly, and custom range summaries."
+        <AttendanceActionCard
+          title="Attendance Reports"
+          description="View and generate attendance reports for your assigned classes."
+          href="/teacher/attendance/reports"
+          buttonLabel="View Reports"
+          icon="📊"
+          iconClassName="bg-purple-100"
         />
-      </Card>
+      </div>
     </div>
-  )
+  );
 }
-
