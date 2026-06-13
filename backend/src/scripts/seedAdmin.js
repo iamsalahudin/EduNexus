@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const Role = require('../models/role');
 const User = require('../models/user');
 
-const FALLBACK_URI = 'mongodb+srv://hussain:aws%401317@cluster0.nuopsgu.mongodb.net/edu';
+const FALLBACK_URI = 'mongodb+srv://hussainahmaddev17_db_user:dHbBwHhY9hdR9tvq@cluster0.ttx1amp.mongodb.net/edu';
 
 async function seed() {
   const uri = config.mongoUri || FALLBACK_URI;

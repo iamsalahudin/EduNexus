@@ -22,7 +22,7 @@ const {
 } = require('../models');
 const { DEFAULT_SUBJECTS, ensureDefaultSubjectsForClass } = require('../controllers/subjectsController');
 
-const FALLBACK_URI = 'mongodb+srv://hussain:aws%401317@cluster0.nuopsgu.mongodb.net/edu';
+const FALLBACK_URI = 'mongodb+srv://hussainahmaddev17_db_user:dHbBwHhY9hdR9tvq@cluster0.ttx1amp.mongodb.net/edu';
 const DEFAULT_PASSWORD = 'Demo@12345';
 
 const MALE_NAMES = [
