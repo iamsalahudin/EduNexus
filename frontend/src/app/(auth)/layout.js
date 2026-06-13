@@ -3,11 +3,7 @@ export default function AuthLayout({ children }) {
     <div className="min-h-[100dvh] overflow-hidden bg-gray-50 dark:bg-gray-900">
       <div className="min-h-[100dvh] grid grid-cols-1 lg:grid-cols-2">
         <div
-          className="hidden lg:flex flex-col justify-between p-10 text-white"
-          style={{
-            background:
-              'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-          }}
+          className="hidden lg:flex flex-col justify-between p-10 text-white bg-auth dark:bg-auth-dark"
         >
           <div>
             <div className="text-2xl font-semibold tracking-tight">EduNexus ERP</div>
@@ -16,7 +12,7 @@ export default function AuthLayout({ children }) {
             </div>
           </div>
 
-          <div className="text-xs opacity-80">Powered by your institution</div>
+          <div className="text-xs opacity-80">Powered by your <b>EduNexus Innovators</b></div>
         </div>
 
         <div className="flex items-center justify-center p-4 sm:p-8">

@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, enum: ['Admin','Principal','Accountant','HR','Reception','Receptionist','Teacher','Student','Parent'], default: 'Teacher' },
+    role: { type: String, required: true, enum: ['Admin','Principal','Accountant','HR','Receptionist','Teacher','Student','Parent'], default: 'Teacher' },
     active: { type: Boolean, default: true },
     profile: { type: mongoose.Schema.Types.Mixed }
   },

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import OTPInput from '@/components/ui/OTPInput';
 import { verifyOtpApi, sendOtpApi } from '@/services/auth.service';
@@ -82,9 +83,14 @@ export default function OTPVerificationPage() {
           </button>
         </div>
 
-        <button className="w-full py-2 btn-primary rounded" disabled={loading}>
-          {loading ? 'Verifying...' : 'Verify OTP'}
-        </button>
+        <div className="w-full flex items-center justify-center text-center gap-1 mt-10">
+          <Link href="/login" className="w-full py-2 bg-gray-600 rounded-md flex items-center justify-center text-center">
+            Cancel
+          </Link>
+          <button type="submit" className="w-full py-2 btn-primary rounded-md flex items-center justify-center text-center" disabled={loading}>
+             {loading ? 'Verifying...' : 'Verify OTP'}
+          </button>
+        </div>
       </form>
     </div>
   );
