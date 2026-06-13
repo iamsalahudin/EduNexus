@@ -292,17 +292,22 @@ async function markAttendance(req, res, next) {
         }
       }
 
+      const updatePayload = {
+        student: sid,
+        date: normalizedDate,
+        status: entry.status,
+        remarks: entry.remarks || '',
+        class: student.class,
+        section: student.section
+      };
+
+      if (req.user.role === 'Teacher') {
+        updatePayload.teacher = req.user.id;
+      }
+
       const rec = await Attendance.findOneAndUpdate(
         { student: sid, date: normalizedDate },
-        {
-          student: sid,
-          date: normalizedDate,
-          status: entry.status,
-          remarks: entry.remarks || '',
-          teacher: req.user.id,
-          class: student.class,
-          section: student.section
-        },
+        updatePayload,
         { upsert: true, new: true }
       );
       attendanceRecords.push(rec);

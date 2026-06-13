@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
+import AttendanceStatsGrid from '@/components/attendance/AttendanceStatsGrid'
 import {
   exportStaffAttendance,
   fetchStaffAttendance,
   markStaffAttendance,
   updateStaffAttendance,
 } from '@/services/attendanceService'
-import { api } from '@/services/api'
+import userService from '@/services/user.service'
 
 const STATUS_OPTIONS = [
   { value: 'present', label: 'Present' },
@@ -84,8 +85,8 @@ export default function TeacherAttendanceManagerView({
 
     async function loadTeachers() {
       try {
-        const res = await api.get('/users', { params: { limit: 1200 } })
-        const users = Array.isArray(res?.data?.users) ? res.data.users : []
+        const res = await userService.listUsers({ limit: 1200 })
+        const users = Array.isArray(res?.users) ? res.users : []
         const list = users
           .filter((user) => String(user?.role || '').toLowerCase() === 'teacher')
           .map((user) => ({
@@ -296,47 +297,59 @@ export default function TeacherAttendanceManagerView({
         </div>
       </Card>
 
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card><div className="text-xs text-gray-500">Total Rows</div><div className="text-xl font-semibold mt-1">{summary.total}</div></Card>
-        <Card><div className="text-xs text-gray-500">Present</div><div className="text-xl font-semibold mt-1 text-green-700">{summary.present}</div></Card>
-        <Card><div className="text-xs text-gray-500">Absent</div><div className="text-xl font-semibold mt-1 text-red-700">{summary.absent}</div></Card>
-        <Card><div className="text-xs text-gray-500">Late</div><div className="text-xl font-semibold mt-1 text-amber-700">{summary.late}</div></Card>
-        <Card><div className="text-xs text-gray-500">Leave</div><div className="text-xl font-semibold mt-1 text-purple-700">{summary.leave}</div></Card>
-      </div>
+      <AttendanceStatsGrid
+        columns={5}
+        className="mt-6"
+        items={[
+          { label: 'Total Rows', value: summary.total },
+          { label: 'Present', value: summary.present, valueClassName: 'text-green-700' },
+          { label: 'Absent', value: summary.absent, valueClassName: 'text-red-700' },
+          { label: 'Late', value: summary.late, valueClassName: 'text-amber-700' },
+          { label: 'Leave', value: summary.leave, valueClassName: 'text-purple-700' },
+        ]}
+      />
 
       <Card className="mt-6">
         <h3 className="font-semibold mb-4">Teacher Attendance Rows</h3>
-        <div className="overflow-auto">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : rows.length === 0 ? (
-            <div className="text-sm text-gray-600 py-4">No attendance rows found for current filters.</div>
-          ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b bg-gray-50">
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Teacher</th>
-                  <th className="py-3 px-4 font-semibold">Department</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Remarks</th>
-                  <th className="py-3 px-4 font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
+        <Table>
+          <TableRoot className="min-w-full text-sm">
+            <TableHead>
+              <TableRow className="text-left border-b bg-gray-50">
+                <TableHeader>Date</TableHeader>
+                <TableHeader>Teacher</TableHeader>
+                <TableHeader>Department</TableHeader>
+                <TableHeader>Status</TableHeader>
+                <TableHeader>Remarks</TableHeader>
+                <TableHeader>Action</TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <Skeleton className="h-64" />
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-sm text-gray-600 py-4">
+                    No attendance rows found for current filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((row) => {
                   const detailHref = typeof detailHrefBuilder === 'function'
                     ? detailHrefBuilder(row.teacherId)
-                    : `${resolvedRoleBase}/attendance/teachers/${row.teacherId}`
+                    : `${resolvedRoleBase}/attendance/teachers/profile/${row.teacherId}`
 
                   return (
-                    <tr key={row.key} className="border-b last:border-b-0 hover:bg-gray-50">
-                      <td className="py-2 px-4">{row.date}</td>
-                      <td className="py-2 px-4">
+                    <TableRow key={row.key}>
+                      <TableCell>{row.date}</TableCell>
+                      <TableCell>
                         <ButtonLink href={detailHref} variant="outline" size="sm">{row.teacherName}</ButtonLink>
-                      </td>
-                      <td className="py-2 px-4">{row.department || '-'}</td>
-                      <td className="py-2 px-4 min-w-[160px]">
+                      </TableCell>
+                      <TableCell>{row.department || '-'}</TableCell>
+                      <TableCell className="min-w-[160px]">
                         <Select
                           value={row.status}
                           onChange={(e) => {
@@ -350,16 +363,16 @@ export default function TeacherAttendanceManagerView({
                             <option key={statusItem.value} value={statusItem.value}>{statusItem.label}</option>
                           ))}
                         </Select>
-                      </td>
-                      <td className="py-2 px-4 min-w-[220px]">
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
                         <Input
                           value={row.remarks}
                           onChange={(e) => updateRow(row.key, { remarks: e.target.value })}
                           placeholder="Optional"
                           disabled={saving}
                         />
-                      </td>
-                      <td className="py-2 px-4">
+                      </TableCell>
+                      <TableCell>
                         <Button
                           type="button"
                           variant="primary"
@@ -369,14 +382,14 @@ export default function TeacherAttendanceManagerView({
                         >
                           {row.recordId ? 'Update' : 'Mark'}
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                })
+              )}
+            </TableBody>
+          </TableRoot>
+        </Table>
       </Card>
     </div>
   )

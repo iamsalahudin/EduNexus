@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import teacherService from '@/services/teacher.service'
 import { Button, ButtonLink, Card, EmptyState, PageHeader, Skeleton } from '@/components/ui'
+import TeacherAssignmentsTable from '@/components/hr/TeacherAssignmentsTable'
 
 export default function TeacherProfilePage() {
   const { id } = useParams()
@@ -116,33 +117,7 @@ export default function TeacherProfilePage() {
             </div>
           </Card>
 
-          <Card>
-            <h2 className="font-medium">Class and Subject Assignment</h2>
-            <p className="text-xs text-gray-600 mt-1">This will be updated from timetable configuration. Until then, it may remain empty.</p>
-
-            {assignmentRows.length === 0 ? (
-              <div className="text-sm text-gray-600 mt-3">No class-subject assignments available yet.</div>
-            ) : (
-              <div className="mt-3 overflow-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="text-left border-b bg-gray-50">
-                      <th className="py-2 px-3 font-semibold">Class Assigned</th>
-                      <th className="py-2 px-3 font-semibold">Subject</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assignmentRows.map((row, idx) => (
-                      <tr key={`${row.className}-${idx}`} className="border-b last:border-b-0">
-                        <td className="py-2 px-3">{row.className || '-'}</td>
-                        <td className="py-2 px-3">{row.subjectName || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
+          <TeacherAssignmentsTable rows={assignmentRows} />
 
           <Card>
             <h2 className="font-medium">Uploaded Documents</h2>

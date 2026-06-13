@@ -14,7 +14,7 @@ export default function Home() {
         >
           <div>
             <div className="text-xs uppercase tracking-wider opacity-90">EduNexus</div>
-            <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
+            <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight text-white">
               Campus ERP, simplified.
             </h1>
             <p className="mt-3 max-w-xl text-sm sm:text-base/7 opacity-90">

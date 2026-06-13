@@ -8,8 +8,8 @@ const { markAttendanceSchema, getAttendanceSchema, updateAttendanceSchema, atten
 // All routes require auth
 router.use(requireAuth);
 
-// Mark student attendance: class teacher only
-router.post('/', requireRole('Teacher'), validate(markAttendanceSchema), attendanceController.markAttendance);
+// Mark student attendance: class teacher + admin/principal
+router.post('/', requireRole('Teacher', 'Admin', 'Principal'), validate(markAttendanceSchema), attendanceController.markAttendance);
 
 // View attendance: all roles
 router.get('/', validate(getAttendanceSchema), attendanceController.getAttendance);

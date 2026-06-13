@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import complaintCategoryService from '@/services/complaintCategoryService'
-import { Button, Card, Input, PageHeader, Skeleton } from '@/components/ui'
+import { Button, PageHeader } from '@/components/ui'
+import ComplaintCategoriesTableCard from '@/components/complaints/ComplaintCategoriesTableCard'
+import ComplaintCategoryFormCard from '@/components/complaints/ComplaintCategoryFormCard'
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([])
@@ -39,6 +41,10 @@ export default function CategoriesPage() {
     setShowModal(true)
   }
 
+  function updateFormField(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
   async function save() {
     try {
       if (editing) {
@@ -69,57 +75,21 @@ export default function CategoriesPage() {
 
       {error ? <div className="text-sm text-red-700">{error}</div> : null}
 
-      <Card className="mt-6">
-        {loading ? (
-          <Skeleton className="h-40" />
-        ) : (
-          <div className="overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b">
-                  <th className="py-2 px-3">Name</th>
-                  <th className="py-2 px-3">Description</th>
-                  <th className="py-2 px-3">Active</th>
-                  <th className="py-2 px-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((c) => (
-                  <tr key={c._id} className="border-b last:border-b-0">
-                    <td className="py-2 px-3 font-medium">{c.name}</td>
-                    <td className="py-2 px-3">{c.description || '-'}</td>
-                    <td className="py-2 px-3">{c.active ? 'Yes' : 'No'}</td>
-                    <td className="py-2 px-3">
-                      <Button onClick={() => openEdit(c)} variant="outline" size="sm">Edit</Button>
-                      <Button onClick={() => remove(c._id)} variant="danger" size="sm" className="ml-2">Delete</Button>
-                    </td>
-                  </tr>
-                ))}
-                {categories.length === 0 && (
-                  <tr><td colSpan={4} className="py-4 text-sm text-gray-600">No categories found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      <ComplaintCategoriesTableCard
+        categories={categories}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={remove}
+      />
 
       {showModal && (
-        <Card className="mt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">{editing ? 'Edit Category' : 'Add Category'}</h3>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
-          </div>
-          <div className="space-y-3 mt-3">
-            <Input label="Name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
-            <Input label="Description" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
-            <Input label="Icon" value={form.icon} onChange={(e) => setForm((p) => ({ ...p, icon: e.target.value }))} />
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-              <Button variant="primary" onClick={save}>{editing ? 'Save' : 'Create'}</Button>
-            </div>
-          </div>
-        </Card>
+        <ComplaintCategoryFormCard
+          editing={editing}
+          form={form}
+          onChange={updateFormField}
+          onClose={() => setShowModal(false)}
+          onSave={save}
+        />
       )}
     </div>
   )

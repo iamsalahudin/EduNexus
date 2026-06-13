@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import classesService from '@/services/classesService'
-import { Button, Card, Input, PageHeader, Select } from '@/components/ui'
+import { Button, Card, Input, PageHeader, Select, Table, TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from '@/components/ui'
 
 export default function FeeStructurePage() {
   const [loading, setLoading] = useState(true)
@@ -208,22 +208,24 @@ export default function FeeStructurePage() {
         {loading ? (
           <div className="text-sm text-gray-600 mt-3">Loading classes...</div>
         ) : (
-          <div className="mt-4 overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-600">
-                  <th className="py-2 pr-3">Class</th>
-                  <th className="py-2 pr-3">Level</th>
-                  <th className="py-2 pr-3">Tuition Fee</th>
-                  <th className="py-2 pr-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {classes.map((c) => (
-                  <ClassRow key={c._id} row={c} disabled={saving} onSave={saveClassFee} />
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-4">
+            <Table>
+              <TableRoot>
+                <TableHead>
+                  <TableRow>
+                    <TableHeader>Class</TableHeader>
+                    <TableHeader>Level</TableHeader>
+                    <TableHeader>Tuition Fee</TableHeader>
+                    <TableHeader>Action</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {classes.map((c) => (
+                    <ClassRow key={c._id} row={c} disabled={saving} onSave={saveClassFee} />
+                  ))}
+                </TableBody>
+              </TableRoot>
+            </Table>
             {classes.length === 0 ? <div className="text-sm text-gray-600 mt-2">No classes found.</div> : null}
           </div>
         )}
@@ -240,17 +242,17 @@ function ClassRow({ row, onSave, disabled }) {
   }, [row?.tutionFee])
 
   return (
-    <tr className="border-t">
-      <td className="py-2 pr-3 whitespace-nowrap">{row.name}</td>
-      <td className="py-2 pr-3 whitespace-nowrap capitalize">{row.level || '-'}</td>
-      <td className="py-2 pr-3">
+    <TableRow>
+      <TableCell className="whitespace-nowrap">{row.name}</TableCell>
+      <TableCell className="whitespace-nowrap capitalize">{row.level || '-'}</TableCell>
+      <TableCell>
         <Input type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
-      </td>
-      <td className="py-2 pr-3">
+      </TableCell>
+      <TableCell>
         <Button type="button" disabled={disabled} onClick={() => onSave(row._id, fee)}>
           Save
         </Button>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   )
 }

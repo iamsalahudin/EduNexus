@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { fetchFeeRecords } from '@/services/feesService'
-import { Button, Card, Input, PageHeader, Select } from '@/components/ui'
+import { Button, Card, Input, PageHeader, Select, Table, TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from '@/components/ui'
 
 function toCSV(rows) {
   if (!rows.length) return ''
@@ -155,37 +155,39 @@ export default function FeeVouchersPage() {
         {isLoading ? (
           <div className="text-sm text-gray-500">Loading report rows...</div>
         ) : (
-          <div className="overflow-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Roll</th>
-                  <th className="text-left">Name</th>
-                  <th className="text-left">Class</th>
-                  <th className="text-right">Monthly Fee</th>
-                  <th className="text-right">Pending</th>
-                  <th className="text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
+          <Table>
+            <TableRoot>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Roll</TableHeader>
+                  <TableHeader>Name</TableHeader>
+                  <TableHeader>Class</TableHeader>
+                  <TableHeader className="text-right">Monthly Fee</TableHeader>
+                  <TableHeader className="text-right">Pending</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {filteredRows.map((row) => (
-                  <tr key={row.id} className="border-b last:border-none">
-                    <td className="py-2">{row.roll}</td>
-                    <td>{row.name}</td>
-                    <td>{row.class} - {row.section}</td>
-                    <td className="text-right">Rs {row.monthlyFee || 0}</td>
-                    <td className="text-right">Rs {row.pendingFee || 0}</td>
-                    <td>{row.status}</td>
-                  </tr>
+                  <TableRow key={row.id}>
+                    <TableCell>{row.roll}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.class} - {row.section}</TableCell>
+                    <TableCell className="text-right">Rs {row.monthlyFee || 0}</TableCell>
+                    <TableCell className="text-right">Rs {row.pendingFee || 0}</TableCell>
+                    <TableCell>{row.status}</TableCell>
+                  </TableRow>
                 ))}
                 {!filteredRows.length ? (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-center text-gray-500">No records found for selected filters.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-6 text-center text-gray-500">
+                      No records found for selected filters.
+                    </TableCell>
+                  </TableRow>
                 ) : null}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </TableRoot>
+          </Table>
         )}
       </Card>
     </div>

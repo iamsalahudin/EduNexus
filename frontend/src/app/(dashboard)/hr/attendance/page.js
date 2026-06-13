@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
+import { Card, PageHeader, Skeleton } from '@/components/ui'
 import { fetchStaffAttendanceSummary } from '@/services/attendanceService'
+import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
+import AttendanceSummaryCard from '@/components/attendance/AttendanceSummaryCard'
 
 export default function HRAttendanceHub() {
   const [staffSummary, setStaffSummary] = useState(null)
@@ -59,62 +61,51 @@ export default function HRAttendanceHub() {
           </>
         ) : (
           <>
-            <div className="card">
-              <div className="text-sm text-gray-500">Teacher Total Days</div>
-              <div className="mt-2 text-2xl font-semibold">{staffSummary?.total ?? 0}</div>
-              <div className="mt-1 text-xs text-gray-500">Teacher records in range</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-500">Teacher Present</div>
-              <div className="mt-2 text-2xl font-semibold text-green-600">{staffSummary?.present ?? 0}</div>
-              <div className="mt-1 text-xs text-gray-500">{staffPresenceRate}% present</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-500">Teacher Late</div>
-              <div className="mt-2 text-2xl font-semibold text-amber-600">{staffSummary?.late ?? 0}</div>
-              <div className="mt-1 text-xs text-gray-500">Late entries</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-500">Absent + Leave</div>
-              <div className="mt-2 text-2xl font-semibold text-red-600">
-                {(staffSummary?.absent ?? 0) + (staffSummary?.leave ?? 0)}
-              </div>
-              <div className="mt-1 text-xs text-gray-500">Staff unavailable</div>
-            </div>
+            <AttendanceSummaryCard
+              label="Teacher Total Days"
+              value={staffSummary?.total ?? 0}
+              sublabel="Teacher records in range"
+            />
+            <AttendanceSummaryCard
+              label="Teacher Present"
+              value={staffSummary?.present ?? 0}
+              sublabel={`${staffPresenceRate}% present`}
+              valueClassName="text-green-600"
+            />
+            <AttendanceSummaryCard
+              label="Teacher Late"
+              value={staffSummary?.late ?? 0}
+              sublabel="Late entries"
+              valueClassName="text-amber-600"
+            />
+            <AttendanceSummaryCard
+              label="Absent + Leave"
+              value={(staffSummary?.absent ?? 0) + (staffSummary?.leave ?? 0)}
+              sublabel="Staff unavailable"
+              valueClassName="text-red-600"
+            />
           </>
         )}
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Daily Teacher Attendance</h3>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">👨‍🏫</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Monitor teacher attendance by date with role-specific filters.
-          </p>
-          <ButtonLink href="/hr/attendance/staff" variant="primary" className="w-full">
-            Open Teacher Attendance
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Daily Teacher Attendance"
+          description="Monitor teacher attendance by date with role-specific filters."
+          href="/hr/attendance/staff"
+          buttonLabel="Open Teacher Attendance"
+          icon="👨‍🏫"
+          iconClassName="bg-blue-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Monthly & Yearly Downloads</h3>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">⬇️</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Download teacher attendance summaries by month or year from reports.
-          </p>
-          <ButtonLink href="/hr/reports/attendance" variant="primary" className="w-full">
-            Open Reports
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Monthly & Yearly Downloads"
+          description="Download teacher attendance summaries by month or year from reports."
+          href="/hr/reports/attendance"
+          buttonLabel="Open Reports"
+          icon="⬇️"
+          iconClassName="bg-green-100"
+        />
       </div>
 
       <Card className="mt-6">

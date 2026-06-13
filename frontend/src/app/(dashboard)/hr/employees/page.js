@@ -1,9 +1,11 @@
 ﻿"use client"
 
 import { useEffect, useState } from 'react'
-import { Button, Card, Input, PageHeader, Select, Skeleton, ToggleBox } from '@/components/ui'
+import { PageHeader } from '@/components/ui'
 import hrTeachersService from '@/services/hrTeachersService'
 import classesService from '@/services/classesService'
+import TeacherCreateCard from '@/components/hr/TeacherCreateCard'
+import TeacherMasterCard from '@/components/hr/TeacherMasterCard'
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
@@ -155,146 +157,48 @@ export default function Page() {
       {success ? <div className="mt-4 text-sm text-green-600">{success}</div> : null}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <h2 className="font-medium">Create Teacher</h2>
-          <form className="mt-4 space-y-3" onSubmit={createTeacher}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-              <Input placeholder="Username" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} required />
-              <Input placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-              <Input
-                placeholder="Password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-              <Select value={newClass} onChange={(e) => setNewClass(e.target.value)}>
-                <option value="">Class (optional)</option>
-                {classes.map((c) => (
-                  <option key={c._id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-              <Select
-                value={newSection}
-                onChange={(e) => setNewSection(e.target.value)}
-                disabled={!newClass || newSections.length === 0}
-              >
-                <option value="">
-                  {!newClass ? 'Select class first' : newSections.length === 0 ? 'No sections' : 'Section (optional)'}
-                </option>
-                {newSections.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <Button variant="primary" type="submit">
-              Create
-            </Button>
-          </form>
-        </Card>
+        <TeacherCreateCard
+          classes={classes}
+          sections={newSections}
+          newName={newName}
+          newUsername={newUsername}
+          newEmail={newEmail}
+          newPassword={newPassword}
+          newClass={newClass}
+          newSection={newSection}
+          onNameChange={setNewName}
+          onUsernameChange={setNewUsername}
+          onEmailChange={setNewEmail}
+          onPasswordChange={setNewPassword}
+          onClassChange={setNewClass}
+          onSectionChange={setNewSection}
+          onSubmit={createTeacher}
+        />
 
-        <Card>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="font-medium">Teacher Master</h2>
-              <p className="text-sm text-gray-600 mt-1">Search and edit teachers.</p>
-            </div>
-            <Button onClick={load}>Refresh</Button>
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-            <Button onClick={load}>Search</Button>
-          </div>
-
-          {loading ? (
-            <div className="mt-4"><Skeleton className="h-24" /></div>
-          ) : (
-            <div className="mt-4 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-600">
-                    <th className="py-2 pr-3">Name</th>
-                    <th className="py-2 pr-3">Username</th>
-                    <th className="py-2 pr-3">Email</th>
-                    <th className="py-2 pr-3">Class</th>
-                    <th className="py-2 pr-3">Section</th>
-                    <th className="py-2 pr-3">Active</th>
-                    <th className="py-2 pr-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teachers.map((t) => (
-                    <tr key={t._id} className="border-t">
-                      <td className="py-2 pr-3 whitespace-nowrap">{t.name}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{t.username || ''}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{t.email}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{t.profile?.class || ''}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{t.profile?.section || ''}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{String(t.active ?? true)}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
-                          Edit
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {teachers.length === 0 ? <div className="text-sm text-gray-600 mt-3">No teachers found.</div> : null}
-            </div>
-          )}
-
-          {selected ? (
-            <div className="mt-6 border-t pt-4">
-              <h3 className="font-medium">Edit Teacher</h3>
-              <form className="mt-3 space-y-3" onSubmit={saveEdit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-                  <Input placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />
-                  <Select value={editClass} onChange={(e) => setEditClass(e.target.value)}>
-                    <option value="">Class (optional)</option>
-                    {classes.map((c) => (
-                      <option key={c._id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </Select>
-                  <Select
-                    value={editSection}
-                    onChange={(e) => setEditSection(e.target.value)}
-                    disabled={!editClass || editSections.length === 0}
-                  >
-                    <option value="">
-                      {!editClass ? 'Select class first' : editSections.length === 0 ? 'No sections' : 'Section (optional)'}
-                    </option>
-                    {editSections.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <ToggleBox active={editActive} onToggle={(next) => setEditActive(next)}>Active</ToggleBox>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="primary" type="submit">
-                    Save
-                  </Button>
-                  <Button type="button" onClick={() => setSelected(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </div>
-          ) : null}
-        </Card>
+        <TeacherMasterCard
+          loading={loading}
+          teachers={teachers}
+          q={q}
+          onQueryChange={setQ}
+          onSearch={load}
+          onRefresh={load}
+          onEdit={startEdit}
+          selected={selected}
+          editName={editName}
+          editEmail={editEmail}
+          editActive={editActive}
+          editClass={editClass}
+          editSection={editSection}
+          editSections={editSections}
+          classes={classes}
+          onEditNameChange={setEditName}
+          onEditEmailChange={setEditEmail}
+          onEditClassChange={setEditClass}
+          onEditSectionChange={setEditSection}
+          onEditActiveToggle={(next) => setEditActive(next)}
+          onEditSubmit={saveEdit}
+          onEditCancel={() => setSelected(null)}
+        />
       </div>
     </div>
   )

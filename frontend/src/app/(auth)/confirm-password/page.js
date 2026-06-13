@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import PasswordStrength from '@/components/ui/PasswordStrength';
@@ -74,9 +75,14 @@ export default function ConfirmPasswordPage() {
             placeholder="Repeat your password"
           />
 
-          <Button type="submit" className="btn-primary" disabled={loading}>
+          <div className="w-full flex items-center justify-center text-center gap-1 mt-10">
+          <Link href="/login" className="w-full py-2 bg-gray-600 rounded-md flex items-center justify-center text-center">
+            Cancel
+          </Link>
+          <button type="submit" className="w-full py-2 btn-primary rounded-md flex items-center justify-center text-center" disabled={loading}>
             {loading ? 'Updating...' : 'Update Password'}
-          </Button>
+          </button>
+        </div>
         </form>
     </div>
   );

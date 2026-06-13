@@ -1,140 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
-import { fetchStudents, fetchStudentAttendance, updateStudentAttendance } from '@/services/attendanceService'
-import classesService from '@/services/classesService'
-import { ATTENDANCE_STATUS_OPTIONS } from '@/utils/constants'
-
-function toInputDate(d) {
-  const dt = d ? new Date(d) : new Date()
-  const yyyy = dt.getFullYear()
-  const mm = String(dt.getMonth() + 1).padStart(2, '0')
-  const dd = String(dt.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
+import DailyStudentAttendanceView from '@/components/attendance/DailyStudentAttendanceView'
 
 export default function DailyStudentAttendancePage() {
-  const today = toInputDate(new Date())
-  const [date, setDate] = useState(today)
-  const [classes, setClasses] = useState([])
-  const [classId, setClassId] = useState('')
-  const [section, setSection] = useState('')
-
-  const [students, setStudents] = useState([])
-  const [records, setRecords] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState(null)
-
-  // Get sections for selected class
-  const classSections = useMemo(() => {
-    if (!classId) return []
-    const selectedClass = classes.find((c) => String(c._id) === String(classId))
-    return Array.isArray(selectedClass?.sections) ? selectedClass.sections : []
-  }, [classes, classId])
-
-  // Load classes on mount
-  useEffect(() => {
-    async function loadClasses() {
-      try {
-        const res = await classesService.listClasses({ active: true })
-        setClasses(Array.isArray(res?.classes) ? res.classes : [])
-      } catch (e) {
-        console.error('Failed to load classes:', e)
-      }
-    }
-    loadClasses()
-  }, [])
-
-  // Load students and attendance when class/date changes
-  useEffect(() => {
-    if (!classId) {
-      setStudents([])
-      setRecords([])
-      return
-    }
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classId, section, date])
-
-  // Reset section when class changes
-  useEffect(() => {
-    if (classId && section && !classSections.includes(section)) {
-      setSection('')
-    }
-  }, [classId, classSections, section])
-
-  async function load() {
-    setLoading(true)
-    setError(null)
-    try {
-      const [studentsRes, attendanceRes] = await Promise.all([
-        fetchStudents({ classId, section: section || undefined, limit: 500 }),
-        fetchStudentAttendance({ classId, date })
-      ])
-      const studentList = studentsRes.students || []
-      const recordList = attendanceRes.records || []
-
-      // Map records by student ID
-      const recordByStudentId = new Map()
-      for (const r of recordList) {
-        const sid = r?.student?._id || r?.student
-        if (sid) recordByStudentId.set(String(sid), r)
-      }
-
-      // Merge students with attendance records
-      const merged = studentList.map((s) => ({
-        ...s,
-        attendance: recordByStudentId.get(String(s._id))
-      }))
-
-      setStudents(merged)
-      setRecords(recordList)
-    } catch (e) {
-      setError(e?.response?.data?.error || e.message || 'Failed to load attendance data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Handle status change
-  async function handleStatusChange(studentId, recordId, newStatus) {
-    if (!recordId) {
-      setError('Cannot update: Record ID missing')
-      return
-    }
-    setUpdating(true)
-    setError(null)
-    try {
-      await updateStudentAttendance(recordId, { status: newStatus })
-      // Update local state
-      setStudents((prev) =>
-        prev.map((s) =>
-          s._id === studentId ? { ...s, attendance: { ...s.attendance, status: newStatus } } : s
-        )
-      )
-    } catch (e) {
-      setError(e?.response?.data?.error || e.message || 'Failed to update attendance')
-    } finally {
-      setUpdating(false)
-    }
-  }
-
-  // Calculate summary
-  const summary = useMemo(() => {
-    const total = students.length
-    const present = students.filter((s) => s.attendance?.status === 'present').length
-    const absent = students.filter((s) => s.attendance?.status === 'absent').length
-    const late = students.filter((s) => s.attendance?.status === 'late').length
-    const excused = students.filter((s) => s.attendance?.status === 'excused').length
-    return { total, present, absent, late, excused }
-  }, [students])
-
-  // Date validation: disable future dates
-  const maxDate = toInputDate(new Date())
-
   return (
+<<<<<<< HEAD
     <div>
       <PageHeader
         title="Daily Student Attendance"
@@ -275,5 +145,12 @@ export default function DailyStudentAttendancePage() {
         </Card>
       )}
     </div>
+=======
+    <DailyStudentAttendanceView
+      backHref="/admin/attendance"
+      title="Daily Student Attendance"
+      subtitle="View and manage student attendance for a specific date by class and section."
+    />
+>>>>>>> br-s
   )
 }

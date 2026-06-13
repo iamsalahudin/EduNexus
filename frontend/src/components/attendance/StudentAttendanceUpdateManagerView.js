@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
 import { fetchStudentAttendance, updateStudentAttendance } from '@/services/attendanceService'
 import classesService from '@/services/classesService'
 
@@ -178,61 +178,63 @@ export default function StudentAttendanceUpdateManagerView({
           ) : filteredRows.length === 0 ? (
             <div className="text-sm text-gray-600">No matching records for the current search.</div>
           ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b">
-                  <th className="py-2 pr-3">Student</th>
-                  <th className="py-2 pr-3">ID</th>
-                  <th className="py-2 pr-3">Status</th>
-                  <th className="py-2 pr-3">Remarks</th>
-                  <th className="py-2 pr-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.map((row) => {
-                  const studentId = String(row?.record?.student?._id || '')
-                  const studentName = `${row?.record?.student?.firstName || ''} ${row?.record?.student?.lastName || ''}`.trim() || 'Student'
-                  return (
-                    <tr key={row.recordId} className="border-b last:border-b-0">
-                      <td className="py-2 pr-3">
-                        {studentId ? (
-                          <ButtonLink href={`${resolvedRoleBase}/attendance/students/${studentId}`} variant="outline" size="sm">
-                            {studentName}
-                          </ButtonLink>
-                        ) : (
-                          studentName
-                        )}
-                      </td>
-                      <td className="py-2 pr-3">{row?.record?.student?.studentId || '-'}</td>
-                      <td className="py-2 pr-3 min-w-[160px]">
-                        <Select value={row.status} onChange={(e) => {
-                          const newStatus = e.target.value
-                          updateRow(row.recordId, { status: newStatus })
-                          saveRow({ ...row, status: newStatus })
-                        }}>
-                          {STATUSES.map((statusItem) => (
-                            <option key={statusItem.value} value={statusItem.value}>{statusItem.label}</option>
-                          ))}
-                        </Select>
-                      </td>
-                      <td className="py-2 pr-3 min-w-[220px]">
-                        <Input value={row.remarks} onChange={(e) => updateRow(row.recordId, { remarks: e.target.value })} placeholder="Optional remarks" />
-                      </td>
-                      <td className="py-2 pr-3">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => saveRow(row)}
-                          disabled={savingId === row.recordId}
-                        >
-                          {savingId === row.recordId ? 'Saving...' : 'Update'}
-                        </Button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            <Table>
+              <TableRoot className="min-w-full text-sm">
+                <TableHead>
+                  <TableRow className="text-left border-b">
+                    <TableHeader>Student</TableHeader>
+                    <TableHeader>ID</TableHeader>
+                    <TableHeader>Status</TableHeader>
+                    <TableHeader>Remarks</TableHeader>
+                    <TableHeader>Actions</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredRows.map((row) => {
+                    const studentId = String(row?.record?.student?._id || '')
+                    const studentName = `${row?.record?.student?.firstName || ''} ${row?.record?.student?.lastName || ''}`.trim() || 'Student'
+                    return (
+                      <TableRow key={row.recordId}>
+                        <TableCell>
+                          {studentId ? (
+                            <ButtonLink href={`${resolvedRoleBase}/attendance/students/profile/${studentId}`} variant="outline" size="sm">
+                              {studentName}
+                            </ButtonLink>
+                          ) : (
+                            studentName
+                          )}
+                        </TableCell>
+                        <TableCell>{row?.record?.student?.studentId || '-'}</TableCell>
+                        <TableCell className="min-w-[160px]">
+                          <Select value={row.status} onChange={(e) => {
+                            const newStatus = e.target.value
+                            updateRow(row.recordId, { status: newStatus })
+                            saveRow({ ...row, status: newStatus })
+                          }}>
+                            {STATUSES.map((statusItem) => (
+                              <option key={statusItem.value} value={statusItem.value}>{statusItem.label}</option>
+                            ))}
+                          </Select>
+                        </TableCell>
+                        <TableCell className="min-w-[220px]">
+                          <Input value={row.remarks} onChange={(e) => updateRow(row.recordId, { remarks: e.target.value })} placeholder="Optional remarks" />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => saveRow(row)}
+                            disabled={savingId === row.recordId}
+                          >
+                            {savingId === row.recordId ? 'Saving...' : 'Update'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </TableRoot>
+            </Table>
           )}
         </div>
       </Card>

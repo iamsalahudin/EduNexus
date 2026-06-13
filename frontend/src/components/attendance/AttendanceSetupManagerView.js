@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
 import classesService from '@/services/classesService'
-import { api } from '@/services/api'
+import userService from '@/services/user.service'
 import {
   deleteAttendanceAssignment,
   fetchAttendanceAssignments,
@@ -50,12 +50,12 @@ export default function AttendanceSetupManagerView({
     setSuccess('')
     try {
       const [userRes, classRes, assignmentRes] = await Promise.all([
-        api.get('/users', { params: { limit: 1200 } }),
+        userService.listUsers({ limit: 1200 }),
         classesService.listClasses({ active: true }),
         fetchAttendanceAssignments(),
       ])
 
-      const users = Array.isArray(userRes?.data?.users) ? userRes.data.users : []
+      const users = Array.isArray(userRes?.users) ? userRes.users : []
       setTeachers(
         users
           .filter((user) => String(user?.role || '').toLowerCase() === 'teacher')
@@ -339,38 +339,40 @@ export default function AttendanceSetupManagerView({
         </div>
       </Card>
 
-      <Card className="mt-6 overflow-auto">
+      <Card className="mt-6">
         <h3 className="font-semibold mb-4">Current Assignments</h3>
         {loading && assignments.length === 0 ? (
           <Skeleton className="h-40" />
         ) : assignmentRows.length === 0 ? (
           <div className="text-sm text-gray-600">No assignments added yet.</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b bg-gray-50">
-                <th className="py-3 px-4 font-semibold">Class</th>
-                <th className="py-3 px-4 font-semibold">Section</th>
-                <th className="py-3 px-4 font-semibold">Teacher</th>
-                <th className="py-3 px-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignmentRows.map((assignment) => (
-                <tr key={assignment._id} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="py-3 px-4">{assignment?.className || '-'}</td>
-                  <td className="py-3 px-4">{assignment?.section || '—'}</td>
-                  <td className="py-3 px-4">{assignment?.teacher?.name || '—'}</td>
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(assignment)} disabled={loading}>Update</Button>
-                      <Button variant="outline" size="sm" onClick={() => handleRemove(assignment._id)} disabled={loading} className="text-red-600">Remove</Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table>
+            <TableRoot className="w-full text-sm">
+              <TableHead>
+                <TableRow className="text-left border-b bg-gray-50">
+                  <TableHeader>Class</TableHeader>
+                  <TableHeader>Section</TableHeader>
+                  <TableHeader>Teacher</TableHeader>
+                  <TableHeader className="text-right">Actions</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {assignmentRows.map((assignment) => (
+                  <TableRow key={assignment._id}>
+                    <TableCell>{assignment?.className || '-'}</TableCell>
+                    <TableCell>{assignment?.section || '—'}</TableCell>
+                    <TableCell>{assignment?.teacher?.name || '—'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(assignment)} disabled={loading}>Update</Button>
+                        <Button variant="outline" size="sm" onClick={() => handleRemove(assignment._id)} disabled={loading} className="text-red-600">Remove</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </TableRoot>
+          </Table>
         )}
       </Card>
     </div>

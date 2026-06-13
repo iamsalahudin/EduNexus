@@ -192,6 +192,14 @@
     background-color: var(--nav-hover-bg);
     color: var(--nav-hover-text);
   }
+
+  .bg-auth {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+
+  .bg-auth-dark {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.14) 0%, rgba(167, 139, 250, 0.14) 100%);
+  }
 }
 
 /* ===========================================================

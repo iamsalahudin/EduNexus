@@ -53,7 +53,7 @@ export function NotificationsPanel({ notifications: providedNotifications, loadi
         })
       ) : (
         <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-          <p className="text-sm">No notifications</p>
+          <p className="text-sm">No unread notifications</p>
         </div>
       )}
     </div>

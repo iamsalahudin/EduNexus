@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Button, Card, Input, Select } from '@/components/ui'
+import { Button, Card, Input, Select, Table, TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from '@/components/ui'
 import { fetchFeeDefaulters, fetchFeeRecords } from '@/services/feesService'
 import useSWR from 'swr'
 
@@ -178,25 +178,53 @@ export default function FeeReportWorkspace({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <div className="font-medium mb-2">Monthly Snapshot</div>
-          <table className="w-full text-sm">
-            <thead><tr className="border-b"><th className="text-left py-2">Month</th><th className="text-right">Students</th><th className="text-right">Collected</th><th className="text-right">Pending</th></tr></thead>
-            <tbody>
-              {monthlyRows.map((row) => (
-                <tr key={row.month}><td className="py-2">{row.month}</td><td className="text-right">{row.students}</td><td className="text-right">Rs {row.collected}</td><td className="text-right">Rs {row.pending}</td></tr>
-              ))}
-            </tbody>
-          </table>
+          <Table>
+            <TableRoot>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Month</TableHeader>
+                  <TableHeader className="text-right">Students</TableHeader>
+                  <TableHeader className="text-right">Collected</TableHeader>
+                  <TableHeader className="text-right">Pending</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {monthlyRows.map((row) => (
+                  <TableRow key={row.month}>
+                    <TableCell>{row.month}</TableCell>
+                    <TableCell className="text-right">{row.students}</TableCell>
+                    <TableCell className="text-right">Rs {row.collected}</TableCell>
+                    <TableCell className="text-right">Rs {row.pending}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </TableRoot>
+          </Table>
         </Card>
         <Card>
           <div className="font-medium mb-2">Yearly Snapshot</div>
-          <table className="w-full text-sm">
-            <thead><tr className="border-b"><th className="text-left py-2">Year</th><th className="text-right">Students</th><th className="text-right">Defaulters</th><th className="text-right">Collected</th></tr></thead>
-            <tbody>
-              {yearlyRows.map((row) => (
-                <tr key={row.year}><td className="py-2">{row.year}</td><td className="text-right">{row.students}</td><td className="text-right">{row.defaulters}</td><td className="text-right">Rs {row.collected}</td></tr>
-              ))}
-            </tbody>
-          </table>
+          <Table>
+            <TableRoot>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Year</TableHeader>
+                  <TableHeader className="text-right">Students</TableHeader>
+                  <TableHeader className="text-right">Defaulters</TableHeader>
+                  <TableHeader className="text-right">Collected</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {yearlyRows.map((row) => (
+                  <TableRow key={row.year}>
+                    <TableCell>{row.year}</TableCell>
+                    <TableCell className="text-right">{row.students}</TableCell>
+                    <TableCell className="text-right">{row.defaulters}</TableCell>
+                    <TableCell className="text-right">Rs {row.collected}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </TableRoot>
+          </Table>
         </Card>
       </div>
 
@@ -205,32 +233,32 @@ export default function FeeReportWorkspace({
           <div className="font-medium">Detailed Rows</div>
           <div className="text-xs text-gray-500">Click a row to open its fee details</div>
         </div>
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="py-2">Roll</th>
-                <th>Name</th>
-                <th>Class</th>
-                <th>Section</th>
-                <th>Status</th>
-                <th className="text-right">Pending</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Table>
+          <TableRoot>
+            <TableHead>
+              <TableRow>
+                <TableHeader>Roll</TableHeader>
+                <TableHeader>Name</TableHeader>
+                <TableHeader>Class</TableHeader>
+                <TableHeader>Section</TableHeader>
+                <TableHeader>Status</TableHeader>
+                <TableHeader className="text-right">Pending</TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {filteredRows.map((row) => (
-                <tr key={row.id} className="border-b last:border-none hover:bg-gray-50 cursor-pointer" onClick={() => window.location.assign(`${detailBasePath}/${row.id}`)}>
-                  <td className="py-2">{row.roll || '—'}</td>
-                  <td>{row.name || '—'}</td>
-                  <td>{row.class || '—'}</td>
-                  <td>{row.section || '—'}</td>
-                  <td>{row.status || '—'}</td>
-                  <td className="text-right">Rs {row.pendingFee || 0}</td>
-                </tr>
+                <TableRow key={row.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.assign(`${detailBasePath}/${row.id}`)}>
+                  <TableCell>{row.roll || '—'}</TableCell>
+                  <TableCell>{row.name || '—'}</TableCell>
+                  <TableCell>{row.class || '—'}</TableCell>
+                  <TableCell>{row.section || '—'}</TableCell>
+                  <TableCell>{row.status || '—'}</TableCell>
+                  <TableCell className="text-right">Rs {row.pendingFee || 0}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </TableRoot>
+        </Table>
       </Card>
     </div>
   )

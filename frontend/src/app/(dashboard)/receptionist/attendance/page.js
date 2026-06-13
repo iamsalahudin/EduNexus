@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { ButtonLink, Card, PageHeader, Skeleton } from '@/components/ui'
+import { Card, PageHeader, Skeleton } from '@/components/ui'
 import { fetchStaffAttendanceSummary } from '@/services/attendanceService'
+import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
+import AttendanceSummaryCard from '@/components/attendance/AttendanceSummaryCard'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -72,51 +74,43 @@ export default function ReceptionistAttendanceHub() {
           </>
         ) : (
           <>
-            <div className="card">
-              <div className="text-sm text-gray-500">Teacher Records</div>
-              <div className="mt-2 text-2xl font-semibold">{totalCount}</div>
-              <div className="mt-1 text-xs text-gray-500">daily teacher entries</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-500">Present</div>
-              <div className="mt-2 text-2xl font-semibold text-green-600">{presentCount}</div>
-              <div className="mt-1 text-xs text-gray-500">{attendancePercentage}% attendance rate</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-500">Absent/Leave</div>
-              <div className="mt-2 text-2xl font-semibold text-red-600">{absentCount}</div>
-              <div className="mt-1 text-xs text-gray-500">not available today</div>
-            </div>
+            <AttendanceSummaryCard
+              label="Teacher Records"
+              value={totalCount}
+              sublabel="daily teacher entries"
+            />
+            <AttendanceSummaryCard
+              label="Present"
+              value={presentCount}
+              sublabel={`${attendancePercentage}% attendance rate`}
+              valueClassName="text-green-600"
+            />
+            <AttendanceSummaryCard
+              label="Absent/Leave"
+              value={absentCount}
+              sublabel="not available today"
+              valueClassName="text-red-600"
+            />
           </>
         )}
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Mark Daily Attendance</h3>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">📋</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Use day-wise mode to mark teacher attendance and teacher-wise mode to review date ranges.
-          </p>
-          <ButtonLink href="/receptionist/attendance/teachers" variant="primary" className="w-full">
-            Open Teacher Attendance
-          </ButtonLink>
-        </Card>
+        <AttendanceActionCard
+          title="Mark Daily Attendance"
+          description="Use day-wise mode to mark teacher attendance and teacher-wise mode to review date ranges."
+          href="/receptionist/attendance/teachers"
+          buttonLabel="Open Teacher Attendance"
+          icon="📋"
+          iconClassName="bg-blue-100"
+        />
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Monthly/Yearly Summaries</h3>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg">✓</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Download filtered monthly and yearly teacher attendance summaries from the management page.
-          </p>
+        <AttendanceActionCard
+          title="Monthly/Yearly Summaries"
+          description="Download filtered monthly and yearly teacher attendance summaries from the management page."
+          icon="✓"
+          iconClassName="bg-green-100"
+        >
           {loading ? (
             <Skeleton className="h-10" />
           ) : (
@@ -131,7 +125,7 @@ export default function ReceptionistAttendanceHub() {
               </div>
             </div>
           )}
-        </Card>
+        </AttendanceActionCard>
       </div>
 
       <Card className="mt-6">

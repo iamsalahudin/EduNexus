@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { sendOtpApi } from '@/services/auth.service';
 
@@ -60,9 +61,15 @@ export default function ForgotPasswordPage(){
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" name="email" placeholder="you@school.edu" required className="w-full border rounded px-3 py-2" />
         </div>
 
-        <div className="w-full py-2 btn-primary rounded flex items-center justify-center text-center">
-          <button type="submit" className="w-full" disabled={loading}>{loading ? 'Sending...' : 'Send OTP'}</button>
+        <div className="w-full flex items-center justify-center text-center gap-1 mt-10">
+          <Link href="/login" className="w-full py-2 bg-gray-600 rounded-md flex items-center justify-center text-center">
+            Cancel
+          </Link>
+          <button type="submit" className="w-full py-2 btn-primary rounded-md flex items-center justify-center text-center" disabled={loading}>
+            {loading ? 'Sending...' : 'Send OTP'}
+          </button>
         </div>
+
       </form>
     </div>
   )
