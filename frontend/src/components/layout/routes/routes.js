@@ -371,7 +371,6 @@ const routes = {
     "results": "/teacher/results",
     "results/report-cards": "/teacher/results/report-cards",
     "salary": "/teacher/salary",
-    "student-attendance": "/teacher/student-attendance",
     "students": "/teacher/students",
     "students/performance": "/teacher/students/performance",
     "subjects": "/teacher/subjects",
