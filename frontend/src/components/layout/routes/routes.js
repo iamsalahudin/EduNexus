@@ -346,9 +346,8 @@ const routes = {
   "teacher": {
     "dashboard": "/teacher/",
     "attendance": "/teacher/attendance",
-    "attendance/daily": "/teacher/attendance/daily",
     "attendance/mark": "/teacher/attendance/mark",
-    "attendance/my": "/teacher/attendance/my",
+    "attendance/my-attendance": "/teacher/attendance/my",
     "attendance/reports": "/teacher/attendance/reports",
     "chat": "/teacher/chat",
     "classes": "/teacher/classes",

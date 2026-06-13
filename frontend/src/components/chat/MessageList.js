@@ -193,7 +193,7 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
             m.role === "user" ? "justify-end" : "justify-start"
           }`}
         >
-          {m.string === "" ? (
+          {m.loading === true ? (
             <TypingIndicator />
           ) : (
             <div
