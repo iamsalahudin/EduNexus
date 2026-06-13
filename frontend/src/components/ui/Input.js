@@ -70,11 +70,11 @@ const Input = forwardRef(function Input(
           type="button"
           aria-label={revealed ? 'Hide password' : 'Show password'}
           aria-pressed={revealed}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 hover:text-gray-900"
+          className="absolute right-2 bottom-0 -translate-y-1/2 text-xs text-gray-600 hover:text-gray-900"
           onClick={() => setRevealed((v) => !v)}
           tabIndex={0}
         >
-          {revealed ? <EyeOff className="h-4 w-4 opacity-50" /> : <Eye className="h-4 w-4 opacity-50" />}
+          {revealed ? <EyeOff className="h-5 w-5 opacity-50" /> : <Eye className="h-5 w-5 opacity-50" />}
         </button>
       </div>
     </div>
