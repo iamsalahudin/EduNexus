@@ -218,7 +218,6 @@ export default function MarkAttendancePage() {
           ) : rows.length === 0 ? (
             <div className="text-sm text-gray-600 py-4">No students found for your assigned class and section.</div>
           ) : (
-<<<<<<< HEAD
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left border-b bg-gray-50">
@@ -253,44 +252,6 @@ export default function MarkAttendancePage() {
                 ))}
               </tbody>
             </table>
-=======
-            <Table>
-              <TableRoot className="min-w-full text-sm">
-                <TableHead>
-                  <TableRow className="text-left border-b bg-gray-50">
-                    <TableHeader>Student</TableHeader>
-                    <TableHeader>Student ID</TableHeader>
-                    <TableHeader>Status</TableHeader>
-                    <TableHeader>Remarks</TableHeader>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={row.studentId}>
-                      <TableCell>{row.studentName}</TableCell>
-                      <TableCell>{row.studentCode}</TableCell>
-                      <TableCell className="min-w-[160px]">
-                        <Select
-                          value={row.status}
-                          onChange={(e) => updateRow(row.studentId, { status: e.target.value })}
-                          options={ATTENDANCE_STATUS_OPTIONS}
-                          disabled={saving}
-                        />
-                      </TableCell>
-                      <TableCell className="min-w-[220px]">
-                        <Input
-                          value={row.remarks}
-                          onChange={(e) => updateRow(row.studentId, { remarks: e.target.value })}
-                          placeholder="Optional"
-                          disabled={saving}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </TableRoot>
-            </Table>
->>>>>>> br-s
           )}
         </div>
       </Card>
