@@ -97,19 +97,19 @@ export default function Navbar({ isHidden, setIsHidden }) {
               </div>
 
               {profileHref ? (
-                <Link onClick={() => setOpen(false)} href={profileHref} className="block px-3 py-2 text-sm nav-item">
+                <Link onClick={() => setOpen(false)} href={profileHref} prefetch={false} className="block px-3 py-2 text-sm nav-item">
                   Profile
                 </Link>
               ) : null}
 
               {settingsHref ? (
-                <Link onClick={() => setOpen(false)} href={settingsHref} className="block px-3 py-2 text-sm nav-item">
+                <Link onClick={() => setOpen(false)} href={settingsHref} prefetch={false} className="block px-3 py-2 text-sm nav-item">
                   Settings
                 </Link>
               ) : null}
 
               {themeHref ? (
-                <Link onClick={() => setOpen(false)} href={themeHref} className="block px-3 py-2 text-sm nav-item">
+                <Link onClick={() => setOpen(false)} href={themeHref} prefetch={false} className="block px-3 py-2 text-sm nav-item">
                   Theme
                 </Link>
               ) : null}

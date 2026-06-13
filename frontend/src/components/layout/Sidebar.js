@@ -109,6 +109,7 @@ export default function Sidebar({ isHidden, onNavigate }) {
                 ) : (
                   <Link
                     href={mainHref}
+                    prefetch={false}
                     onClick={() => {
                       if (typeof window === 'undefined') return;
                       const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
@@ -137,6 +138,7 @@ export default function Sidebar({ isHidden, onNavigate }) {
                       <Link
                         key={href}
                         href={href}
+                        prefetch={false}
                         onClick={() => {
                           if (typeof window === 'undefined') return;
                           const isDesktop = window.matchMedia('(min-width: 1024px)').matches;

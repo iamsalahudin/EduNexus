@@ -24,6 +24,9 @@ export default function RootLayout({ children }) {
         <Script id="performance-marks-polyfill" strategy="beforeInteractive">
           {`(function(){try{var perf=window.performance;if(!perf)return;if(typeof perf.clearMarks!=='function'){perf.clearMarks=function(){}}if(typeof perf.clearMeasures!=='function'){perf.clearMeasures=function(){}}}catch(e){}})()`}
         </Script>
+        <Script id="chunkload-recovery" strategy="beforeInteractive">
+          {`(function(){try{var KEY='edunexus_chunk_reload_at';function shouldReload(){var now=Date.now();var last=Number(sessionStorage.getItem(KEY)||0);if(now-last<5000)return false;sessionStorage.setItem(KEY,String(now));return true;}function isChunk(err){var m=err&&(err.message||err.name||'');return /ChunkLoadError|Loading chunk\\s.+\\s?failed/.test(String(m))||(err&&err.name==='ChunkLoadError');}window.addEventListener('error',function(e){if(isChunk(e.error||e)){if(shouldReload())location.reload();}});window.addEventListener('unhandledrejection',function(e){if(isChunk(e.reason)){if(shouldReload())location.reload();}});}catch(e){}})()`}
+        </Script>
       </head>
       <body className=' scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'>
         <AuthProvider>

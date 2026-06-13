@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Button, ButtonLink, Card, Input, PageHeader, Skeleton } from '@/components/ui'
-import { fetchStudentAttendance, fetchStudents } from '@/services/attendanceService'
 import classesService from '@/services/classesService'
+import api, { invalidateApiCache } from '@/services/api'
+import { useAgentDataChanged } from '@/hooks/useAgentDataChanged'
 
 function toInputDate(d) {
   const dt = d ? new Date(d) : new Date()
@@ -23,58 +24,51 @@ export default function ClassAttendanceView({
   const [classStats, setClassStats] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const refresh = useCallback(() => {
+    invalidateApiCache('/attendance')
+    setReloadKey((n) => n + 1)
+  }, [])
+  useAgentDataChanged(refresh, ['attendances', 'students'])
 
   useEffect(() => {
-    async function loadClasses() {
+    const controller = new AbortController()
+    let cancelled = false
+    async function load() {
       setLoading(true)
       setError(null)
       try {
-        const res = await classesService.listClasses({ active: true })
-        const classList = Array.isArray(res?.classes) ? res.classes : []
+        const [classesRes, overviewRes] = await Promise.all([
+          classesService.listClasses({ active: true }, { signal: controller.signal }),
+          api.get('/attendance/class-overview', { params: { date }, signal: controller.signal }),
+        ])
+        if (cancelled) return
+        const classList = Array.isArray(classesRes?.classes) ? classesRes.classes : []
         setClasses(classList)
-
+        const overview = Array.isArray(overviewRes?.data?.overview) ? overviewRes.data.overview : []
+        const byName = new Map(overview.map((r) => [String(r.class), r]))
         const stats = {}
         for (const cls of classList) {
-          try {
-            const [studentsRes, attendanceRes] = await Promise.all([
-              fetchStudents({ classId: cls.name, limit: 500 }),
-              fetchStudentAttendance({ classId: cls.name, date })
-            ])
-            const totalStudents = studentsRes.students?.length || 0
-            const attendanceRecords = attendanceRes.records || []
-
-            let present = 0
-            let absent = 0
-            let late = 0
-            let excused = 0
-            for (const record of attendanceRecords) {
-              if (record.status === 'present') present += 1
-              else if (record.status === 'absent') absent += 1
-              else if (record.status === 'late') late += 1
-              else if (record.status === 'excused') excused += 1
-            }
-
-            stats[cls._id] = {
-              total: totalStudents,
-              present,
-              absent,
-              late,
-              excused,
-              percentage: totalStudents > 0 ? ((present / totalStudents) * 100).toFixed(1) : 0,
-            }
-          } catch (e) {
-            stats[cls._id] = { total: 0, present: 0, absent: 0, late: 0, excused: 0, percentage: 0 }
-          }
+          const r = byName.get(String(cls.name)) || { total: 0, present: 0, absent: 0, late: 0, excused: 0, percentage: 0 }
+          stats[cls._id] = r
         }
         setClassStats(stats)
       } catch (e) {
+        if (cancelled || controller.signal.aborted) return
+        const isAbort = e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError' || /canceled/i.test(String(e?.message || ''))
+        if (isAbort) return
         setError(e?.response?.data?.error || e.message || 'Failed to load class data')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
-    loadClasses()
-  }, [date])
+    load()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [date, reloadKey])
 
   const maxDate = toInputDate(new Date())
 

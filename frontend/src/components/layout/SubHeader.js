@@ -53,7 +53,7 @@ export default function SubHeader({ breadcrumb = [], className = "" }) {
         >
           {finalBreadcrumb.map((bc, id) => (
             <span key={bc.id || id} className="inline-flex items-center">
-              <Link href={bc.link}>{bc.name}</Link>
+              <Link href={bc.link} prefetch={false}>{bc.name}</Link>
               {id < finalBreadcrumb.length - 1 && (
                 <ChevronRight className="mx-1 w-4 h-4" />
               )}
