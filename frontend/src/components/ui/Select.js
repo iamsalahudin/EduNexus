@@ -11,6 +11,7 @@ const Select = forwardRef(function Select(
     onChange,
     className = '',
     selectClassName = '',
+    options,
     children,
     ...rest
   },
@@ -34,7 +35,24 @@ const Select = forwardRef(function Select(
           {label}
         </label>
       ) : null}
-      <select {...selectProps}>{children}</select>
+      <select {...selectProps}>
+        {options
+          ? options.map((opt) => {
+              if (typeof opt === 'string') {
+                return (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                )
+              }
+              return (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              )
+            })
+          : children}
+      </select>
     </div>
   )
 })

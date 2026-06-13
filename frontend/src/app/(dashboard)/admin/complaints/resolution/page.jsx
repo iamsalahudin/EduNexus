@@ -244,7 +244,7 @@ export default function ComplaintResolutionPage() {
                     onChange={(e) => setResStatus(e.target.value)}
                     disabled={saving}
                   >
-                    {STATUS_OPTIONS.map((opt) => (
+                    {COMPLAINT_STATUS_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </Select>

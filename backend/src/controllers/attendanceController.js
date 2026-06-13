@@ -59,11 +59,20 @@ function pairKey(pair) {
   return `${String(pair?.className || '').trim().toLowerCase()}::${String(pair?.section || '').trim().toLowerCase()}`;
 }
 
+function pairMatchesClassSection(pair, className, section) {
+  if (!pair) return false;
+  const targetClass = String(className || '').trim();
+  const targetSection = String(section || '').trim();
+  
+  const classMatches = targetClass === String(pair.className || '').trim();
+  const sectionMatches = !pair.section || targetSection === String(pair.section || '').trim();
+  
+  return classMatches && sectionMatches;
+}
+
 function pairMatchesStudent(pair, student) {
-  if (!pair || !student) return false;
-  const studentClass = String(student.class || '').trim();
-  const studentSection = String(student.section || '').trim();
-  return studentClass === String(pair.className || '').trim() && studentSection === String(pair.section || '').trim();
+  if (!student) return false;
+  return pairMatchesClassSection(pair, student.class, student.section);
 }
 
 function buildTeacherScopeFilter(pairs) {
@@ -686,7 +695,7 @@ async function updateAttendance(req, res, next) {
     // teacher can modify within scope or owner; admin/principal can always modify
     if (req.user.role === 'Teacher') {
       const scopePairs = await resolveTeacherScopePairs(req.user);
-      const canByScope = scopePairs.some((pair) => String(rec.class || '') === pair.className && String(rec.section || '') === String(pair.section || ''));
+      const canByScope = scopePairs.some((pair) => pairMatchesClassSection(pair, rec.class, rec.section));
       const canByOwner = rec.teacher && rec.teacher.toString() === req.user.id.toString();
       if (!canByScope && !canByOwner) return res.status(403).json({ error: 'Forbidden' });
     }

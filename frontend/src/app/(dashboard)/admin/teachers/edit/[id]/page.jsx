@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import teacherService from '@/services/teacher.service'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Textarea, ToggleBox } from '@/components/ui'
+import { TEACHER_EMPLOYMENT_STATUS_OPTIONS } from '@/utils/constants'
 
-const STATUS_OPTIONS = ['Working', 'Resigned']
 const MAX_DOCS = 10
 const MAX_FILE_BYTES = 10 * 1024 * 1024
 

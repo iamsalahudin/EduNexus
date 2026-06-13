@@ -218,6 +218,42 @@ export default function MarkAttendancePage() {
           ) : rows.length === 0 ? (
             <div className="text-sm text-gray-600 py-4">No students found for your assigned class and section.</div>
           ) : (
+<<<<<<< HEAD
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left border-b bg-gray-50">
+                  <th className="py-3 px-4 font-semibold">Student</th>
+                  <th className="py-3 px-4 font-semibold">Student ID</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.studentId} className="border-b last:border-b-0 hover:bg-gray-50">
+                    <td className="py-2 px-4">{row.studentName}</td>
+                    <td className="py-2 px-4">{row.studentCode}</td>
+                    <td className="py-2 px-4 min-w-[160px]">
+                      <Select
+                        value={row.status}
+                        onChange={(e) => updateRow(row.studentId, { status: e.target.value })}
+                        options={ATTENDANCE_STATUS_OPTIONS}
+                        disabled={saving}
+                      />
+                    </td>
+                    <td className="py-2 px-4 min-w-[220px]">
+                      <Input
+                        value={row.remarks}
+                        onChange={(e) => updateRow(row.studentId, { remarks: e.target.value })}
+                        placeholder="Optional"
+                        disabled={saving}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+=======
             <Table>
               <TableRoot className="min-w-full text-sm">
                 <TableHead>
@@ -254,6 +290,7 @@ export default function MarkAttendancePage() {
                 </TableBody>
               </TableRoot>
             </Table>
+>>>>>>> br-s
           )}
         </div>
       </Card>
