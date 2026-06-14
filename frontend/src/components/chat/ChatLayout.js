@@ -13,15 +13,20 @@ import { invalidateApiCache } from "@/services/api";
 const WRITE_OPS = new Set(['insertOne', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'writeBatch']);
 const COLLECTION_TO_PATH = {
   attendances: '/attendance',
+  attendanceassignments: '/attendance',
+  attendanceleaverequests: '/attendance',
   students: '/students',
   teachers: '/teachers',
   exams: '/exams',
+  examconfigs: '/exams',
   exammarks: '/marksheets',
   marksheets: '/marksheets',
   reportcards: '/reportcards',
   fees: '/fees',
+  feevouchertemplates: '/fees',
   homeworks: '/homeworks',
   complaints: '/complaints',
+  complaintcategories: '/complaints',
   classes: '/classes',
   schoolclasses: '/classes',
   subjects: '/subjects',
@@ -35,6 +40,9 @@ const COLLECTION_TO_PATH = {
   transportroutes: '/transport',
   hostels: '/hostel',
   libraryissues: '/library',
+  syllabi: '/syllabus',
+  gradescales: '/grade-scales',
+  departments: '/departments',
 };
 
 function notifyAgentWrote(meta) {
