@@ -127,7 +127,7 @@ export default function ClassAttendanceView({
                     {cls.sections && <p className="text-sm text-gray-500">Sections: {cls.sections.join(', ')}</p>}
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">{stat.percentage}%</div>
+                    <div className="text-2xl font-bold text-[--color-primary]">{stat.percentage}%</div>
                     <p className="text-xs text-gray-500">Attendance Rate</p>
                   </div>
                 </div>
@@ -160,10 +160,6 @@ export default function ClassAttendanceView({
                   </div>
                   <span className="text-xs font-semibold">{stat.percentage}%</span>
                 </div>
-
-                <Button variant="outline" className="w-full text-sm">
-                  View Details
-                </Button>
               </Card>
             )
           })}
