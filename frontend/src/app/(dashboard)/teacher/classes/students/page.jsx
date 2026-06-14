@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import classesService from '@/services/classesService'
+import teacherService from '@/services/teacher.service'
 import { Card, EmptyState, PageHeader, Select, Skeleton } from '@/components/ui'
 
 export default function ClassStudentsPage() {
@@ -14,7 +14,7 @@ export default function ClassStudentsPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await classesService.listClasses()
+      const res = await teacherService.getMyClasses()
       setClasses(Array.isArray(res?.classes) ? res.classes : [])
     } catch (err) {
       setError(err?.response?.data?.error || 'Class assignments are not available yet')

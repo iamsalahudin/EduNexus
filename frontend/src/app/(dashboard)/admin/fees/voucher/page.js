@@ -1,139 +1,177 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Button, Card, Input, PageHeader } from '@/components/ui'
-import { getFeeVoucherTemplate, saveFeeVoucherTemplate } from '@/services/feesService'
+"use client";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Link from "next/link";
+import { Button, Card, Input, PageHeader } from "@/components/ui";
+import {
+  getFeeVoucherTemplate,
+  saveFeeVoucherTemplate,
+} from "@/services/feesService";
+import { VoucherDisplay } from "@/components/fees/VoucherDisplay";
 
-const BankSchema = z.object({ bankName: z.string().min(1), account: z.string().min(1) })
 const VoucherSchema = z.object({
   schoolName: z.string().min(1),
   schoolAddress: z.string().min(1),
-  banks: z.array(BankSchema).min(1)
-})
+  banks: z
+    .array(
+      z.object({ bankName: z.string().min(1), account: z.string().min(1) }),
+    )
+    .min(1),
+});
 
-export default function FeeVoucher(){
-  const [saveMessage, setSaveMessage] = useState('')
-  const [savedTemplate, setSavedTemplate] = useState(null)
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm({
+export default function FeeVoucherPage() {
+  const [saveMessage, setSaveMessage] = useState("");
+  const [colorMode, setColorMode] = useState("color");
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(VoucherSchema),
-    defaultValues: { schoolName:'My School', schoolAddress:'Address', banks: [{ bankName:'Bank A', account:'XXXX' }] }
-  })
+    defaultValues: {
+      schoolName: "My School",
+      schoolAddress: "Address",
+      banks: [{ bankName: "Bank A", account: "XXXX" }],
+    },
+  });
 
-  const { fields, append, remove } = useFieldArray({ name: 'banks', control })
+  const { fields, append, remove } = useFieldArray({ name: "banks", control });
+  const liveData = watch();
 
   useEffect(() => {
-    let active = true
+    getFeeVoucherTemplate().then((template) => {
+      if (template) reset(template);
+    });
+  }, [reset]);
 
-    ;(async () => {
-      try {
-        const template = await getFeeVoucherTemplate()
-        if (!active) return
-        setSavedTemplate(template)
-        if (template) {
-          reset({
-            schoolName: template.schoolName || 'My School',
-            schoolAddress: template.schoolAddress || 'Address',
-            banks: Array.isArray(template.banks) && template.banks.length > 0 ? template.banks : [{ bankName:'Bank A', account:'XXXX' }]
-          })
-        }
-      } catch {
-        if (active) setSavedTemplate(null)
-      }
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [reset])
-
-  async function onSubmit(values){
-    const template = await saveFeeVoucherTemplate(values)
-    setSavedTemplate(template)
-    setSaveMessage('Voucher template saved.')
+  async function onSubmit(values) {
+    await saveFeeVoucherTemplate(values);
+    setSaveMessage("Voucher template saved successfully.");
+    setTimeout(() => setSaveMessage(""), 3000);
   }
-
-  const { ref: schoolNameRef, ...schoolNameReg } = register('schoolName')
-  const { ref: schoolAddressRef, ...schoolAddressReg } = register('schoolAddress')
 
   return (
     <div>
-      <PageHeader title="Fee Voucher" />
-      {saveMessage ? <div className="mt-2 text-sm text-green-600">{saveMessage}</div> : null}
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <PageHeader title="Fee Voucher Configuration" />
+        <Link href="/admin/fees/voucher/print" className="p-3 px-5 border-[--color-primary] border rounded-md text-sm text-[--color-primary] font-medium hover:bg-[--color-primary] hover:text-white transition">
+          Print Vouchers
+        </Link>
+      </div>
+      {saveMessage && (
+        <div className="mt-2 text-sm text-green-600 font-medium">
+          {saveMessage}
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
         <Card>
-          <h3 className="font-medium">School Info</h3>
+          <h3 className="font-medium mb-3">School Info</h3>
           <Input
-            {...schoolNameReg}
-            ref={schoolNameRef}
+            {...register("schoolName")}
             placeholder="School Name"
-            className="mt-2"
+            className="mb-2"
           />
-          {errors.schoolName && <div className="text-red-500 text-sm">{errors.schoolName.message}</div>}
-          <Input
-            {...schoolAddressReg}
-            ref={schoolAddressRef}
-            placeholder="School Address"
-            className="mt-2"
-          />
-          {errors.schoolAddress && <div className="text-red-500 text-sm">{errors.schoolAddress.message}</div>}
+          <Input {...register("schoolAddress")} placeholder="School Address" />
         </Card>
 
         <Card>
-          <h3 className="font-medium">Bank Accounts</h3>
-          <div className="mt-2 space-y-2">
-            {fields.map((f,i)=> (
-              <div key={f.id} className="flex gap-2">
-                {(() => {
-                  const { ref: bankNameRef, ...bankNameReg } = register(`banks.${i}.bankName`)
-                  const { ref: accountRef, ...accountReg } = register(`banks.${i}.account`)
-                  return (
-                    <>
-                      <Input {...bankNameReg} ref={bankNameRef} placeholder="Bank Name" className="flex-1" />
-                      <Input {...accountReg} ref={accountRef} placeholder="Account" className="flex-1" />
-                      <Button type="button" variant="outline" size="sm" onClick={() => remove(i)}>
-                        Remove
-                      </Button>
-                    </>
-                  )
-                })()}
-              </div>
-            ))}
-            <div>
-              <Button type="button" variant="secondary" onClick={() => append({ bankName:'', account:'' })}>
-                Add Another Bank
+          <h3 className="font-medium mb-3">Bank Accounts</h3>
+          {fields.map((f, i) => (
+            <div key={f.id} className="flex gap-2 mb-2">
+              <Input {...register(`banks.${i}.bankName`)} placeholder="Bank" />
+              <Input
+                {...register(`banks.${i}.account`)}
+                placeholder="A/C No."
+              />
+              <Button type="button" variant="outline" onClick={() => remove(i)}>
+                X
               </Button>
             </div>
-          </div>
+          ))}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => append({ bankName: "", account: "" })}
+          >
+            + Add Bank
+          </Button>
         </Card>
 
-        <div className="md:col-span-2">
-          <Card className="mt-4">
-            <h3 className="font-medium">Voucher Preview</h3>
-            {savedTemplate ? (
-              <div className="mt-3 p-4 border rounded space-y-2 text-sm">
-                <div><span className="font-medium">School:</span> {savedTemplate.schoolName}</div>
-                <div><span className="font-medium">Address:</span> {savedTemplate.schoolAddress}</div>
-                <div>
-                  <span className="font-medium">Banks:</span>
-                  <ul className="list-disc ml-6 mt-1">
-                    {savedTemplate.banks.map((bank, index) => (
-                      <li key={`${bank.bankName}-${index}`}>{bank.bankName} - {bank.account}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3 p-4 border rounded text-sm text-gray-500">Save a template to preview the voucher content here.</div>
-            )}
-          </Card>
+        <Button type="submit" variant="primary" className="md:col-span-2">
+          Save Template
+        </Button>
+      </form>
 
-          <div className="mt-3 flex gap-2">
-            <Button type="submit" variant="primary">Save Voucher</Button>
+      <div className="mt-10">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Voucher Preview</h3>
+          <div
+            style={{
+              display: "inline-flex",
+              background: "#f1f1f1",
+              borderRadius: 8,
+              padding: 3,
+              gap: 2,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setColorMode("color")}
+              style={{
+                padding: "6px 18px",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+                transition: "all 0.18s",
+                background: colorMode === "color" ? "#1a1a2e" : "transparent",
+                color: colorMode === "color" ? "#c8b560" : "#666",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              🎨 Color
+            </button>
+            <button
+              type="button"
+              onClick={() => setColorMode("bw")}
+              style={{
+                padding: "6px 18px",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+                transition: "all 0.18s",
+                background: colorMode === "bw" ? "#222" : "transparent",
+                color: colorMode === "bw" ? "#fff" : "#666",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              ⬛ Black & White
+            </button>
           </div>
         </div>
-      </form>
+
+        {/* The reusable voucher component */}
+        <div style={{ background: "#d6d3ca", borderRadius: 10, padding: 20 }}>
+          <VoucherDisplay data={liveData} colorMode={colorMode} />
+        </div>
+      </div>
     </div>
-  )
+  );
 }
