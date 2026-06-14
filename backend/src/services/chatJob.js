@@ -49,7 +49,30 @@ async function processChat(payload, options = {}) {
 
     const reply = extractReply(response.data);
     if (!reply) {
-      throw new Error('Invalid response from agent: missing reply/output');
+      // The webhook returned 200 but no usable reply. This usually means a downstream Code node
+      // threw and n8n's "Continue on Fail" swallowed it. Try to extract an error message from
+      // the response body so the user sees something useful instead of a generic message.
+      const extractError = (data) => {
+        if (!data) return null;
+        if (typeof data === 'string') return data;
+        if (Array.isArray(data) && data.length) {
+          const first = data[0]?.json ?? data[0];
+          return first?.error || first?.message || first?.errorMessage || null;
+        }
+        if (typeof data === 'object') {
+          return data.error || data.message || data.errorMessage || data.details?.errorMessage || null;
+        }
+        return null;
+      };
+      const errMsg = extractError(response.data);
+      return {
+        reply: errMsg ? `Agent error: ${errMsg}` : 'The agent did not return a reply. Please rephrase your request or check the n8n workflow logs.',
+        data: null,
+        actions: [],
+        sources: [],
+        attachments: [],
+        agentError: true,
+      };
     }
 
     // Attempt to map commonly used fields from agent output
@@ -87,14 +110,23 @@ async function processChat(payload, options = {}) {
       });
 
       const status = err.response.status;
-      if (status >= 400 && status < 500) {
+      if (status >= 400) {
         const body = err.response.data;
         let reply = null;
         if (typeof body === 'string' && body.trim()) reply = body.trim();
         else if (body && typeof body === 'object') {
-          reply = body.reply || body.answer || body.error || body.message || null;
+          if (Array.isArray(body) && body.length) {
+            const first = body[0]?.json ?? body[0];
+            reply = first?.error || first?.message || first?.errorMessage || null;
+          }
+          if (!reply) reply = body.reply || body.answer || body.error || body.message
+            || body.errorMessage || body.details?.errorMessage || null;
         }
-        if (!reply) reply = `Request not allowed (status ${status}).`;
+        if (!reply) {
+          reply = status >= 500
+            ? `The agent's workflow failed (status ${status}). Please rephrase your request or check the n8n logs for the failing node.`
+            : `Request not allowed (status ${status}).`;
+        }
         return {
           reply,
           data: null,
