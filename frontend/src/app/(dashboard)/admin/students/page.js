@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ButtonLink from '@/components/ui/ButtonLink'
 import studentsService from '@/services/studentsService'
+import classesService from '@/services/classesService'
 import {
   Button,
   Card,
@@ -30,11 +31,13 @@ export default function Page() {
   const [bootstrapping, setBootstrapping] = useState(true)
   const [summary, setSummary] = useState({ total: 0, incampus: 0, active: 0, alumni: 0 })
   const [students, setStudents] = useState([])
+  const [classes, setClasses] = useState([])
   const [recentStudents, setRecentStudents] = useState([])
   const [recentCertificates, setRecentCertificates] = useState([])
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
   const [active, setActive] = useState('')
+  const [classFilter, setClassFilter] = useState('')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -51,6 +54,20 @@ export default function Page() {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return '-'
     return date.toLocaleDateString()
+  }
+
+  async function loadClasses() {
+    setLoading(true)
+    setError('')
+    try {
+      const { classes: list } = await classesService.listClasses()
+      setClasses(Array.isArray(list) ? list : [])
+
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to load classes')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function downloadCertificateById(certificateId, certificateNumber) {
@@ -73,6 +90,7 @@ export default function Page() {
   }), [summary])
 
   async function loadDashboard(nextPage = 1, opts = {}) {
+    await loadClasses()
     const silent = Boolean(opts.silent)
     if (silent) {
       setLoading(true)
@@ -87,6 +105,7 @@ export default function Page() {
           q: q || undefined,
           status: status || undefined,
           active: active || undefined,
+          class: classFilter === 'all' ? undefined : classFilter,
           sortBy: 'updatedAt',
           sortOrder: 'desc',
           page: nextPage,
@@ -102,6 +121,7 @@ export default function Page() {
       ])
 
       setSummary(summaryRes?.summary || {})
+      console.log("classes list", listRes)
       setStudents(Array.isArray(listRes?.students) ? listRes.students : [])
       setPagination(listRes?.pagination || {
         page: nextPage,
@@ -177,9 +197,18 @@ export default function Page() {
                   </option>
                 ))}
               </Select>
+              <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+                <option value="all">All Classes</option>
+                {classes.map((c) => (
+                  <option key={c._id} value={c.name}>{c.name}</option>
+                ))}
+              </Select>
             </div>
 
-            <div className="mt-3">
+            <div className="mt-3 flex gap-2">
+              <ButtonLink href="/admin/students/admission" variant="secondary">
+                New Admission
+              </ButtonLink>
               <Button type="button" variant="primary" onClick={applyFilters} disabled={bootstrapping || loading}>
                 {loading ? 'Searching...' : 'Apply Filters'}
               </Button>

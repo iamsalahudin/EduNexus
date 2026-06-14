@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import timetableService from '@/services/timetableService'
+import teacherService from '@/services/teacher.service'
 import { fetchStudents, fetchStudentAttendance, markStudentAttendance } from '@/services/attendanceService'
 import { Button, ButtonLink, Card, Input, PageHeader, Select, Skeleton, Table, TableRoot, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui'
 import AttendanceStatsGrid from '@/components/attendance/AttendanceStatsGrid'
@@ -37,6 +38,7 @@ function extractScopeFromTimetable(timetable) {
 
 export default function MarkAttendancePage() {
   const { user } = useAuth()
+  const [classes, setClasses] = useState([])
   const [scope, setScope] = useState({ classId: '', section: '' })
   const [date, setDate] = useState(toInputDate(new Date()))
   const [loadingScope, setLoadingScope] = useState(true)
@@ -49,10 +51,15 @@ export default function MarkAttendancePage() {
   useEffect(() => {
     let mounted = true
 
-    async function resolveScope() {
+    async function initializePage() {
       setLoadingScope(true)
       setError('')
       try {
+        const classesRes = await teacherService.getMyClasses()
+        const fetchedClasses = Array.isArray(classesRes?.classes) ? classesRes.classes : []
+        if (!mounted) return
+        setClasses(fetchedClasses)
+
         const profileScope = extractScopeFromProfile(user)
         if (profileScope.classId) {
           if (!mounted) return
@@ -64,7 +71,16 @@ export default function MarkAttendancePage() {
         const firstTimetable = Array.isArray(res?.timetables) ? res.timetables[0] : null
         const timetableScope = extractScopeFromTimetable(firstTimetable)
         if (!mounted) return
-        setScope(timetableScope)
+
+        if (timetableScope.classId) {
+          setScope(timetableScope)
+        } else if (fetchedClasses.length > 0) {
+          const firstClass = fetchedClasses[0]
+          setScope({
+            classId: firstClass.name,
+            section: Array.isArray(firstClass.sections) && firstClass.sections.length > 0 ? firstClass.sections[0] : ''
+          })
+        }
       } catch (e) {
         if (!mounted) return
         setError(e?.response?.data?.error || e.message || 'Unable to resolve your class-teacher scope.')
@@ -73,7 +89,9 @@ export default function MarkAttendancePage() {
       }
     }
 
-    resolveScope()
+    if (user) {
+      initializePage()
+    }
     return () => {
       mounted = false
     }
@@ -185,8 +203,45 @@ export default function MarkAttendancePage() {
       <Card className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input label="Date" type="date" value={date} max={toInputDate(new Date())} onChange={(e) => setDate(e.target.value)} />
-          <Input label="Class" value={scope.classId || 'Not assigned'} disabled />
-          <Input label="Section" value={scope.section || 'All'} disabled />
+
+          <Select
+            label="Class"
+            value={scope.classId}
+            onChange={(e) => {
+              const selectedClassName = e.target.value;
+              const selectedClassObj = classes.find((c) => c.name === selectedClassName);
+              const sections = selectedClassObj?.sections || [];
+              setScope({
+                classId: selectedClassName,
+                section: sections.length > 0 ? sections[0] : '',
+              });
+            }}
+            disabled={loadingScope || loadingStudents}
+          >
+            <option value="">Choose class</option>
+            {classes.map((c) => (
+              <option key={c._id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            label="Section"
+            value={scope.section}
+            onChange={(e) => {
+              setScope((prev) => ({ ...prev, section: e.target.value }));
+            }}
+            disabled={loadingScope || loadingStudents || !scope.classId}
+          >
+            <option value="">Select section</option>
+            {(classes.find((c) => c.name === scope.classId)?.sections || []).map((sec) => (
+              <option key={sec} value={sec}>
+                {sec}
+              </option>
+            ))}
+          </Select>
+
           <div className="flex items-end gap-2">
             <Button type="button" variant="secondary" onClick={loadStudentsAndAttendance} disabled={loadingStudents || loadingScope || !scope.classId}>Refresh</Button>
             <Button type="button" variant="primary" onClick={saveAll} disabled={saving || loadingStudents || !rows.length || !scope.classId}>

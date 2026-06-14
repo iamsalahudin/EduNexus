@@ -6,11 +6,7 @@ export default function Home() {
     <main className="min-h-[100dvh] overflow-hidden bg-gray-50 dark:bg-gray-900">
       <div className="min-h-[100dvh] grid grid-cols-1 lg:grid-cols-2">
         <section
-          className="relative flex flex-col justify-between p-6 sm:p-10 text-white"
-          style={{
-            background:
-              'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-          }}
+          className="relative flex flex-col justify-between p-6 sm:p-10 text-white bg-auth dark:bg-auth-dark"
         >
           <div>
             <div className="text-xs uppercase tracking-wider opacity-90">EduNexus</div>
