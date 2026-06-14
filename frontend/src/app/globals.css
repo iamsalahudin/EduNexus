@@ -295,3 +295,28 @@
   a::after { content: '' !important; }
   button, input, select, textarea { display: none !important; }
 }
+
+@media print {
+  /* 1. Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* 2. Show only the print-only container and its children */
+  .print-only, .print-only * {
+    visibility: visible;
+  }
+
+  /* 3. Position the container at the top left of the printed page */
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* 4. Ensure each voucher breaks to a new page */
+  .print-page {
+    page-break-after: always;
+  }
+}

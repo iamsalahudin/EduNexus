@@ -60,6 +60,11 @@ const teacherService = {
   deleteTeacher: async (id) => {
     const { data } = await api.delete(`/teachers/${id}`)
     return data
+  },
+
+  getMyClasses: async () => {
+    const { data } = await api.get('/teachers/my-classes')
+    return data
   }
 }
 

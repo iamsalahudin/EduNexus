@@ -1,4 +1,4 @@
-const { Teacher, User } = require('../models');
+const { Teacher, User, SchoolClass } = require('../models');
 const { sendWelcomeCredentialsEmail } = require('../services/teacherOnboardingMailer');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
 const {
@@ -545,11 +545,36 @@ async function deleteTeacher(req, res, next) {
   }
 }
 
+async function getMyClasses(req, res, next) {
+  try {
+    const teacher = await Teacher.findOne({ user: req.user.id })
+      .select('classesAssigned')
+      .lean();
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher profile not found' });
+    }
+
+    const assignedClasses = Array.isArray(teacher.classesAssigned)
+      ? teacher.classesAssigned.map((c) => String(c).trim()).filter(Boolean)
+      : [];
+
+    const classes = await SchoolClass.find({ name: { $in: assignedClasses } })
+      .sort({ name: 1 })
+      .lean();
+
+    res.json({ classes });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getTeachersSummary,
   listTeachers,
   getTeacherById,
   createTeacher,
   updateTeacher,
-  deleteTeacher
+  deleteTeacher,
+  getMyClasses
 };

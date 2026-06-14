@@ -202,7 +202,7 @@ export default function MessageList({ messages = [], onNavigate = () => {} }) {
               }`}
             >
               <div
-                className={`max-w-72 text-sm rounded-xl mb-5 px-5 py-3 pointer-events-none ${
+                className={`max-w-[50vw] text-sm rounded-xl mb-5 px-5 py-3 ${
                   m.role === "user"
                     ? "bg-[var(--color-primary)] opacity-80 text-white rounded-br-none"
                     : "bg-slate-500/10 text-[var(--color-text)] rounded-bl-none"

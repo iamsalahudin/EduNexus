@@ -1,8 +1,8 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import { Button, ButtonLink, Card, PageHeader, Select, Skeleton } from '@/components/ui'
-import classesService from '@/services/classesService'
+import teacherService from '@/services/teacher.service'
 import homeworksService from '@/services/homeworksService'
 
 function fmtDate(value) {
@@ -26,7 +26,7 @@ export default function Page() {
   async function boot() {
     setBootLoading(true)
     try {
-      const cRes = await classesService.listClasses({ active: true })
+      const cRes = await teacherService.getMyClasses()
       setClasses(Array.isArray(cRes?.classes) ? cRes.classes : [])
     } catch {
       setClasses([])
