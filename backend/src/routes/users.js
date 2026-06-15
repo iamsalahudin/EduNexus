@@ -39,8 +39,9 @@ const userUpdateSchema = Joi.object({
 // Admin + Principal user management (principal is restricted in controller)
 router.use(requireAuth, requireRole('Admin', 'Principal'));
 
-// Admin-only write operations that can affect platform-wide access.
-router.post('/', requireRole('Admin'), validate(userCreateSchema), userController.createUser);
+// Principal can create staff users too (controller restricts role to HR/Finance/Reception).
+router.post('/', requireRole('Admin', 'Principal'), validate(userCreateSchema), userController.createUser);
+// Role change + delete remain Admin-only - they are platform-wide actions.
 router.patch('/:id/role', requireRole('Admin'), validate(Joi.object({ body: Joi.object({ role: Joi.string().valid(...ADMIN_MANAGED_ROLES).required() }) })), userController.changeRole);
 router.delete('/:id', requireRole('Admin'), userController.deleteUser);
 

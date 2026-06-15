@@ -9,6 +9,8 @@ import {
   fetchAttendanceAssignments,
   saveAttendanceAssignment,
 } from '@/services/attendanceService'
+import { invalidateApiCache } from '@/services/api'
+import { useAgentDataChanged } from '@/hooks/useAgentDataChanged'
 
 function trimText(value) {
   return String(value || '').trim()
@@ -83,6 +85,13 @@ export default function AttendanceSetupManagerView({
   useEffect(() => {
     load()
   }, [])
+
+  useAgentDataChanged(() => {
+    invalidateApiCache('/attendance')
+    invalidateApiCache('/users')
+    invalidateApiCache('/classes')
+    load()
+  }, ['attendanceassignments', 'attendances', 'users', 'teachers', 'schoolclasses'])
 
   const editingAssignment = useMemo(() => {
     return assignments.find((assignment) => String(assignment?._id || '') === String(editingId || '')) || null
