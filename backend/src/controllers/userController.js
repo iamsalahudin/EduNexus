@@ -80,6 +80,14 @@ async function createUser(req, res, next) {
     const normalizedUsername = String(username || '').trim().toLowerCase();
     const normalizedEmail = String(email).toLowerCase().trim();
 
+    // Principals may create staff (HR / Finance / Reception) but not Admin or another Principal.
+    if (isPrincipalRequest(req)) {
+      const PRINCIPAL_CREATABLE = new Set(['HR', 'Finance', 'Reception']);
+      if (!PRINCIPAL_CREATABLE.has(String(role))) {
+        return res.status(403).json({ error: 'Principal can only create HR, Finance, or Reception users.' });
+      }
+    }
+
     const existingUsername = await User.findOne({ username: normalizedUsername });
     if (existingUsername) return res.status(409).json({ error: 'Username already exists' });
 
