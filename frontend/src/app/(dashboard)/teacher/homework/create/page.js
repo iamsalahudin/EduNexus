@@ -1,9 +1,9 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Skeleton from '@/components/ui/Skeleton'
-import classesService from '@/services/classesService'
+import teacherService from '@/services/teacher.service'
 import subjectsService from '@/services/subjectsService'
 import homeworksService from '@/services/homeworksService'
 import InlineFilePreview from '@/components/homework/InlineFilePreview'
@@ -46,7 +46,7 @@ export default function Page() {
     setError('')
     try {
       const [cRes, sRes] = await Promise.all([
-        classesService.listClasses({ active: true }),
+        teacherService.getMyClasses(),
         subjectsService.listSubjects({})
       ])
       setClasses(Array.isArray(cRes?.classes) ? cRes.classes : [])

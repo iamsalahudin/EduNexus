@@ -20,6 +20,7 @@ router.get('/export', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Recept
 // Summary/statistics with role-scoped data
 router.get('/summary', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist', 'Student', 'Parent'), attendanceController.getAttendanceSummary);
 router.get('/reports', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist'), attendanceController.getAttendanceReport);
+router.get('/class-overview', requireRole('Admin', 'Principal', 'HR', 'Teacher', 'Receptionist'), attendanceController.getClassAttendanceOverview);
 
 // Update attendance: teacher scoped + admin/principal
 router.patch('/:id', requireRole('Teacher', 'Admin', 'Principal'), validate(updateAttendanceSchema), attendanceController.updateAttendance);

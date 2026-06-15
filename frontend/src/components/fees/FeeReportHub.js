@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, PageHeader } from "@/components/ui";
+import Link from "next/link";
 
 function Stat({ label, value, hint }) {
   return (
@@ -58,7 +59,7 @@ export default function FeeReportHub({
       <Card>
         <h3 className="font-medium">Quick Links</h3>
         <div className="mt-4 flex flex-col lg:flex-row gap-2">
-        <a
+        <Link
           href={`${roleBase}/fees/report/collection-trend`}
           className=" card nav-item"
         >
@@ -66,14 +67,14 @@ export default function FeeReportHub({
           <div className="text-sm text-gray-400">
             Monthly and yearly fee collection snapshots with downloads.
           </div>
-        </a>
-        <a href={`${roleBase}/fees/report/records`} className=" card nav-item">
+        </Link>
+        <Link href={`${roleBase}/fees/report/records`} className=" card nav-item">
           <div className="font-semibold">Student Records</div>
           <div className="text-sm text-gray-400">
             Searchable class and student fee record report.
           </div>
-        </a>
-        <a
+        </Link>
+        <Link
           href={`${roleBase}/fees/report/defaulters`}
           className=" card nav-item"
         >
@@ -81,7 +82,7 @@ export default function FeeReportHub({
           <div className="text-sm text-gray-400">
             Outstanding fee list with export options.
           </div>
-        </a>
+        </Link>
         </div>
       </Card>
     </div>

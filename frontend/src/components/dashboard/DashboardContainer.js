@@ -2,6 +2,7 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useDashboard } from '@/hooks/useDashboard';
+import Link from 'next/link';
 import { StatCard } from '@/components/dashboard/cards/StatCard';
 import { AttendanceCard } from '@/components/dashboard/cards/AttendanceCard';
 import { FinanceCard } from '@/components/dashboard/cards/FinanceCard';
@@ -173,13 +174,15 @@ export function DashboardContainer() {
             </>
           ) : (
             <>
-              <StatCard
-                title="Total Students"
-                value={summary?.students?.total ?? 0}
-                color="primary"
-                loading={false}
-                subtitle={`Active: ${summary?.students?.active ?? 0} | Inactive: ${summary?.students?.inactive ?? 0}`}
-              />
+              <Link className='hover:shadow-lg' href="/admin/students">
+                <StatCard
+                  title="Total Students"
+                  value={summary?.students?.total ?? 0}
+                  color="primary"
+                  loading={false}
+                  subtitle={`Active: ${summary?.students?.active ?? 0} | Inactive: ${summary?.students?.inactive ?? 0}`}
+              /></Link>
+              <Link className='hover:shadow-lg' href="/admin/teachers">
               <StatCard
                 title="Total Teachers"
                 value={summary?.teachers?.total ?? 0}
@@ -187,6 +190,8 @@ export function DashboardContainer() {
                 loading={false}
                 subtitle={`Active: ${summary?.teachers?.active ?? 0} | Inactive: ${summary?.teachers?.inactive ?? 0}`}
               />
+              </Link>
+              <Link className='hover:shadow-lg' href="/admin/parents">
               <StatCard
                 title="Total Parents"
                 value={summary?.parents?.total ?? 0}
@@ -194,6 +199,8 @@ export function DashboardContainer() {
                 loading={false}
                 subtitle={`Active: ${summary?.parents?.active ?? 0} | Inactive: ${summary?.parents?.inactive ?? 0}`}
               />
+              </Link>
+              <Link className='hover:shadow-lg' href="/admin/classes">
               <StatCard
                 title="Total Classes"
                 value={summary?.classes?.total ?? 0}
@@ -201,6 +208,7 @@ export function DashboardContainer() {
                 loading={false}
                 subtitle={`Active: ${summary?.classes?.active ?? 0} | Inactive: ${summary?.classes?.inactive ?? 0}`}
               />
+              </Link>
             </>
           )}
         </div>
@@ -217,13 +225,14 @@ export function DashboardContainer() {
                 <FinanceChartSkeleton />
               </>
             ) : (
-              <>
-                <AttendanceCard
+              <div className="flex flex-col gap-2">
+                <Link className='hover:shadow-lg' href="/admin/attendance"><AttendanceCard
                   title="Today's Attendance"
                   students={attendance?.students}
                   teachers={attendance?.teachers}
                   loading={false}
-                />
+                /></Link>
+                <Link className='hover:shadow-lg' href="/admin/fees/report/collection-trend">
                 <FinanceCard
                   title="Monthly Fees Collection"
                   data={{
@@ -234,12 +243,13 @@ export function DashboardContainer() {
                   }}
                   loading={false}
                 />
+                </Link>
                 <FinanceChart
                   data={finance?.graphData}
                   loading={false}
                   title="Collections vs Expenses"
                 />
-              </>
+              </div>
             )}
           </div>
 
@@ -252,7 +262,7 @@ export function DashboardContainer() {
               </>
             ) : (
               <>
-                <NotificationsPanel notifications={notifications} loading={false} maxNotifications={8} />
+                <Link className='hover:shadow-lg' href="/admin/settings/notifications"><NotificationsPanel notifications={notifications} loading={false} maxNotifications={8} /></Link>
                 <ActivitiesPanel activities={activities} loading={false} maxActivities={5} />
               </>
             )}

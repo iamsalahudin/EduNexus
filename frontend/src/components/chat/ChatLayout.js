@@ -8,6 +8,48 @@ import MessageInput from "./MessageInput";
 import { uid } from "./chatStore";
 import { sendToApi, fetchSessions, fetchMessages } from "./api";
 import { useRouter, usePathname } from "next/navigation";
+import { invalidateApiCache } from "@/services/api";
+
+const WRITE_OPS = new Set(['insertOne', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'writeBatch']);
+const COLLECTION_TO_PATH = {
+  attendances: '/attendance',
+  students: '/students',
+  teachers: '/teachers',
+  exams: '/exams',
+  exammarks: '/marksheets',
+  marksheets: '/marksheets',
+  reportcards: '/reportcards',
+  fees: '/fees',
+  homeworks: '/homeworks',
+  complaints: '/complaints',
+  classes: '/classes',
+  schoolclasses: '/classes',
+  subjects: '/subjects',
+  users: '/users',
+  parents: '/parents',
+  staffattendances: '/staff-attendance',
+  salarystaffs: '/salary',
+  timetables: '/timetables',
+  dailydiaries: '/daily-diary',
+  notifications: '/notifications',
+  transportroutes: '/transport',
+  hostels: '/hostel',
+  libraryissues: '/library',
+};
+
+function notifyAgentWrote(meta) {
+  if (typeof window === 'undefined') return;
+  const op = meta?.operation;
+  if (!op || !WRITE_OPS.has(op)) return;
+  const cols = new Set();
+  if (meta.collection) cols.add(String(meta.collection).toLowerCase());
+  if (Array.isArray(meta.subCollections)) meta.subCollections.forEach((c) => c && cols.add(String(c).toLowerCase()));
+  for (const c of cols) {
+    const path = COLLECTION_TO_PATH[c];
+    if (path) invalidateApiCache(path);
+  }
+  window.dispatchEvent(new CustomEvent('edunexus:data-changed', { detail: { operation: op, collections: Array.from(cols) } }));
+}
 
 // default input height in px — used to pad messages so they don't get hidden
 const INPUT_HEIGHT = 96;
@@ -145,6 +187,15 @@ export default function ChatLayout({ mode = "full" }) {
 
     // call API with retries handled inside
     const res = await sendToApi({ conversationId: id, message: text });
+
+    // If the agent performed a write, bust the matching api cache + notify pages so the UI refreshes.
+    try {
+      const meta = res?.data || {};
+      const subCols = Array.isArray(res?.data?.subResults)
+        ? res.data.subResults.map((s) => s?.collection || s?.result?.collection).filter(Boolean)
+        : [];
+      notifyAgentWrote({ operation: meta.operation, collection: meta.collection, subCollections: subCols });
+    } catch (_) {}
 
     // update placeholder with real response
     setMessagesBySession((prev) => {

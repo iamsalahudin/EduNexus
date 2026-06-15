@@ -85,6 +85,26 @@ async function processChat(payload, options = {}) {
         statusText: err.response.statusText,
         data: err.response.data,
       });
+
+      const status = err.response.status;
+      if (status >= 400 && status < 500) {
+        const body = err.response.data;
+        let reply = null;
+        if (typeof body === 'string' && body.trim()) reply = body.trim();
+        else if (body && typeof body === 'object') {
+          reply = body.reply || body.answer || body.error || body.message || null;
+        }
+        if (!reply) reply = `Request not allowed (status ${status}).`;
+        return {
+          reply,
+          data: null,
+          actions: [],
+          sources: [],
+          attachments: [],
+          agentDenied: true,
+          statusCode: status,
+        };
+      }
     } else {
       logger.error('[CHAT][JOB] no HTTP response received (network/DNS/SSL/proxy?)');
     }

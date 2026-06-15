@@ -322,7 +322,20 @@ exports.sendMessage = async (req, res) => {
       }
     }
 
-    res.status(500).json({ error: 'Failed to process your query' });
+    let userFacing = 'Failed to process your query';
+    let statusCode = 500;
+    if (error.response) {
+      statusCode = error.response.status || 500;
+      const body = error.response.data;
+      if (typeof body === 'string' && body.trim()) {
+        userFacing = body.trim();
+      } else if (body && typeof body === 'object') {
+        userFacing = body.error || body.message || body.reply || body.answer || userFacing;
+      }
+    } else if (error.message && !/timed out|aborted/i.test(error.message)) {
+      userFacing = error.message;
+    }
+    res.status(statusCode).json({ error: userFacing });
   }
 };
 

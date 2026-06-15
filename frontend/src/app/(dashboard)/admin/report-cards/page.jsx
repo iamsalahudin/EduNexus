@@ -40,7 +40,7 @@ export default function ReportCardsPage() {
         ))}
       </div>
 
-      <Card className="border-l-4 border-l-violet-500 bg-violet-50">
+      <Card className="border-l-4 border-l-violet-800 bg-violet-500/10 text-violet-800">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <div className="text-xs uppercase tracking-wide text-violet-700">Output</div>

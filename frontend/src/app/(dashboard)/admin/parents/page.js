@@ -1,8 +1,8 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import ButtonLink from '@/components/ui/ButtonLink'
-import teacherService from '@/services/teacher.service'
+import parentService from '@/services/parents.services'
 import {
   Button,
   Card,
@@ -21,16 +21,14 @@ import {
   TableRow,
 } from '@/components/ui'
 
-const STATUS_OPTIONS = ['', 'Working', 'Resigned']
-const ACTIVE_OPTIONS = ['', 'true', 'false']
 const PAGE_SIZE = 12
 
 export default function Page() {
   const [loading, setLoading] = useState(false)
   const [bootstrapping, setBootstrapping] = useState(true)
   const [summary, setSummary] = useState({ total: 0, working: 0, active: 0, inactive: 0, past: 0 })
-  const [teachers, setTeachers] = useState([])
-  const [recentTeachers, setRecentTeachers] = useState([])
+  const [parents, setParents] = useState([])
+  const [recentParents, setRecentParents] = useState([])
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
   const [active, setActive] = useState('')
@@ -62,18 +60,15 @@ export default function Page() {
     }
     setError('')
     try {
-      const [summaryRes, listRes, recentRes] = await Promise.all([
-        teacherService.getSummary(),
-        teacherService.listTeachers({
+      const [listRes, recentRes] = await Promise.all([
+        parentService.listParents({
           q: q || undefined,
-          status: status || undefined,
-          active: active || undefined,
           sortBy: 'updatedAt',
           sortOrder: 'desc',
           page: nextPage,
           limit: PAGE_SIZE,
         }),
-        teacherService.listTeachers({
+        parentService.listParents({
           recentHours: 24,
           sortBy: 'updatedAt',
           sortOrder: 'desc',
@@ -81,8 +76,7 @@ export default function Page() {
         }),
       ])
 
-      setSummary(summaryRes?.summary || {})
-      setTeachers(Array.isArray(listRes?.teachers) ? listRes.teachers : [])
+      setParents(Array.isArray(listRes?.parents) ? listRes.parents : [])
       setPagination(listRes?.pagination || {
         page: nextPage,
         limit: PAGE_SIZE,
@@ -92,9 +86,9 @@ export default function Page() {
         hasNext: false,
       })
       setPage(listRes?.pagination?.page || nextPage)
-      setRecentTeachers(Array.isArray(recentRes?.teachers) ? recentRes.teachers : [])
+      setRecentParents(Array.isArray(recentRes?.parents) ? recentRes.parents : [])
     } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to load teachers')
+      setError(e?.response?.data?.error || 'Failed to load parents data')
     } finally {
       if (silent) setLoading(false)
       else setBootstrapping(false)
@@ -118,49 +112,23 @@ export default function Page() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Teachers"
-        subtitle="Track teacher accounts, profiles, and recent onboarding activity."
-        right={(
-          <div className="flex flex-wrap gap-2">
-            <ButtonLink href="/admin/teachers/add" variant="primary">Add Teacher</ButtonLink>
-          </div>
-        )}
+        title="Parents"
+        subtitle="Track parent accounts, profiles, and recent onboarding activity."
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <StatCard label="Total" value={bootstrapping ? '...' : stats.total} />
-        <StatCard label="Working" value={bootstrapping ? '...' : stats.working} />
-        <StatCard label="Active" value={bootstrapping ? '...' : stats.active} />
-        <StatCard label="Inactive" value={bootstrapping ? '...' : stats.inactive} />
-        <StatCard label="Past" value={bootstrapping ? '...' : stats.past} />
-      </div>
-
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-medium">Teachers List</h2>
-              <p className="text-sm text-gray-600 mt-1">Search by name, email, designation, department, or employee ID.</p>
+              <h2 className="font-medium">Parents List</h2>
+              <p className="text-sm text-gray-600 mt-1">Search by name, email or parent ID.</p>
             </div>
             <Button type="button" onClick={() => loadDashboard(page, { silent: true })} disabled={bootstrapping || loading}>Refresh</Button>
           </div>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s || 'all'} value={s}>{s || 'Any Status'}</option>
-              ))}
-            </Select>
-            <Select value={active} onChange={(e) => setActive(e.target.value)}>
-              {ACTIVE_OPTIONS.map((a) => (
-                <option key={a || 'all'} value={a}>
-                  {a === '' ? 'Any Active State' : a === 'true' ? 'Active' : 'Inactive'}
-                </option>
-              ))}
-            </Select>
           </div>
 
           <div className="mt-3">
@@ -172,32 +140,32 @@ export default function Page() {
           <div className="mt-4">
             {bootstrapping ? (
               <Skeleton className="h-40" />
-            ) : teachers.length === 0 ? (
-              <EmptyState title="No teachers found" />
+            ) : parents.length === 0 ? (
+              <EmptyState title="No parents found" />
             ) : (
               <>
                 <Table>
                   <TableRoot>
                     <TableHead>
                       <TableRow>
-                        <TableHeader>Employee ID</TableHeader>
+                        <TableHeader>Parent ID</TableHeader>
                         <TableHeader>Name</TableHeader>
-                        <TableHeader>Designation</TableHeader>
+                        <TableHeader>Email</TableHeader>
                         <TableHeader>Status</TableHeader>
                         <TableHeader>Actions</TableHeader>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {teachers.map((row) => (
+                      {parents.map((row) => (
                         <TableRow key={row._id} className="hover:bg-gray-50">
-                          <TableCell>{row.employeeId || '-'}</TableCell>
+                          <TableCell>{row.parentId || '-'}</TableCell>
                           <TableCell>{row?.user?.name || '-'}</TableCell>
-                          <TableCell>{row.designation || '-'}</TableCell>
+                          <TableCell>{row.email || '-'}</TableCell>
                           <TableCell>{row.status || '-'}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <ButtonLink href={`/admin/teachers/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
-                              <ButtonLink href={`/admin/teachers/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
+                              <ButtonLink href={`/admin/parents/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
+                              <ButtonLink href={`/admin/parents/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -238,21 +206,21 @@ export default function Page() {
 
         <Card>
           <h2 className="font-medium">Quick Navigation</h2>
-          <p className="text-sm text-gray-600 mt-1">Manage teacher records and onboarding.</p>
+          <p className="text-sm text-gray-600 mt-1">Manage parent records and onboarding.</p>
 
           <div className="mt-4 grid grid-cols-1 gap-2">
-            <ButtonLink href="/admin/teachers/add" variant="secondary" className="w-full">Add New Teacher</ButtonLink>
+            <ButtonLink href="/admin/parents/add" variant="secondary" className="w-full">Add New Parent</ButtonLink>
           </div>
 
           <div className="mt-5">
-            <h3 className="text-sm font-medium">Recent Teachers (Last 24 Hours)</h3>
-            <p className="text-xs text-gray-600 mt-1">Latest 5 teacher profiles added or updated.</p>
+            <h3 className="text-sm font-medium">Recent Parents (Last 24 Hours)</h3>
+            <p className="text-xs text-gray-600 mt-1">Latest 5 parent profiles added or updated.</p>
 
             <div className="mt-3">
               {bootstrapping ? (
                 <Skeleton className="h-28" />
-              ) : recentTeachers.length === 0 ? (
-                <EmptyState title="No recent teacher updates" />
+              ) : recentParents.length === 0 ? (
+                <EmptyState title="No recent parent updates" />
               ) : (
                 <Table>
                   <TableRoot>
@@ -263,13 +231,13 @@ export default function Page() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {recentTeachers.map((row) => (
+                      {recentParents.map((row) => (
                         <TableRow key={row._id}>
                           <TableCell>{row?.user?.name || '-'}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <ButtonLink href={`/admin/teachers/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
-                              <ButtonLink href={`/admin/teachers/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
+                              <ButtonLink href={`/admin/parents/profile/${row._id}`} variant="outline" size="sm">View</ButtonLink>
+                              <ButtonLink href={`/admin/parents/edit/${row._id}`} variant="outline" size="sm">Edit</ButtonLink>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -285,4 +253,3 @@ export default function Page() {
     </div>
   )
 }
-

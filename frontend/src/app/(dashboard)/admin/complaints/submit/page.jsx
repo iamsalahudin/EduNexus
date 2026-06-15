@@ -64,6 +64,7 @@ export default function SubmitComplaintPage() {
   }
 
   async function handleSubmit(e) {
+    console.log('Submitting complaint with data:', formData)
     e.preventDefault()
     setError('')
     setSuccess('')

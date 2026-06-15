@@ -1,8 +1,8 @@
 import { api } from './api'
 
 export const classesService = {
-  listClasses: async (params = undefined) => {
-    const { data } = await api.get('/classes', params ? { params } : undefined)
+  listClasses: async (params = undefined, options = undefined) => {
+    const { data } = await api.get('/classes', { ...(params ? { params } : {}), ...(options || {}) })
     return data
   },
 

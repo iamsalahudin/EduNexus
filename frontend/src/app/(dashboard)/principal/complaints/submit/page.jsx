@@ -221,8 +221,8 @@ export default function SubmitComplaintPage() {
       </Card>
 
       {/* Info Box */}
-      <Card className="mt-6 bg-blue-50 border border-blue-200">
-        <div className="text-sm text-blue-900">
+      <Card className="mt-6 bg-blue-500/20 border border-blue-500 mb-4">
+        <div className="text-sm text-blue-500">
           <p className="font-medium mb-2">What happens next?</p>
           <ul className="list-disc list-inside space-y-1 text-xs">
             <li>Your complaint will be reviewed by our team</li>

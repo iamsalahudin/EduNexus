@@ -949,6 +949,55 @@ async function editLeaveRequest(req, res, next) {
   }
 }
 
+async function getClassAttendanceOverview(req, res, next) {
+  try {
+    const dateInput = req.query.date ? new Date(req.query.date) : new Date();
+    if (Number.isNaN(dateInput.getTime())) {
+      return res.status(400).json({ error: 'Invalid date' });
+    }
+    const day = new Date(dateInput);
+    day.setHours(0, 0, 0, 0);
+    const nextDay = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+
+    const [perClassTotals, perClassAttendance] = await Promise.all([
+      Student.aggregate([
+        { $match: { status: 'incampus' } },
+        { $group: { _id: '$class', total: { $sum: 1 } } }
+      ]),
+      Attendance.aggregate([
+        { $match: { date: { $gte: day, $lt: nextDay } } },
+        { $group: { _id: { class: '$class', status: '$status' }, count: { $sum: 1 } } }
+      ])
+    ]);
+
+    const totals = new Map(perClassTotals.map((r) => [String(r._id || ''), r.total]));
+    const stats = new Map();
+    for (const r of perClassAttendance) {
+      const key = String(r._id?.class || '');
+      const entry = stats.get(key) || { present: 0, absent: 0, late: 0, excused: 0 };
+      const status = r._id?.status;
+      if (status === 'present') entry.present += r.count;
+      else if (status === 'absent') entry.absent += r.count;
+      else if (status === 'late') entry.late += r.count;
+      else if (status === 'excused') entry.excused += r.count;
+      stats.set(key, entry);
+    }
+
+    const classKeys = new Set([...totals.keys(), ...stats.keys()]);
+    const overview = Array.from(classKeys).map((cls) => {
+      const total = totals.get(cls) || 0;
+      const s = stats.get(cls) || { present: 0, absent: 0, late: 0, excused: 0 };
+      const percentage = total > 0 ? Number(((s.present / total) * 100).toFixed(1)) : 0;
+      return { class: cls, total, present: s.present, absent: s.absent, late: s.late, excused: s.excused, percentage };
+    });
+    overview.sort((a, b) => String(a.class).localeCompare(String(b.class), undefined, { numeric: true }));
+
+    res.json({ date: day.toISOString().slice(0, 10), overview });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listAttendanceAssignments,
   saveAttendanceAssignment,
@@ -957,6 +1006,7 @@ module.exports = {
   getAttendance,
   getAttendanceSummary,
   getAttendanceReport,
+  getClassAttendanceOverview,
   updateAttendance,
   deleteAttendance,
   exportAttendance

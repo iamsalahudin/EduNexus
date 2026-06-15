@@ -1,10 +1,11 @@
 "use client"
 
+import PageHeader from '@/components/ui/PageHeader'
+import ButtonLink from '@/components/ui/ButtonLink'
 import DailyStudentAttendanceView from '@/components/attendance/DailyStudentAttendanceView'
 
 export default function DailyStudentAttendancePage() {
   return (
-<<<<<<< HEAD
     <div>
       <PageHeader
         title="Daily Student Attendance"
@@ -145,12 +146,5 @@ export default function DailyStudentAttendancePage() {
         </Card>
       )}
     </div>
-=======
-    <DailyStudentAttendanceView
-      backHref="/admin/attendance"
-      title="Daily Student Attendance"
-      subtitle="View and manage student attendance for a specific date by class and section."
-    />
->>>>>>> br-s
   )
 }
