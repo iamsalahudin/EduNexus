@@ -130,7 +130,7 @@ export default function EmployeesPage() {
                       <a href={`mailto:${emp.user?.email || ''}`}>{emp.user?.email || '-'}</a>
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium" style={{
+                      <span className="px-2 py-1 rounded text-xs font-medium min-w-14" style={{
                         backgroundColor: emp.role === 'Admin' ? '#fef3c7' : '#dbeafe',
                         color: emp.role === 'Admin' ? '#92400e' : '#1e40af'
                       }}>

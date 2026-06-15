@@ -67,13 +67,6 @@ export default function AdminNotificationsPage() {
     };
   }, []);
 
-  const quickLinks = useMemo(() => ([
-    { title: 'Send Notification', description: 'Broadcast a new message to a role, class, or specific users.', href: '/principal/notifications/send' },
-    { title: 'History', description: 'Review previously sent announcements and delivery status.', href: '/principal/notifications/history' },
-    { title: 'Class Alerts', description: 'Manage class-specific notification workflows.', href: '/principal/notifications/class' },
-    { title: 'Requests', description: 'Review user help requests and respond from the inbox.', href: '/principal/notifications' },
-  ]), []);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -98,18 +91,6 @@ export default function AdminNotificationsPage() {
         <StatCard label="Unread" value={loading ? 'Loading...' : metrics.unread} />
         <StatCard label="Requests" value={loading ? 'Loading...' : metrics.requests} />
         <StatCard label="Broadcasts" value={loading ? 'Loading...' : metrics.broadcasts} />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {quickLinks.map((link) => (
-          <Card key={link.href}>
-            <h3 className="text-lg font-semibold text-gray-900">{link.title}</h3>
-            <p className="mt-2 text-sm text-gray-600">{link.description}</p>
-            <div className="mt-4">
-              <ButtonLink href={link.href} variant="outline">Open</ButtonLink>
-            </div>
-          </Card>
-        ))}
       </div>
 
       <NotificationsManagementWorkspace
