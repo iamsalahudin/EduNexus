@@ -123,7 +123,6 @@ export default function Page() {
         right={(
           <div className="flex flex-wrap gap-2">
             <ButtonLink href="/admin/teachers/add" variant="primary">Add Teacher</ButtonLink>
-            <ButtonLink href="/admin/settings/profile" variant="outline">Profile Settings</ButtonLink>
           </div>
         )}
       />
