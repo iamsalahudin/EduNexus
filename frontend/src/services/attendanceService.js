@@ -111,7 +111,9 @@ export async function fetchStaffAttendanceSummary({ role, userId, fromDate, toDa
       ...(year ? { year } : {})
     }
   })
-  return res.data
+  // The staff-attendance controller wraps the payload as { success, message, data: { summary, perUser } }.
+  // Unwrap so callers can read `.summary`/`.perUser` directly (matching the student summary shape).
+  return res.data?.data ?? res.data
 }
 
 export async function markStaffAttendance({ date, status, remarks, userId } = {}) {

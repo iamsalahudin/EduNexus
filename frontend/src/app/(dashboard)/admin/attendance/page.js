@@ -46,9 +46,9 @@ export default function AttendanceHome() {
           // Students whose attendance has not been marked yet today
           notMarkedYet: Math.max(0, totalStudents - studentMarkedToday)
         })
-        // Staff/teacher summary uses a different shape than students:
-        // { summary: { present, absent, late, leave, total } }
-        const staffSummary = s2.summary || {}
+        // Staff/teacher summary is wrapped as { data: { summary: { present, absent, late, leave, total } } }
+        // (the staff controller nests under `data`, unlike the student controller).
+        const staffSummary = s2?.data?.summary || s2?.summary || {}
         const staffMarkedToday = (staffSummary.present || 0) + (staffSummary.absent || 0) + (staffSummary.late || 0) + (staffSummary.leave || 0)
         setStaffStats({
           total: staffSummary.total || 0,

@@ -547,17 +547,29 @@ async function deleteTeacher(req, res, next) {
 
 async function getMyClasses(req, res, next) {
   try {
-    const teacher = await Teacher.findOne({ user: req.user.id })
-      .select('classesAssigned')
-      .lean();
+    // Class assignments live in two places depending on how the teacher was created:
+    //  - Teacher.classesAssigned (set by the Assign-Subject-to-Teacher screen / agent)
+    //  - User.profile.class (set at teacher creation / seeding)
+    // Merge both so the dashboard reflects either source.
+    const [teacher, user] = await Promise.all([
+      Teacher.findOne({ user: req.user.id }).select('classesAssigned').lean(),
+      User.findById(req.user.id).select('profile').lean()
+    ]);
 
-    if (!teacher) {
-      return res.status(404).json({ error: 'Teacher profile not found' });
+    const names = new Set();
+    if (teacher && Array.isArray(teacher.classesAssigned)) {
+      for (const c of teacher.classesAssigned) {
+        const v = String(c || '').trim();
+        if (v) names.add(v);
+      }
     }
+    const profileClass = String(user?.profile?.class || '').trim();
+    if (profileClass) names.add(profileClass);
 
-    const assignedClasses = Array.isArray(teacher.classesAssigned)
-      ? teacher.classesAssigned.map((c) => String(c).trim()).filter(Boolean)
-      : [];
+    const assignedClasses = [...names];
+    if (assignedClasses.length === 0) {
+      return res.json({ classes: [] });
+    }
 
     const classes = await SchoolClass.find({ name: { $in: assignedClasses } })
       .sort({ name: 1 })
