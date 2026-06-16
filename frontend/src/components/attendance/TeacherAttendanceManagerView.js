@@ -318,15 +318,19 @@ export default function TeacherAttendanceManagerView({
       <Card className="mt-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Teacher Attendance Rows</h3>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={saveAll}
-            disabled={loading || saving || rows.length === 0}
-          >
-            {saving ? 'Marking...' : 'Mark Attendance'}
-          </Button>
+          <div className="flex items-center gap-3">
+            {!saving && success ? <span className="text-sm text-green-700">✓ {success}</span> : null}
+            {!saving && error ? <span className="text-sm text-red-600">{error}</span> : null}
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={saveAll}
+              disabled={loading || saving || rows.length === 0}
+            >
+              {saving ? 'Marking...' : 'Mark Attendance'}
+            </Button>
+          </div>
         </div>
         <Table>
           <TableRoot className="min-w-full text-sm">

@@ -1,4 +1,4 @@
-const { Teacher, User, SchoolClass } = require('../models');
+const { Teacher, User, SchoolClass, Subject } = require('../models');
 const { sendWelcomeCredentialsEmail } = require('../services/teacherOnboardingMailer');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
 const {
@@ -569,6 +569,69 @@ async function getMyClasses(req, res, next) {
   }
 }
 
+async function getMySubjects(req, res, next) {
+  try {
+    const teacher = await Teacher.findOne({ user: req.user.id })
+      .select('classesAssigned subjects')
+      .lean();
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher profile not found' });
+    }
+
+    const assignedClasses = Array.isArray(teacher.classesAssigned)
+      ? teacher.classesAssigned.map((c) => String(c).trim()).filter(Boolean)
+      : [];
+    const teacherSubjects = Array.isArray(teacher.subjects)
+      ? teacher.subjects.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+    const teacherSubjectKeys = new Set(teacherSubjects.map((s) => s.toLowerCase()));
+
+    // Subjects defined (per class) for the teacher's assigned classes
+    const classKeys = assignedClasses.map((c) => c.toLowerCase());
+    const subjectDocs = classKeys.length
+      ? await Subject.find({ classKey: { $in: classKeys }, active: { $ne: false } })
+          .sort({ className: 1, order: 1, name: 1 })
+          .lean()
+      : [];
+
+    // Group subjects per assigned class, flag which ones this teacher teaches
+    const subjectsByClass = assignedClasses.map((className) => {
+      const key = className.toLowerCase();
+      const docs = subjectDocs.filter((doc) => doc.classKey === key);
+      return {
+        className,
+        subjects: docs.map((doc) => ({
+          name: doc.name,
+          teaching: teacherSubjectKeys.has(String(doc.nameKey || doc.name).toLowerCase())
+        }))
+      };
+    });
+
+    // Flat list of subjects this teacher is assigned (with their class where known)
+    const subjects = [];
+    const seen = new Set();
+    for (const cls of subjectsByClass) {
+      for (const subject of cls.subjects) {
+        if (!subject.teaching) continue;
+        subjects.push({ name: subject.name, className: cls.className });
+        seen.add(subject.name.toLowerCase());
+      }
+    }
+    // Include any assigned subjects that don't map to a defined class subject
+    for (const name of teacherSubjects) {
+      if (!seen.has(name.toLowerCase())) {
+        subjects.push({ name, className: null });
+        seen.add(name.toLowerCase());
+      }
+    }
+
+    res.json({ classesAssigned: assignedClasses, subjects, subjectsByClass });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getTeachersSummary,
   listTeachers,
@@ -576,5 +639,6 @@ module.exports = {
   createTeacher,
   updateTeacher,
   deleteTeacher,
-  getMyClasses
+  getMyClasses,
+  getMySubjects
 };

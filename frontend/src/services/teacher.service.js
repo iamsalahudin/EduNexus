@@ -65,6 +65,11 @@ const teacherService = {
   getMyClasses: async () => {
     const { data } = await api.get('/teachers/my-classes')
     return data
+  },
+
+  getMySubjects: async () => {
+    const { data } = await api.get('/teachers/my-subjects')
+    return data
   }
 }
 

@@ -341,8 +341,6 @@ const routes = {
     "notifications": "/teacher/notifications",
     "notifications/announcements": "/teacher/notifications/announcements",
     "notifications/class": "/teacher/notifications/class",
-    "report-cards": "/teacher/report-cards",
-    "report-cards/class": "/teacher/report-cards/class",
     "results": "/teacher/results",
     "results/report-cards": "/teacher/results/report-cards",
     "salary": "/teacher/salary",
