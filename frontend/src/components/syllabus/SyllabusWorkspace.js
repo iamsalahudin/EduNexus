@@ -8,6 +8,7 @@ import { Button, Card, Input, PageHeader, Select, Skeleton, Textarea } from '@/c
 
 const TERM_OPTIONS = [
   { value: 'annual', label: 'Annual' },
+  { value: 'monthly', label: 'Monthly' },
   { value: 'term-1', label: 'Term 1' },
   { value: 'term-2', label: 'Term 2' },
   { value: 'term-3', label: 'Term 3' },

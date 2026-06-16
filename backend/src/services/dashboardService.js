@@ -1,5 +1,6 @@
 const { User, Student, Teacher, Attendance, Fee, SchoolClass } = require('../models');
 const StaffAttendance = require('../models/staffAttendance');
+const FinanceExpense = require('../models/financeExpense');
 
 async function getDashboardSummary() {
   try {
@@ -139,28 +140,40 @@ async function getFinanceOverview() {
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const daysInMonth = monthEnd.getDate();
 
-    const collections = await Fee.aggregate([
-      { $match: { createdAt: { $gte: monthStart, $lte: monthEnd }, status: 'paid' } },
-      { $group: {
-        _id: { $dayOfMonth: '$createdAt' },
-        amount: { $sum: '$amount' }
-      }},
-      { $sort: { '_id': 1 } }
+    const [collections, expenses] = await Promise.all([
+      Fee.aggregate([
+        { $match: { createdAt: { $gte: monthStart, $lte: monthEnd }, status: 'paid' } },
+        { $group: {
+          _id: { $dayOfMonth: '$createdAt' },
+          amount: { $sum: '$amount' }
+        }},
+        { $sort: { '_id': 1 } }
+      ]),
+      FinanceExpense.aggregate([
+        { $match: { expenseDate: { $gte: monthStart, $lte: monthEnd } } },
+        { $group: {
+          _id: { $dayOfMonth: '$expenseDate' },
+          amount: { $sum: '$amount' }
+        }},
+        { $sort: { '_id': 1 } }
+      ])
     ]);
 
     const graphData = Array.from({ length: daysInMonth }).map((_, i) => {
       const day = i + 1;
       const collectedDay = collections.find(c => c._id === day);
+      const expenseDay = expenses.find(c => c._id === day);
       return {
         day,
         collections: collectedDay?.amount || 0,
-        expenses: 0
+        expenses: expenseDay?.amount || 0
       };
     });
 
     const totalCollected = collections.reduce((sum, c) => sum + c.amount, 0);
+    const totalExpenses = expenses.reduce((sum, c) => sum + c.amount, 0);
     return {
-      summary: { totalCollected, totalExpenses: 0, netIncome: totalCollected },
+      summary: { totalCollected, totalExpenses, netIncome: totalCollected - totalExpenses },
       graphData
     };
   } catch (err) {

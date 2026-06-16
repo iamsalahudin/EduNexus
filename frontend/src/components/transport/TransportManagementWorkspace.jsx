@@ -81,7 +81,7 @@ export default function TransportManagementWorkspace({
     setError('')
     try {
       const [routesRes, enrollmentsRes, requestsRes, paymentsRes] = await Promise.all([
-        transportService.listRoutes({ limit: 200 }),
+        transportService.listRoutes({ limit: 100 }),
         transportService.listEnrollments({ limit: 100 }),
         transportService.listRequests({ limit: 100 }),
         transportService.listPayments({ limit: 100 })

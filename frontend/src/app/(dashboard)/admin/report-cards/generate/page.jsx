@@ -22,7 +22,7 @@ export default function GenerateReportCardsPage() {
   const exportRows = students.map((student) => {
     const row = {
       studentId: student.studentId,
-      name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+      name: student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim(),
       term,
       year
     }
@@ -52,7 +52,7 @@ export default function GenerateReportCardsPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await studentsService.listStudents({ class: className, active: true })
+      const res = await studentsService.listStudents({ classId: className, active: true })
       const list = Array.isArray(res?.students) ? res.students : []
       setStudents(list)
       const subRes = await subjectsService.listSubjects({ className })
@@ -190,8 +190,6 @@ export default function GenerateReportCardsPage() {
     }
   }
 
-  const selectedClass = classes.find((c) => String(c?.name) === String(cls))
-
   return (
     <div className="space-y-6">
       <PageHeader title="Generate Report Cards" subtitle="Create and manage student report cards" />
@@ -234,7 +232,7 @@ export default function GenerateReportCardsPage() {
           {students.map((student) => (
             <Card key={student._id}>
               <div className="flex items-center justify-between mb-3">
-                <div><div className="font-semibold">{student.firstName} {student.lastName}</div><div className="text-xs text-gray-600">{student.studentId}</div></div>
+                <div><div className="font-semibold">{student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim()}</div><div className="text-xs text-gray-600">{student.studentId}</div></div>
                 <Button size="sm" onClick={() => saveReportCard(student._id)}>Save Card</Button>
               </div>
               <div className="grid gap-3 md:grid-cols-4">

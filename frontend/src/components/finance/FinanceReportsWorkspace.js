@@ -30,7 +30,7 @@ export default function FinanceReportsWorkspace({
       setError('')
       const [categoriesData, reportData] = await Promise.all([
         fetchFinanceCategories({}),
-        fetchFinanceReports({ type: reportType, categoryId, startDate, endDate })
+        fetchFinanceReports({ type: reportType, categoryId: categoryId || undefined, startDate: startDate || undefined, endDate: endDate || undefined })
       ])
       setCategories(categoriesData)
       setRows(Array.isArray(reportData.rows) ? reportData.rows : [])

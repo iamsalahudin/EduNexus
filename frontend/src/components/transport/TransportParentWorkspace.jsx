@@ -48,7 +48,7 @@ export default function TransportParentWorkspace() {
     try {
       const [childrenRes, routesRes, enrollRes, paymentsRes, requestsRes] = await Promise.all([
         transportService.listParentChildren(),
-        transportService.listRoutes({ active: true, limit: 200 }),
+        transportService.listRoutes({ active: true, limit: 100 }),
         transportService.listEnrollments({ limit: 100 }),
         transportService.listPayments({ limit: 100 }),
         transportService.listRequests({ limit: 100 })

@@ -349,7 +349,9 @@ const routes = {
     "subjects": "/teacher/subjects",
     "subjects/class-subjects": "/teacher/subjects/class-subjects",
     "timetable": "/teacher/timetable",
-    "transport": "/teacher/transport"
+    "transport": "/teacher/transport",
+    "profile": "/teacher/profile",
+    "profile/edit": "/teacher/profile/edit"
   },
   "warden": {
     "dashboard": "/warden/",

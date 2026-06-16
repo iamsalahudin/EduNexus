@@ -8,7 +8,7 @@ const SyllabusSchema = new mongoose.Schema(
     academicYear: { type: String, trim: true, default: '' },
     term: {
       type: String,
-      enum: ['annual', 'term-1', 'term-2', 'term-3', 'custom'],
+      enum: ['annual', 'monthly', 'term-1', 'term-2', 'term-3', 'custom'],
       default: 'annual',
       index: true
     },
