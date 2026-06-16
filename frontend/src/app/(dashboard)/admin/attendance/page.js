@@ -46,14 +46,16 @@ export default function AttendanceHome() {
           // Students whose attendance has not been marked yet today
           notMarkedYet: Math.max(0, totalStudents - studentMarkedToday)
         })
-        const staffTotals = s2.totals || {}
-        const staffMarkedToday = (staffTotals.presentDays || 0) + (staffTotals.absentDays || 0) + (staffTotals.lateDays || 0) + (staffTotals.excusedDays || 0)
+        // Staff/teacher summary uses a different shape than students:
+        // { summary: { present, absent, late, leave, total } }
+        const staffSummary = s2.summary || {}
+        const staffMarkedToday = (staffSummary.present || 0) + (staffSummary.absent || 0) + (staffSummary.late || 0) + (staffSummary.leave || 0)
         setStaffStats({
-          total: staffTotals.totalDays || 0,
-          present: staffTotals.presentDays || 0,
-          absent: staffTotals.absentDays || 0,
-          late: staffTotals.lateDays || 0,
-          leave: staffTotals.excusedDays || 0,
+          total: staffSummary.total || 0,
+          present: staffSummary.present || 0,
+          absent: staffSummary.absent || 0,
+          late: staffSummary.late || 0,
+          leave: staffSummary.leave || 0,
           enrolled: totalTeachers,
           // Teachers whose attendance has not been marked yet today
           notMarkedYet: Math.max(0, totalTeachers - staffMarkedToday)

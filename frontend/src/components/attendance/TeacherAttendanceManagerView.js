@@ -338,7 +338,7 @@ export default function TeacherAttendanceManagerView({
               <TableRow className="text-left border-b bg-gray-50">
                 <TableHeader>Date</TableHeader>
                 <TableHeader>Teacher</TableHeader>
-                <TableHeader>Department</TableHeader>
+                {/* <TableHeader>Department</TableHeader> */}
                 <TableHeader>Status</TableHeader>
                 <TableHeader>Remarks</TableHeader>
               </TableRow>
@@ -368,7 +368,7 @@ export default function TeacherAttendanceManagerView({
                       <TableCell>
                         <ButtonLink href={detailHref} variant="outline" size="sm">{row.teacherName}</ButtonLink>
                       </TableCell>
-                      <TableCell>{row.department || '-'}</TableCell>
+                      {/* <TableCell>{row.department || '-'}</TableCell> */}
                       <TableCell className="min-w-[160px]">
                         <Select
                           value={row.status}
