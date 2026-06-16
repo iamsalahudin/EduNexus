@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Card, PageHeader, Skeleton, StatCard } from '@/components/ui'
-import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary } from '@/services/attendanceService'
+import { fetchStudentAttendanceSummary, fetchStaffAttendanceSummary, fetchStudents } from '@/services/attendanceService'
+import userService from '@/services/user.service'
 import AttendanceActionCard from '@/components/attendance/AttendanceActionCard'
 
 export default function AttendanceHome() {
@@ -18,29 +19,44 @@ export default function AttendanceHome() {
       setLoading(true)
       setError(null)
       try {
-        const [s1, s2] = await Promise.all([
+        const [s1, s2, studentsRes, usersRes] = await Promise.all([
           fetchStudentAttendanceSummary({ fromDate: today, toDate: today }),
-          fetchStaffAttendanceSummary({ fromDate: today, toDate: today })
+          fetchStaffAttendanceSummary({ fromDate: today, toDate: today }),
+          fetchStudents({ status: 'incampus', limit: 1 }),
+          userService.listUsers({ limit: 1200 })
         ])
         if (!mounted) return
+
+        // Total enrolled students who are expected to be marked today
+        const totalStudents = studentsRes?.pagination?.total || 0
+        // Total active teachers expected to be marked today
+        const allUsers = Array.isArray(usersRes?.users) ? usersRes.users : []
+        const totalTeachers = allUsers.filter((u) => String(u?.role || '').toLowerCase() === 'teacher').length
+
         // Convert summary data to aggregated stats
         const studentTotals = s1.totals || {}
+        const studentMarkedToday = (studentTotals.presentDays || 0) + (studentTotals.absentDays || 0) + (studentTotals.lateDays || 0) + (studentTotals.excusedDays || 0)
         setStudentStats({
           total: studentTotals.totalDays || 0,
           present: studentTotals.presentDays || 0,
           absent: studentTotals.absentDays || 0,
           late: studentTotals.lateDays || 0,
           leave: studentTotals.excusedDays || 0,
-          notMarkedYet: Math.max(0, (studentTotals.totalDays || 0) - ((studentTotals.presentDays || 0) + (studentTotals.absentDays || 0) + (studentTotals.lateDays || 0) + (studentTotals.excusedDays || 0)))
+          enrolled: totalStudents,
+          // Students whose attendance has not been marked yet today
+          notMarkedYet: Math.max(0, totalStudents - studentMarkedToday)
         })
         const staffTotals = s2.totals || {}
+        const staffMarkedToday = (staffTotals.presentDays || 0) + (staffTotals.absentDays || 0) + (staffTotals.lateDays || 0) + (staffTotals.excusedDays || 0)
         setStaffStats({
           total: staffTotals.totalDays || 0,
           present: staffTotals.presentDays || 0,
           absent: staffTotals.absentDays || 0,
           late: staffTotals.lateDays || 0,
           leave: staffTotals.excusedDays || 0,
-          notMarkedYet: Math.max(0, (staffTotals.totalDays || 0) - ((staffTotals.presentDays || 0) + (staffTotals.absentDays || 0) + (staffTotals.lateDays || 0) + (staffTotals.excusedDays || 0)))
+          enrolled: totalTeachers,
+          // Teachers whose attendance has not been marked yet today
+          notMarkedYet: Math.max(0, totalTeachers - staffMarkedToday)
         })
       } catch (e) {
         if (mounted) {
@@ -63,7 +79,7 @@ export default function AttendanceHome() {
     <div>
       <PageHeader
         title="Attendance Management"
-        subtitle="Monitor school-wide attendance for students and staff with comprehensive analytics."
+        subtitle="MMMonitor school-wide attendance for students and staff with comprehensive analytics."
       />
 
       {error ? (
@@ -206,10 +222,10 @@ export default function AttendanceHome() {
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-gray-400 h-2 rounded-full"
-                        style={{ width: `${studentStats?.total ? ((studentStats.notMarkedYet / studentStats.total) * 100) : 0}%` }}
+                        style={{ width: `${studentStats?.enrolled ? Math.min(100, (studentStats.notMarkedYet / studentStats.enrolled) * 100) : 0}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">{studentStats?.total ? ((studentStats.notMarkedYet / studentStats.total) * 100).toFixed(1) : 0}%</span>
+                    <span className="text-xs text-gray-500">{studentStats?.enrolled ? ((studentStats.notMarkedYet / studentStats.enrolled) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
               </div>
@@ -292,10 +308,10 @@ export default function AttendanceHome() {
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-gray-400 h-2 rounded-full"
-                        style={{ width: `${staffStats?.total ? ((staffStats.notMarkedYet / staffStats.total) * 100) : 0}%` }}
+                        style={{ width: `${staffStats?.enrolled ? Math.min(100, (staffStats.notMarkedYet / staffStats.enrolled) * 100) : 0}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">{staffStats?.total ? ((staffStats.notMarkedYet / staffStats.total) * 100).toFixed(1) : 0}%</span>
+                    <span className="text-xs text-gray-500">{staffStats?.enrolled ? ((staffStats.notMarkedYet / staffStats.enrolled) * 100).toFixed(1) : 0}%</span>
                   </div>
                 </div>
               </div>
