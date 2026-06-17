@@ -218,13 +218,12 @@ async function getHomeworksForAdminPrincipal(req, res, next) {
   try {
     const { class: cls, section, status, subject, sortBy, order } = req.query;
 
-    if (!cls || !section) {
-      return res.status(400).json({ error: 'class and section are required' });
-    }
-
-    const filter = { class: cls, section };
+    // Admin/Principal get a school-wide view. class/section are optional filters;
+    // when omitted, return all homework (any status) so created homework is visible.
+    const filter = {};
+    if (cls) filter.class = cls;
+    if (section) filter.section = section;
     if (status) filter.status = status;
-    else filter.status = 'published';
     if (subject) {
       const subjectId = toObjectId(subject);
       if (subjectId) filter.subject = subjectId;

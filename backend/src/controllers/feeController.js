@@ -444,7 +444,10 @@ async function getFeeRecords(req, res, next) {
       row.monthlyFee = Math.max(row.monthlyFee, Number(fee.amount || 0));
 
       const paidSum = (fee.payments || []).reduce((sum, p) => sum + Number(p?.amount || 0), 0);
-      const pending = Math.max(0, Number(fee.amount || 0) - paidSum);
+      // Honor an explicit status of 'paid' (e.g. set by the agent) even when no
+      // matching payment entry exists, so the UI reflects it.
+      const isPaid = String(fee.status || '').toLowerCase() === 'paid';
+      const pending = isPaid ? 0 : Math.max(0, Number(fee.amount || 0) - paidSum);
       row.pendingFee += pending;
 
       (fee.payments || []).forEach((payment) => {

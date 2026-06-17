@@ -6,8 +6,8 @@ const submitComplaintSchema = Joi.object({
     subject: Joi.string().trim().max(160),
     description: Joi.string().trim().max(2000),
     message: Joi.string().trim().max(2000),
-    category: Joi.string().valid('general', 'academic', 'discipline', 'behavior', 'transport', 'fees', 'other').default('general'),
-    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
+    category: Joi.string().trim().max(100).allow('', null).default('general'),
+    priority: Joi.string().trim().lowercase().valid('low', 'medium', 'high', 'urgent').default('medium'),
     type: Joi.string().trim().allow('', null),
     relatedToStudent: Joi.string().optional().allow(null, '')
   })
@@ -43,8 +43,8 @@ const editComplaintSchema = Joi.object({
     subject: Joi.string().trim().max(160).optional(),
     description: Joi.string().trim().max(2000).optional(),
     message: Joi.string().trim().max(2000).optional(),
-    category: Joi.string().valid('general', 'academic', 'discipline', 'behavior', 'transport', 'fees', 'other').optional(),
-    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional()
+    category: Joi.string().trim().max(100).allow('', null).optional(),
+    priority: Joi.string().trim().lowercase().valid('low', 'medium', 'high', 'urgent').optional()
   }).required()
 });
 
