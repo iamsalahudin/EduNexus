@@ -14,10 +14,10 @@ function toInputDate(d) {
 }
 
 const DEFAULT_REPORT_TYPES = [
-  { value: 'class-wise', label: 'Class-wise Report' },
-  { value: 'student-wise', label: 'Student-wise Report' },
+  // { value: 'class-wise', label: 'Class-wise Report' },
+  // { value: 'student-wise', label: 'Student-wise Report' },
   { value: 'teacher-search', label: 'Teacher Attendance' },
-  { value: 'school-trends', label: 'School Trends' },
+  // { value: 'school-trends', label: 'School Trends' },
 ]
 
 export default function AttendanceReportsView({

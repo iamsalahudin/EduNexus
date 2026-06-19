@@ -8,9 +8,9 @@ export default function AttendanceReportsPage() {
       title="Student Attendance Reports"
       subtitle="Generate comprehensive attendance reports with various filters and analysis."
       reportTypes={[
-        { value: 'class-wise', label: 'Class-wise Report' },
+        // { value: 'class-wise', label: 'Class-wise Report' },
         { value: 'student-wise', label: 'Student-wise Report' },
-        { value: 'school-trends', label: 'School Trends' },
+        // { value: 'school-trends', label: 'School Trends' },
       ]}
     />
   )
