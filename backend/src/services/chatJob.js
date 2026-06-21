@@ -17,9 +17,13 @@ async function processChat(payload, options = {}) {
   logger.info(`[CHAT][JOB] User ${payload.userId} (${payload.role}) -> ${payload.message.substring(0, 80)}`);
   logger.info('[CHAT][JOB] n8n webhook URL:', N8N_WEBHOOK_URL);
 
+  // Innermost timeout in the chain. Must stay below the Bull job timeout and the
+  // controller's race guard so a slow (but valid) agent reply still gets through.
+  const N8N_REQUEST_TIMEOUT = parseInt(process.env.N8N_REQUEST_TIMEOUT_MS || '80000', 10);
+
   try {
     const response = await axios.post(N8N_WEBHOOK_URL, payload, {
-      timeout: 60000,
+      timeout: N8N_REQUEST_TIMEOUT,
       headers: { 'Content-Type': 'application/json' },
       signal: options.signal,
     });

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { jwtSecret } = require('../config');
 
-function signAccessToken(user, expiresIn = '120m') {
+function signAccessToken(user, expiresIn = '1d' ) {
   const payload = { sub: user._id.toString(), role: user.role, username: user.username, email: user.email };
   return jwt.sign(payload, jwtSecret, { expiresIn });
 }

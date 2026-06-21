@@ -4,7 +4,12 @@ const logger = require('../utils/logger');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const CONCURRENCY = parseInt(process.env.CHAT_QUEUE_CONCURRENCY || '2', 10);
-const JOB_TIMEOUT = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '35000', 10);
+// Backstop above the n8n request timeout (N8N_REQUEST_TIMEOUT_MS, default 80s) so a
+// slow agent reply resolves the job normally before Bull force-fails it.
+const JOB_TIMEOUT = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '85000', 10);
+// Chat jobs can trigger writes (e.g. "create the timetable"), so retries are unsafe by
+// default — a timed-out-but-applied command would run twice. Opt in via env only.
+const JOB_ATTEMPTS = parseInt(process.env.CHAT_JOB_ATTEMPTS || '1', 10);
 const DISABLE_QUEUE = process.env.CHAT_QUEUE_DISABLED === 'true' || process.env.NODE_ENV === 'test';
 
 let queueReady = false;
@@ -26,7 +31,7 @@ const chatQueue = DISABLE_QUEUE
     }
   : new Queue('chat-queue', REDIS_URL, {
       defaultJobOptions: {
-        attempts: 2,
+        attempts: JOB_ATTEMPTS,
         backoff: { type: 'exponential', delay: 2000 },
         removeOnComplete: true,
         removeOnFail: 50,
