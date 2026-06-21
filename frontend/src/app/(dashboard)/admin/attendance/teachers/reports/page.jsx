@@ -6,7 +6,8 @@ export default function AttendanceReportsPage() {
   return (
     <AttendanceReportsView
       title="Teachers Attendance Reports"
-      subtitle="Generate comprehensive attendance reports with various filters and analysis."
+      subtitle="Generate comprehensive teacher attendance reports with various filters and analysis."
+      reportTypes={[{ value: 'teacher-search', label: 'Teacher Attendance' }]}
     />
   )
 }

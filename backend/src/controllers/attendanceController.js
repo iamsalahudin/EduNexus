@@ -630,13 +630,19 @@ async function getAttendanceReport(req, res, next) {
     }
 
     if (reportType === 'teacher-search') {
+      // A teacher's OWN attendance lives in staffattendances (keyed by user),
+      // not in the student Attendance collection.
+      const StaffAttendance = require('../models/staffAttendance');
+      const staffFilter = {};
+      if (dateFilter) staffFilter.date = dateFilter;
+
       const teachers = await User.find({ role: 'Teacher' }).select('name').sort({ name: 1 }).lean();
       const report = [];
 
       for (const teacher of teachers) {
-        const records = await Attendance.find({
-          ...attendanceFilter,
-          teacher: teacher._id
+        const records = await StaffAttendance.find({
+          ...staffFilter,
+          user: teacher._id
         }).select('status').lean();
 
         const total = records.length;
