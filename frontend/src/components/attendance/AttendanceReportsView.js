@@ -13,15 +13,23 @@ function toInputDate(d) {
   return `${yyyy}-${mm}-${dd}`
 }
 
+const DEFAULT_REPORT_TYPES = [
+  // { value: 'class-wise', label: 'Class-wise Report' },
+  // { value: 'student-wise', label: 'Student-wise Report' },
+  { value: 'teacher-search', label: 'Teacher Attendance' },
+  // { value: 'school-trends', label: 'School Trends' },
+]
+
 export default function AttendanceReportsView({
   title,
   subtitle,
   backHref = '/admin/attendance',
+  reportTypes = DEFAULT_REPORT_TYPES,
 }) {
   const today = toInputDate(new Date())
   const thirtyDaysAgo = toInputDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
 
-  const [reportType, setReportType] = useState('class-wise')
+  const [reportType, setReportType] = useState(reportTypes?.[0]?.value || 'class-wise')
   const [fromDate, setFromDate] = useState(thirtyDaysAgo)
   const [toDate, setToDate] = useState(today)
   const [classId, setClassId] = useState('')
@@ -118,10 +126,9 @@ export default function AttendanceReportsView({
             value={reportType}
             onChange={(e) => setReportType(e.target.value)}
           >
-            <option value="class-wise">Class-wise Report</option>
-            <option value="student-wise">Student-wise Report</option>
-            <option value="teacher-search">Teacher Attendance</option>
-            <option value="school-trends">School Trends</option>
+            {reportTypes.map((rt) => (
+              <option key={rt.value} value={rt.value}>{rt.label}</option>
+            ))}
           </Select>
           <Input
             label="From Date"
@@ -145,7 +152,7 @@ export default function AttendanceReportsView({
             >
               <option value="">Select Class</option>
               {classes.map((c) => (
-                <option key={c._id} value={c._id}>{c.name}</option>
+                <option key={c._id || c.name} value={c.name}>{c.name}</option>
               ))}
             </Select>
           )}

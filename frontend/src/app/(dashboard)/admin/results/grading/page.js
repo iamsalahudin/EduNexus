@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { Button, Card, Input, PageHeader, Skeleton } from '@/components/ui'
 import examsService from '@/services/examsService'
 
+const WEIGHT_LABELS = { exam: 'Exam', attendance: 'Attendance', homework: 'Homework', gr: 'General Report (GR)' }
+
 export default function GradingPage() {
 	const [exams, setExams] = useState([])
 	const [selectedExam, setSelectedExam] = useState(null)
-	const [weights, setWeights] = useState({ theory: 50, practical: 20, quiz: 10, assignment: 10, attendance: 10 })
+	const [weights, setWeights] = useState({ exam: 60, attendance: 10, homework: 15, gr: 15 })
 	const [loading, setLoading] = useState(true)
 	const [saving, setSaving] = useState(false)
 	const [error, setError] = useState('')
@@ -37,7 +39,7 @@ export default function GradingPage() {
 
 	function selectExam(exam) {
 		setSelectedExam(exam)
-		setWeights(exam?.resultWeights || { theory: 50, practical: 20, quiz: 10, assignment: 10, attendance: 10 })
+		setWeights(exam?.resultWeights || { exam: 60, attendance: 10, homework: 15, gr: 15 })
 	}
 
 	async function saveWeights() {
@@ -93,7 +95,7 @@ export default function GradingPage() {
 						<div className="grid gap-4 md:grid-cols-2">
 							{Object.entries(weights).map(([key, value]) => (
 								<div key={key}>
-									<label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">{key}</label>
+									<label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">{WEIGHT_LABELS[key] || key}</label>
 									<Input
 										type="number"
 										min="0"

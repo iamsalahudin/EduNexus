@@ -220,7 +220,7 @@ export default function Page() {
             </div>
 
             <Textarea
-              label="Description (optional)"
+              label="Description"
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}

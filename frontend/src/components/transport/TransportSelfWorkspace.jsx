@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import transportService from '@/services/transportService'
-import { Button, Card, Input, PageHeader, Select, Skeleton, Textarea } from '@/components/ui'
+import { Button, Card, Input, PageHeader, Select, Skeleton } from '@/components/ui'
 
 function fmtDate(value) {
   if (!value) return '—'
@@ -25,7 +25,7 @@ function requestBadge(status) {
   return 'border-yellow-300 bg-yellow-50 text-yellow-700'
 }
 
-export default function TransportSelfWorkspace({ title, subtitle }) {
+export default function TransportSelfWorkspace({ title, subtitle, readOnly = false }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -45,7 +45,7 @@ export default function TransportSelfWorkspace({ title, subtitle }) {
     setError('')
     try {
       const [routesRes, enrollRes, paymentsRes, requestsRes] = await Promise.all([
-        transportService.listRoutes({ active: true, limit: 200 }),
+        transportService.listRoutes({ active: true, limit: 100 }),
         transportService.listEnrollments({ status: 'enrolled', limit: 20 }),
         transportService.listPayments({ limit: 100 }),
         transportService.listRequests({ limit: 100 })
@@ -174,7 +174,7 @@ export default function TransportSelfWorkspace({ title, subtitle }) {
         </div>
       </Card>
 
-      {!activeEnrollment ? (
+      {!readOnly && !activeEnrollment ? (
         <Card className="mt-6">
           <h2 className="font-medium">Request Transport Enrollment</h2>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -200,7 +200,7 @@ export default function TransportSelfWorkspace({ title, subtitle }) {
                 <th className="py-2 pr-3">Reason</th>
                 <th className="py-2 pr-3">Status</th>
                 <th className="py-2 pr-3">Created</th>
-                <th className="py-2 pr-3">Action</th>
+                {!readOnly ? <th className="py-2 pr-3">Action</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -210,9 +210,11 @@ export default function TransportSelfWorkspace({ title, subtitle }) {
                   <td className="py-2 pr-3">{row.reason || '—'}</td>
                   <td className="py-2 pr-3"><span className={`text-xs px-2 py-1 border rounded ${requestBadge(row.status)}`}>{row.status}</span></td>
                   <td className="py-2 pr-3">{fmtDate(row.createdAt)}</td>
-                  <td className="py-2 pr-3">
-                    {row.status === 'pending' ? <Button size="sm" variant="outline" onClick={() => cancelRequest(row._id)}>Cancel</Button> : <span className="text-xs text-gray-500">—</span>}
-                  </td>
+                  {!readOnly ? (
+                    <td className="py-2 pr-3">
+                      {row.status === 'pending' ? <Button size="sm" variant="outline" onClick={() => cancelRequest(row._id)}>Cancel</Button> : <span className="text-xs text-gray-500">—</span>}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

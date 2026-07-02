@@ -1,4 +1,4 @@
-const { Teacher, User, SchoolClass } = require('../models');
+const { Teacher, User, SchoolClass, Subject } = require('../models');
 const { sendWelcomeCredentialsEmail } = require('../services/teacherOnboardingMailer');
 const { createWelcomeNotificationSafe } = require('../services/notificationService');
 const {
@@ -547,8 +547,44 @@ async function deleteTeacher(req, res, next) {
 
 async function getMyClasses(req, res, next) {
   try {
+    // Class assignments live in two places depending on how the teacher was created:
+    //  - Teacher.classesAssigned (set by the Assign-Subject-to-Teacher screen / agent)
+    //  - User.profile.class (set at teacher creation / seeding)
+    // Merge both so the dashboard reflects either source.
+    const [teacher, user] = await Promise.all([
+      Teacher.findOne({ user: req.user.id }).select('classesAssigned').lean(),
+      User.findById(req.user.id).select('profile').lean()
+    ]);
+
+    const names = new Set();
+    if (teacher && Array.isArray(teacher.classesAssigned)) {
+      for (const c of teacher.classesAssigned) {
+        const v = String(c || '').trim();
+        if (v) names.add(v);
+      }
+    }
+    const profileClass = String(user?.profile?.class || '').trim();
+    if (profileClass) names.add(profileClass);
+
+    const assignedClasses = [...names];
+    if (assignedClasses.length === 0) {
+      return res.json({ classes: [] });
+    }
+
+    const classes = await SchoolClass.find({ name: { $in: assignedClasses } })
+      .sort({ name: 1 })
+      .lean();
+
+    res.json({ classes });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getMySubjects(req, res, next) {
+  try {
     const teacher = await Teacher.findOne({ user: req.user.id })
-      .select('classesAssigned')
+      .select('classesAssigned subjects')
       .lean();
 
     if (!teacher) {
@@ -558,12 +594,51 @@ async function getMyClasses(req, res, next) {
     const assignedClasses = Array.isArray(teacher.classesAssigned)
       ? teacher.classesAssigned.map((c) => String(c).trim()).filter(Boolean)
       : [];
+    const teacherSubjects = Array.isArray(teacher.subjects)
+      ? teacher.subjects.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+    const teacherSubjectKeys = new Set(teacherSubjects.map((s) => s.toLowerCase()));
 
-    const classes = await SchoolClass.find({ name: { $in: assignedClasses } })
-      .sort({ name: 1 })
-      .lean();
+    // Subjects defined (per class) for the teacher's assigned classes
+    const classKeys = assignedClasses.map((c) => c.toLowerCase());
+    const subjectDocs = classKeys.length
+      ? await Subject.find({ classKey: { $in: classKeys }, active: { $ne: false } })
+          .sort({ className: 1, order: 1, name: 1 })
+          .lean()
+      : [];
 
-    res.json({ classes });
+    // Group subjects per assigned class, flag which ones this teacher teaches
+    const subjectsByClass = assignedClasses.map((className) => {
+      const key = className.toLowerCase();
+      const docs = subjectDocs.filter((doc) => doc.classKey === key);
+      return {
+        className,
+        subjects: docs.map((doc) => ({
+          name: doc.name,
+          teaching: teacherSubjectKeys.has(String(doc.nameKey || doc.name).toLowerCase())
+        }))
+      };
+    });
+
+    // Flat list of subjects this teacher is assigned (with their class where known)
+    const subjects = [];
+    const seen = new Set();
+    for (const cls of subjectsByClass) {
+      for (const subject of cls.subjects) {
+        if (!subject.teaching) continue;
+        subjects.push({ name: subject.name, className: cls.className });
+        seen.add(subject.name.toLowerCase());
+      }
+    }
+    // Include any assigned subjects that don't map to a defined class subject
+    for (const name of teacherSubjects) {
+      if (!seen.has(name.toLowerCase())) {
+        subjects.push({ name, className: null });
+        seen.add(name.toLowerCase());
+      }
+    }
+
+    res.json({ classesAssigned: assignedClasses, subjects, subjectsByClass });
   } catch (err) {
     next(err);
   }
@@ -576,5 +651,6 @@ module.exports = {
   createTeacher,
   updateTeacher,
   deleteTeacher,
-  getMyClasses
+  getMyClasses,
+  getMySubjects
 };

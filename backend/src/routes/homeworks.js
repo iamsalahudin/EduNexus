@@ -3,7 +3,7 @@ const router = express.Router();
 const homeworkController = require('../controllers/homeworkController');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
-const multer = require('multer');
+const { createUploadMiddleware } = require('../middlewares/upload');
 const {
   createHomeworkSchema,
   updateHomeworkSchema,
@@ -14,7 +14,8 @@ const {
   returnSubmissionSchema
 } = require('../validators/homeworks');
 
-const upload = multer({ storage: multer.memoryStorage() });
+// Enforce file-type allowlist and per-file size limit on homework submissions
+const upload = createUploadMiddleware({ maxFiles: 10, maxFileSizeMB: 20 });
 
 // All routes require auth
 router.use(requireAuth);

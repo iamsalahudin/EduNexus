@@ -5,8 +5,9 @@ import TransportSelfWorkspace from '@/components/transport/TransportSelfWorkspac
 export default function TeacherTransportPage() {
   return (
     <TransportSelfWorkspace
+      readOnly
       title="Transport"
-      subtitle="Check available routes, your transport details, and payment history."
+      subtitle="View available routes, your transport details, and payment history."
     />
   )
 }

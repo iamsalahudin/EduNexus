@@ -127,7 +127,7 @@ export default function EmployeesPage() {
                   <th className="text-left p-3 font-semibold">Name</th>
                   <th className="text-left p-3 font-semibold">Username</th>
                   <th className="text-left p-3 font-semibold">Email</th>
-                  <th className="text-left p-3 font-semibold">Role</th>
+                  <th className="text-left p-3 font-semibold">Employee Type</th>
                   <th className="text-left p-3 font-semibold">Status</th>
                   <th className="text-right p-3 font-semibold">Actions</th>
                 </tr>
@@ -141,11 +141,8 @@ export default function EmployeesPage() {
                       <a href={`mailto:${emp.user?.email || ''}`}>{emp.user?.email || '-'}</a>
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium" style={{
-                        backgroundColor: emp.role === 'Admin' ? '#fef3c7' : '#dbeafe',
-                        color: emp.role === 'Admin' ? '#92400e' : '#1e40af'
-                      }}>
-                        {emp.role}
+                      <span >
+                        {emp.staffType}
                       </span>
                     </td>
                     <td className="p-3">

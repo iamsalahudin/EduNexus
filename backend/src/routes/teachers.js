@@ -22,6 +22,7 @@ router.use(requireAuth);
 
 router.get('/summary', requireRole('Admin', 'Principal', 'HR', 'Reception'), controller.getTeachersSummary);
 router.get('/my-classes', requireRole('Teacher'), controller.getMyClasses);
+router.get('/my-subjects', requireRole('Teacher'), controller.getMySubjects);
 router.get('/', requireRole('Admin', 'Principal', 'HR', 'Reception'), validate(listTeachersSchema), controller.listTeachers);
 router.get('/:id', requireRole('Admin', 'Principal', 'HR', 'Reception'), validate(getTeacherSchema), controller.getTeacherById);
 router.post('/', requireRole('Admin', 'Principal'), upload.array('documents', 10), validate(createTeacherSchema), controller.createTeacher);

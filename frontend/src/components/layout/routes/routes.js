@@ -341,8 +341,6 @@ const routes = {
     "notifications": "/teacher/notifications",
     "notifications/announcements": "/teacher/notifications/announcements",
     "notifications/class": "/teacher/notifications/class",
-    "report-cards": "/teacher/report-cards",
-    "report-cards/class": "/teacher/report-cards/class",
     "results": "/teacher/results",
     "results/report-cards": "/teacher/results/report-cards",
     "salary": "/teacher/salary",
@@ -351,7 +349,9 @@ const routes = {
     "subjects": "/teacher/subjects",
     "subjects/class-subjects": "/teacher/subjects/class-subjects",
     "timetable": "/teacher/timetable",
-    "transport": "/teacher/transport"
+    "transport": "/teacher/transport",
+    "profile": "/teacher/profile",
+    "profile/edit": "/teacher/profile/edit"
   },
   "warden": {
     "dashboard": "/warden/",

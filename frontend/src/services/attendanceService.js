@@ -1,13 +1,14 @@
 import { api } from '@/services/api'
 
 // --- Students roster ---
-export async function fetchStudents({ classId, section, q, limit } = {}) {
+export async function fetchStudents({ classId, section, q, limit, status } = {}) {
   const res = await api.get('/students', {
     params: {
       ...(classId ? { classId } : {}),
       ...(section ? { section } : {}),
       ...(q ? { q } : {}),
-      ...(limit ? { limit } : {})
+      ...(limit ? { limit } : {}),
+      ...(status ? { status } : {})
     }
   })
   return res.data
@@ -110,7 +111,9 @@ export async function fetchStaffAttendanceSummary({ role, userId, fromDate, toDa
       ...(year ? { year } : {})
     }
   })
-  return res.data
+  // The staff-attendance controller wraps the payload as { success, message, data: { summary, perUser } }.
+  // Unwrap so callers can read `.summary`/`.perUser` directly (matching the student summary shape).
+  return res.data?.data ?? res.data
 }
 
 export async function markStaffAttendance({ date, status, remarks, userId } = {}) {

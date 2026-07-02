@@ -33,6 +33,13 @@ const ComplaintSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Normalize priority casing before validation so values like "High" (from the
+// agent or older data) don't fail the lowercase enum on any save() path.
+ComplaintSchema.pre('validate', function (next) {
+  if (this.priority != null) this.priority = String(this.priority).trim().toLowerCase();
+  next();
+});
+
 ComplaintSchema.index({ createdBy: 1, createdAt: -1 });
 ComplaintSchema.index({ assignedTo: 1, status: 1, createdAt: -1 });
 ComplaintSchema.index({ status: 1, createdAt: -1 });

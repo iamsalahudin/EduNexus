@@ -38,10 +38,10 @@ export default function FinanceExpensesWorkspace({
       const [categoriesData, expensesData] = await Promise.all([
         fetchFinanceCategories({ type: 'debit', active: 'true' }),
         fetchFinanceExpenses({
-          q: query,
-          categoryId: categoryFilter,
-          startDate,
-          endDate
+          q: query || undefined,
+          categoryId: categoryFilter || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined
         })
       ])
       setCategories(categoriesData)

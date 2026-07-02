@@ -13,14 +13,19 @@ export default function TimetableSetupForm({ onComplete }) {
   const [sectionModeByClass, setSectionModeByClass] = useState({})
 
   const [classes, setClasses] = useState([]);
+  const [configuredLevels, setConfiguredLevels] = useState([]);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let mounted = true
     ;(async () => {
       try {
-        const { classes: list } = await classesService.listClasses({ active: true })
+        const [classesRes, levelsRes] = await Promise.all([
+          classesService.listClasses({ active: true }),
+          classesService.listLevels().catch(() => ({ levels: [] }))
+        ])
         if (!mounted) return
+        const list = classesRes?.classes
         const normalized = (Array.isArray(list) ? list : []).map((c) => ({
           id: c.name,
           name: c.name,
@@ -30,9 +35,11 @@ export default function TimetableSetupForm({ onComplete }) {
             : []
         }))
         setClasses(normalized)
+        setConfiguredLevels(Array.isArray(levelsRes?.levels) ? levelsRes.levels : [])
       } catch (e) {
         if (!mounted) return
         setClasses([])
+        setConfiguredLevels([])
         setLoadError(e?.response?.data?.error || 'Failed to load classes')
       }
     })()
@@ -41,10 +48,14 @@ export default function TimetableSetupForm({ onComplete }) {
     }
   }, [])
 
+  // Levels come from the configured level list (e.g. pre-primary/primary/middle/high)
+  // merged with any levels already assigned to classes, so the picker is never empty.
   const availableLevels = useMemo(() => {
-    const unique = [...new Set(classes.map((c) => c.level).filter(Boolean))]
-    return unique.sort()
-  }, [classes])
+    const merged = [...configuredLevels, ...classes.map((c) => c.level)]
+      .map((l) => String(l || '').trim())
+      .filter(Boolean)
+    return [...new Set(merged)].sort()
+  }, [classes, configuredLevels])
 
   const classesInSelectedLevel = useMemo(() => {
     if (!selectedLevel) return []
@@ -354,7 +365,7 @@ export default function TimetableSetupForm({ onComplete }) {
                 </div>
               </>
             ) : (
-              <span className="text-sm text-red-600">No active classes found in this level.</span>
+              <span className="text-sm text-red-600">No active classes are tagged with this level. Assign this level to classes in Class Management first.</span>
             )}
           </div>
         ) : (

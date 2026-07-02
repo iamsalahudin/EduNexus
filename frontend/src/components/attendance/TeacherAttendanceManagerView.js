@@ -205,24 +205,30 @@ export default function TeacherAttendanceManagerView({
     setRows((prev) => prev.map((row) => (row.key === rowKey ? { ...row, ...patch } : row)))
   }
 
-  async function saveRow(row) {
+  async function saveAll() {
+    if (!rows.length) return
     setSaving(true)
     setError('')
     setSuccess('')
     try {
-      if (row.recordId && allowUpdateExisting) {
-        await updateStaffAttendance(row.recordId, { status: row.status, remarks: row.remarks })
-      } else {
-        const res = await markStaffAttendance({
-          userId: row.teacherId,
-          date: row.date,
-          status: row.status,
-          remarks: row.remarks,
-        })
-        const invalidCount = Array.isArray(res?.invalid) ? res.invalid.length : 0
-        if (invalidCount > 0) setError(`${invalidCount} entries were invalid and were not saved.`)
+      let saved = 0
+      let invalid = 0
+      for (const row of rows) {
+        if (row.recordId && allowUpdateExisting) {
+          await updateStaffAttendance(row.recordId, { status: row.status, remarks: row.remarks })
+        } else {
+          const res = await markStaffAttendance({
+            userId: row.teacherId,
+            date: row.date,
+            status: row.status,
+            remarks: row.remarks,
+          })
+          invalid += Array.isArray(res?.invalid) ? res.invalid.length : 0
+        }
+        saved += 1
       }
-      setSuccess(`Attendance saved for ${row.teacherName} on ${row.date}`)
+      if (invalid > 0) setError(`${invalid} entries were invalid and were not saved.`)
+      setSuccess(`Attendance marked for ${saved} record(s).`)
       await load()
     } catch (e) {
       setError(e?.response?.data?.error || e.message || 'Failed to save attendance')
@@ -310,29 +316,43 @@ export default function TeacherAttendanceManagerView({
       />
 
       <Card className="mt-6">
-        <h3 className="font-semibold mb-4">Teacher Attendance Rows</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold">Teacher Attendance Rows</h3>
+          <div className="flex items-center gap-3">
+            {!saving && success ? <span className="text-sm text-green-700">✓ {success}</span> : null}
+            {!saving && error ? <span className="text-sm text-red-600">{error}</span> : null}
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={saveAll}
+              disabled={loading || saving || rows.length === 0}
+            >
+              {saving ? 'Marking...' : 'Mark Attendance'}
+            </Button>
+          </div>
+        </div>
         <Table>
           <TableRoot className="min-w-full text-sm">
             <TableHead>
               <TableRow className="text-left border-b bg-gray-50">
                 <TableHeader>Date</TableHeader>
                 <TableHeader>Teacher</TableHeader>
-                <TableHeader>Department</TableHeader>
+                {/* <TableHeader>Department</TableHeader> */}
                 <TableHeader>Status</TableHeader>
                 <TableHeader>Remarks</TableHeader>
-                <TableHeader>Action</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={5}>
                     <Skeleton className="h-64" />
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-sm text-gray-600 py-4">
+                  <TableCell colSpan={5} className="text-sm text-gray-600 py-4">
                     No attendance rows found for current filters.
                   </TableCell>
                 </TableRow>
@@ -348,15 +368,11 @@ export default function TeacherAttendanceManagerView({
                       <TableCell>
                         <ButtonLink href={detailHref} variant="outline" size="sm">{row.teacherName}</ButtonLink>
                       </TableCell>
-                      <TableCell>{row.department || '-'}</TableCell>
+                      {/* <TableCell>{row.department || '-'}</TableCell> */}
                       <TableCell className="min-w-[160px]">
                         <Select
                           value={row.status}
-                          onChange={(e) => {
-                            const newStatus = e.target.value
-                            updateRow(row.key, { status: newStatus })
-                            saveRow({ ...row, status: newStatus })
-                          }}
+                          onChange={(e) => updateRow(row.key, { status: e.target.value })}
                           disabled={saving}
                         >
                           {STATUS_OPTIONS.map((statusItem) => (
@@ -371,17 +387,6 @@ export default function TeacherAttendanceManagerView({
                           placeholder="Optional"
                           disabled={saving}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => saveRow(row)}
-                          disabled={saving}
-                        >
-                          {row.recordId ? 'Update' : 'Mark'}
-                        </Button>
                       </TableCell>
                     </TableRow>
                   )

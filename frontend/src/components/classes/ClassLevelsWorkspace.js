@@ -99,7 +99,7 @@ export default function ClassLevelsWorkspace({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        actions={<ButtonLink href={`${roleBase}/classes`}>Back to Classes</ButtonLink>}
+        right={<ButtonLink href={`${roleBase}/classes`} variant="secondary">Back to Classes</ButtonLink>}
       />
 
       {error ? <div className="mt-4 text-sm text-red-600">{error}</div> : null}

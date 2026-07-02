@@ -245,8 +245,10 @@ exports.sendMessage = async (req, res) => {
       return res.json(responsePayload);
     }
 
-    // Wait for job result with timeout guard
-    const jobTimeout = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '35000', 10) + 5000;
+    // Wait for job result with timeout guard.
+    // Outermost backstop: kept above the Bull job timeout (CHAT_JOB_TIMEOUT_MS) and the
+    // n8n request timeout so a valid-but-slow agent reply is delivered, not discarded.
+    const jobTimeout = parseInt(process.env.CHAT_JOB_TIMEOUT_MS || '85000', 10) + 5000;
     const abortPromise = new Promise((_, reject) => {
       if (abortController.signal.aborted) {
         return reject(Object.assign(new Error('Chat request aborted'), { code: 'ERR_CANCELED' }));

@@ -35,10 +35,13 @@ export default function Page() {
     } finally {
       setBootLoading(false)
     }
+    // Show all homework on first load (class/section are optional filters).
+    load()
   }
 
   useEffect(() => {
     boot()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const selectedClass = useMemo(() => classes.find((c) => String(c?.name) === String(cls)) || null, [classes, cls])
@@ -59,13 +62,12 @@ export default function Page() {
 
   async function load() {
     setError('')
-    if (!cls || !section) {
-      setError('Select class and section')
-      return
-    }
     setLoading(true)
     try {
-      const res = await homeworksService.list({ class: cls, section, sortBy, order })
+      const params = { sortBy, order }
+      if (cls) params.class = cls
+      if (section) params.section = section
+      const res = await homeworksService.list(params)
       setHomeworks(Array.isArray(res?.homeworks) ? res.homeworks : [])
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to load homework')
@@ -134,7 +136,7 @@ export default function Page() {
                 <option value="desc">Descending</option>
               </Select>
             <div className="flex items-end">
-              <Button type="button" variant="primary" onClick={load} disabled={loading || !cls || !section}>
+              <Button type="button" variant="primary" onClick={load} disabled={loading}>
                 {loading ? 'Loading…' : 'Apply'}
               </Button>
             </div>

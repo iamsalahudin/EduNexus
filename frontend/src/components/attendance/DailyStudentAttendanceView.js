@@ -329,7 +329,7 @@ export default function DailyStudentAttendanceView({
                       return (
                         <TableRow key={student._id}>
                           <TableCell>{student.name || "-"}</TableCell>
-                          <TableCell>{student.class?.name || "-"}</TableCell>
+                          <TableCell>{student.class || "-"}</TableCell>
                           <TableCell>{student.section || "-"}</TableCell>
                           <TableCell>
                             <Select

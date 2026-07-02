@@ -15,7 +15,6 @@ const QUICK_ACTIONS = [
   { href: '/teacher/timetable', label: 'Timetable', description: 'Open your personal teaching schedule.' },
   { href: '/teacher/homework', label: 'Homework', description: 'Track assigned work and submissions.' },
   { href: '/teacher/exams/marks-management', label: 'Marks Management', description: 'Enter marks for assigned classes.' },
-  { href: '/teacher/report-cards', label: 'Report Cards', description: 'Review student progress and reports.' },
   { href: '/teacher/students', label: 'Students', description: 'Browse your class rosters and profiles.' },
 ]
 

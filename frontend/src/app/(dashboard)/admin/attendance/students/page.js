@@ -1,13 +1,8 @@
 "use client"
+import DailyStudentAttendanceView from '@/components/attendance/DailyStudentAttendanceView'
 
-import StudentAttendanceUpdateManagerView from '@/components/attendance/StudentAttendanceUpdateManagerView'
-
-export default function AdminStudentAttendancePage() {
+export default function DailyStudentAttendancePage() {
   return (
-    <StudentAttendanceUpdateManagerView
-      roleBase="/admin"
-      title="Student Attendance"
-      subtitle="Update existing student attendance records by class and date."
-    />
+    <DailyStudentAttendanceView/>
   )
 }

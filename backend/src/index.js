@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
 const { connectDB } = require('./config/db');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
@@ -30,9 +31,20 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 };
 app.use(cors(corsOptions));
-app.use(express.json());
+// Limit request body size to mitigate large-payload DoS
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('dev'));
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+// Force user-uploaded files to download instead of rendering inline (prevents stored-XSS via SVG/HTML)
+app.use(
+  '/uploads',
+  express.static(path.resolve(process.cwd(), 'uploads'), {
+    setHeaders(res) {
+      res.setHeader('Content-Disposition', 'attachment');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
+  })
+);
 
 // parse cookies
 app.use(cookieParser());
@@ -45,6 +57,17 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
+
+// Global rate limiting to throttle abuse/scraping across all API routes.
+// Per-route limiters (e.g. stricter login limits) still apply on top of this.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: Number(process.env.RATE_LIMIT_MAX || 1000),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use('/api', apiLimiter);
 
 // ROUTES
 app.use('/api', routes);
