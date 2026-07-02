@@ -5,11 +5,11 @@
   "scripts": {
     "check:integrity": "node ../scripts/check-integrity.js",
     "predev": "node ../scripts/check-integrity.js",
-    "dev": "next dev",
+    "dev": "node api.js && next dev",
     "prebuild": "node ../scripts/check-integrity.js",
     "build": "next build",
     "prestart": "node ../scripts/check-integrity.js",
-    "start": "next start"
+    "start": "node api.js && next start"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
