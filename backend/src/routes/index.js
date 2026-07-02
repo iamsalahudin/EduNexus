@@ -29,6 +29,9 @@ router.use('/staff-attendance', require('./staffAttendance'));
 // Student management (parent linking, bulk import)
 router.use('/students', require('./students'));
 
+// Parent management
+router.use('/parents', require('./parents'));
+
 // Classes/Grades management (Admin)
 router.use('/classes', require('./classes'));
 
