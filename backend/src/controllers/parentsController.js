@@ -35,21 +35,61 @@ async function getParentsSummary(req, res, next) {
 
 async function listParents(req, res, next) {
   try {
-    const { q, limit, page, sortBy, sortOrder } = req.query;
+    const { q, limit, page, sortBy, sortOrder, recentHours, active } = req.query;
     const filter = {};
     const search = String(q || '').trim();
+
+    if (recentHours !== undefined && recentHours !== '') {
+      const hours = Number(recentHours);
+      if (Number.isFinite(hours) && hours > 0) {
+        filter.updatedAt = { $gte: new Date(Date.now() - hours * 60 * 60 * 1000) };
+      }
+    }
+
+    let activeFilter;
+    if (active !== undefined && active !== '') {
+      if (String(active).toLowerCase() === 'true') activeFilter = true;
+      if (String(active).toLowerCase() === 'false') activeFilter = false;
+    }
 
     const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
     const max = Math.min(parseInt(limit || '20', 10) || 20, 100);
     const skip = (pageNumber - 1) * max;
 
-    const pipeline = [{ $match: filter }];
+    const sortableFields = new Set(['createdAt', 'updatedAt', 'name', 'email', 'phone']);
+    const sortKey = sortableFields.has(String(sortBy)) ? String(sortBy) : 'updatedAt';
+    const direction = String(sortOrder).toLowerCase() === 'asc' ? 1 : -1;
+
+    const pipeline = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDoc'
+        }
+      },
+      { $unwind: { path: '$userDoc', preserveNullAndEmptyArrays: true } }
+    ];
+
+    if (activeFilter !== undefined) {
+      pipeline.push({ $match: { 'userDoc.active': activeFilter } });
+    }
     
     if (search) {
       const regex = new RegExp(escapeRegex(search), 'i');
       pipeline.push({
         $match: {
-          $or: [{ name: regex }, { email: regex }, { phone: regex }, { cnic: regex }]
+          $or: [
+            { name: regex },
+            { email: regex },
+            { phone: regex },
+            { cnic: regex },
+            { 'userDoc.name': regex },
+            { 'userDoc.username': regex },
+            { 'userDoc.email': regex }
+          ]
         }
       });
     }
@@ -58,15 +98,52 @@ async function listParents(req, res, next) {
       Parent.aggregate([...pipeline, { $count: 'total' }]),
       Parent.aggregate([
         ...pipeline,
-        { $sort: { [sortBy || 'createdAt']: sortOrder === 'asc' ? 1 : -1 } },
+        { $sort: { [sortKey]: direction, _id: -1 } },
         { $skip: skip },
-        { $limit: max }
+        { $limit: max },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            phone: 1,
+            cnic: 1,
+            dob: 1,
+            occupation: 1,
+            salary: 1,
+            relation: 1,
+            address: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            user: {
+              _id: '$userDoc._id',
+              name: '$userDoc.name',
+              username: '$userDoc.username',
+              email: '$userDoc.email',
+              active: '$userDoc.active',
+              role: '$userDoc.role'
+            },
+            status: {
+              $cond: [{ $eq: ['$userDoc.active', false] }, 'Inactive', 'Active']
+            }
+          }
+        }
       ])
     ]);
 
+    const total = countRows?.[0]?.total || 0;
+    const totalPages = Math.max(Math.ceil(total / max), 1);
+
     res.json({
       parents: docs,
-      pagination: { total: countRows?.[0]?.total || 0, page: pageNumber, limit: max }
+      pagination: {
+        total,
+        page: Math.min(pageNumber, totalPages),
+        limit: max,
+        totalPages,
+        hasPrev: pageNumber > 1,
+        hasNext: pageNumber < totalPages
+      }
     });
   } catch (err) {
     next(err);
@@ -75,9 +152,11 @@ async function listParents(req, res, next) {
 
 async function getParentById(req, res, next) {
   try {
-    const parent = await Parent.findById(req.params.id).populate('user');
+    const parent = await Parent.findById(req.params.id).populate('user', 'name username email active role profile');
     if (!parent) return res.status(404).json({ error: 'Parent not found' });
-    res.json({ parent });
+    const doc = parent.toObject();
+    doc.status = doc?.user?.active === false ? 'Inactive' : 'Active';
+    res.json({ parent: doc });
   } catch (err) {
     next(err);
   }
